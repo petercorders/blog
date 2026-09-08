@@ -1,3 +1,5 @@
+package com.petercoders.blog.gc
+
 /**
  * G1 리멤버드 셋의 카드 집합이 InlinePtr → Array Of Cards → Howl → Full 로 갈아타는 것을 관찰한다.
  *

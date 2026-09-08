@@ -1,0 +1,22 @@
+# ZColorBits — ZGC 컬러 포인터 비트
+# JDK: openjdk version "25.0.4.1" 2026-08-18 LTS
+# 기기: Apple M5 Pro (15코어, 24GB, arm64) · macOS Darwin 25.6.0 · 캐시라인 128B
+# 명령: java --sun-misc-unsafe-memory-access=allow -XX:+UseZGC -Xlog:gc -jar z.jar
+#
+# raw>>16 은 주소가 아니다. 언컬러 시프트가 사이클마다 13~16 사이에서 정해진다(ZPointerLoadShiftTable).
+
+[0.003s][info][gc] Using The Z Garbage Collector
+field offset = 16
+store 직후                       raw=0x0400001ab380e510  RRRR=1110 MM=01 mm=01 FF=00 rr=01 0000=0000  raw>>16=0x400001ab380
+[0.038s][info][gc] GC(0) Major Collection (System.gc())
+[0.041s][info][gc] GC(0) Major Collection (System.gc()) 36M(1%)->36M(1%) 0.003s
+gc#1 후, 자바 코드로 읽기 전            raw=0x0400026e9528e930  RRRR=1110 MM=10 mm=01 FF=00 rr=11 0000=0000  raw>>16=0x400026e9528
+gc#1 후, h.ref 한 번 읽은 뒤         raw=0x0400022e9278b930  RRRR=1011 MM=10 mm=01 FF=00 rr=11 0000=0000  raw>>16=0x400022e9278
+[0.042s][info][gc] GC(1) Major Collection (System.gc())
+[0.043s][info][gc] GC(1) Major Collection (System.gc()) 38M(1%)->38M(1%) 0.001s
+gc#2 후, 자바 코드로 읽기 전            raw=0x0400022e9278b530  RRRR=1011 MM=01 mm=01 FF=00 rr=11 0000=0000  raw>>16=0x400022e9278
+gc#2 후, h.ref 한 번 읽은 뒤         raw=0x040002ae9278e530  RRRR=1110 MM=01 mm=01 FF=00 rr=11 0000=0000  raw>>16=0x40002ae9278
+[0.043s][info][gc] GC(2) Major Collection (System.gc())
+[0.045s][info][gc] GC(2) Major Collection (System.gc()) 40M(1%)->38M(1%) 0.002s
+gc#3 후, 자바 코드로 읽기 전            raw=0x040002ae9278e930  RRRR=1110 MM=10 mm=01 FF=00 rr=11 0000=0000  raw>>16=0x40002ae9278
+gc#3 후, h.ref 한 번 읽은 뒤         raw=0x0400024e9278b930  RRRR=1011 MM=10 mm=01 FF=00 rr=11 0000=0000  raw>>16=0x400024e9278

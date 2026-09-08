@@ -1,3 +1,5 @@
+package com.petercoders.blog.gc
+
 import java.util.concurrent.CountDownLatch
 
 /**

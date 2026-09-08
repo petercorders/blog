@@ -1,3 +1,5 @@
+package com.petercoders.blog.gc
+
 /**
  * 카드 테이블 false sharing. 자바 코드에는 공유 상태가 없는데 카드 테이블이 공유 상태가 된다.
  *

@@ -1,0 +1,29 @@
+# CardFalseSharing — 카드 테이블 false sharing
+# JDK: openjdk version "25.0.4.1" 2026-08-18 LTS
+# 기기: Apple M5 Pro (15코어, 24GB, arm64) · macOS Darwin 25.6.0 · 캐시라인 128B
+# 명령: java -XX:+UseSerialGC [-XX:+UseCondCardMark] -Xmn256m -jar fs.jar <pad>
+
+== pad=0 default
+pad=0 round=0  947 ms  (2110.0 M stores/s)
+pad=0 round=1  957 ms  (2088.1 M stores/s)
+pad=0 round=2  952 ms  (2099.5 M stores/s)
+== pad=0 +UseCondCardMark
+pad=0 round=0  258 ms  (7723.6 M stores/s)
+pad=0 round=1  257 ms  (7780.3 M stores/s)
+pad=0 round=2  262 ms  (7606.6 M stores/s)
+== pad=1024 default
+pad=1024 round=0  491 ms  (4067.5 M stores/s)
+pad=1024 round=1  489 ms  (4084.1 M stores/s)
+pad=1024 round=2  485 ms  (4121.7 M stores/s)
+== pad=1024 +UseCondCardMark
+pad=1024 round=0  173 ms  (11495.9 M stores/s)
+pad=1024 round=1  165 ms  (12103.0 M stores/s)
+pad=1024 round=2  171 ms  (11687.8 M stores/s)
+== pad=65536 default
+pad=65536 round=0  126 ms  (15850.0 M stores/s)
+pad=65536 round=1  125 ms  (15892.5 M stores/s)
+pad=65536 round=2  123 ms  (16163.0 M stores/s)
+== pad=65536 +UseCondCardMark
+pad=65536 round=0  168 ms  (11853.3 M stores/s)
+pad=65536 round=1  166 ms  (11986.9 M stores/s)
+pad=65536 round=2  175 ms  (11419.7 M stores/s)

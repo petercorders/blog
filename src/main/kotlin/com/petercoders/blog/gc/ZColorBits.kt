@@ -1,3 +1,5 @@
+package com.petercoders.blog.gc
+
 import java.lang.reflect.Field
 
 /** ZGC 컬러 포인터의 하위 16비트를 배리어 없이 읽어 사이클마다 어떻게 바뀌는지 본다. */
@@ -9,11 +11,14 @@ private val unsafe: sun.misc.Unsafe = run {
     f.get(null) as sun.misc.Unsafe
 }
 
-/** 참조 필드를 정수로 읽는다. 정수 읽기라 로드 배리어를 타지 않는다. */
+/** 참조 필드를 정수로 읽는다. 정수 읽기라 로드 배리어를 타지 않는다.
+ *
+ * raw>>16 은 주소가 아니다. 언컬러 시프트가 사이클마다 13~16 사이에서 정해지므로
+ * (ZPointerLoadShiftTable) 이 열은 "상위 비트가 움직였다" 정도로만 읽어야 한다. */
 private fun dump(h: Slot, off: Long, label: String) {
     val raw = unsafe.getLong(h, off)
     val b = java.lang.Long.toBinaryString(raw and 0xFFFF).padStart(16, '0')
-    println("%-30s raw=0x%016x  RRRR=%s MM=%s mm=%s FF=%s rr=%s 0000=%s  addr=0x%x"
+    println("%-30s raw=0x%016x  RRRR=%s MM=%s mm=%s FF=%s rr=%s 0000=%s  raw>>16=0x%x"
         .format(label, raw, b.substring(0, 4), b.substring(4, 6), b.substring(6, 8),
             b.substring(8, 10), b.substring(10, 12), b.substring(12, 16), raw ushr 16))
 }

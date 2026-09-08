@@ -1,0 +1,33 @@
+# StackRoots — 스택 스캔 비용 (G1 vs ZGC)
+# JDK: openjdk version "25.0.4.1" 2026-08-18 LTS
+# 기기: Apple M5 Pro (15코어, 24GB, arm64) · macOS Darwin 25.6.0 · 캐시라인 128B
+# 명령: java -Xmx1g -XX:+UseG1GC|-XX:+UseZGC -Xlog:gc,gc+phases,safepoint -jar stack.jar <n>
+# 스레드가 전부 뜬 뒤(ready.await 이후)의 첫 마킹 시작 사이클만 남겼다. 원본 전체는 각자 재현 가능.
+
+== G1 threads=50
+[0.031s][trace][gc,phases] GC(0)       Thread Roots (ms):             Min: 0.05, Avg: 0.09, Max: 0.13, Diff: 0.08, Sum: 0.83, Workers: 9
+[0.031s][info ][gc       ] GC(0) Pause Young (Concurrent Start) (System.gc()) 27M->1M(386M) 1.163ms
+[0.031s][info ][safepoint] Safepoint "G1TryInitiateConcMark", Time since last: 22565083 ns, Reaching safepoint: 2917 ns, At safepoint: 1174667 ns, Leaving safepoint: 2416 ns, Total: 1180000 ns, Threads: 0 runnable, 61 total
+== ZGC threads=50
+[0.048s][info][gc,phases] GC(0) Y: Pause Mark Start 0.006ms
+[0.049s][debug][gc,phases] GC(0) Y: Concurrent Mark Roots 0.382ms
+[0.051s][debug][gc,phases] GC(0) Y: Concurrent Mark Roots 0.235ms
+[0.048s][info][safepoint] Safepoint "ZMarkStartYoung", Time since last: 31172417 ns, Reaching safepoint: 2792 ns, At safepoint: 23625 ns, Leaving safepoint: 583 ns, Total: 27000 ns, Threads: 0 runnable, 60 total
+== G1 threads=500
+[0.037s][trace][gc,phases] GC(1)       Thread Roots (ms):             Min: 0.39, Avg: 0.41, Max: 0.43, Diff: 0.03, Sum: 3.71, Workers: 9
+[0.037s][info ][gc       ] GC(1) Pause Young (Concurrent Start) (System.gc()) 28M->1M(386M) 1.408ms
+[0.037s][info ][safepoint] Safepoint "G1TryInitiateConcMark", Time since last: 10630916 ns, Reaching safepoint: 17209 ns, At safepoint: 1421291 ns, Leaving safepoint: 6542 ns, Total: 1445042 ns, Threads: 0 runnable, 511 total
+== ZGC threads=500
+[0.037s][info ][gc,phases] GC(1) Y: Pause Mark Start 0.002ms
+[0.039s][debug][gc,phases] GC(1) Y: Concurrent Mark Roots 1.506ms
+[0.043s][debug][gc,phases] GC(1) Y: Concurrent Mark Roots 1.327ms
+[0.037s][info ][safepoint] Safepoint "ZMarkStartYoung", Time since last: 2180792 ns, Reaching safepoint: 8375 ns, At safepoint: 8458 ns, Leaving safepoint: 1000 ns, Total: 17833 ns, Threads: 0 runnable, 510 total
+== G1 threads=2000
+[0.103s][trace][gc,phases] GC(1)       Thread Roots (ms):             Min: 1.50, Avg: 1.53, Max: 1.57, Diff: 0.07, Sum: 13.77, Workers: 9
+[0.103s][info ][gc       ] GC(1) Pause Young (Concurrent Start) (System.gc()) 123M->2M(386M) 3.006ms
+[0.103s][info ][safepoint] Safepoint "G1TryInitiateConcMark", Time since last: 74467208 ns, Reaching safepoint: 76250 ns, At safepoint: 3028667 ns, Leaving safepoint: 23083 ns, Total: 3128000 ns, Threads: 0 runnable, 2011 total
+== ZGC threads=2000
+[0.141s][info ][gc,phases] GC(3) Y: Pause Mark Start 0.003ms
+[0.145s][debug][gc,phases] GC(3) Y: Concurrent Mark Roots 4.636ms
+[0.151s][debug][gc,phases] GC(3) Y: Concurrent Mark Roots 4.909ms
+[0.141s][info ][safepoint] Safepoint "ZMarkStartYoung", Time since last: 783750 ns, Reaching safepoint: 57750 ns, At safepoint: 10792 ns, Leaving safepoint: 6125 ns, Total: 74667 ns, Threads: 0 runnable, 2010 total

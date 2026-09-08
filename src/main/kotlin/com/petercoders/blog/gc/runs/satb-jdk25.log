@@ -1,0 +1,777 @@
+# SatbDemo — SATB 프리라이트 배리어와 동시 마킹 사이클
+# JDK: openjdk version "25.0.4.1" 2026-08-18 LTS
+# 기기: Apple M5 Pro (15코어, 24GB, arm64) · macOS Darwin 25.6.0 · 캐시라인 128B
+# 명령: java -Xmx512m -XX:+ExplicitGCInvokesConcurrent -Xlog:gc,gc+phases=debug,gc+marking=debug -jar satb.jar
+
+[0.014s][info][gc] Using G1
+[0.081s][info][gc,phases] GC(0)   Pre Evacuate Collection Set: 0.07ms
+[0.081s][debug][gc,phases] GC(0)     Pre Evacuate Prepare: 0.01ms
+[0.081s][debug][gc,phases] GC(0)       JT Retire TLABs And Flush Logs (ms): Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.081s][debug][gc,phases] GC(0)       Non-JT Flush Logs (ms):        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)     Choose Collection Set: 0.00ms
+[0.081s][debug][gc,phases] GC(0)     Region Register: 0.06ms
+[0.081s][debug][gc,phases] GC(0)     Prepare Heap Roots: 0.00ms
+[0.081s][info ][gc,phases] GC(0)   Merge Heap Roots: 0.34ms
+[0.081s][debug][gc,phases] GC(0)     Prepare Merge Heap Roots: 0.00ms
+[0.081s][debug][gc,phases] GC(0)     Remembered Sets (ms):          Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Eager Reclaim (ms):            skipped
+[0.081s][debug][gc,phases] GC(0)       Merged Inline:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged ArrayOfCards:           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Howl:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Full:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Howl Inline:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Howl ArrayOfCards:      Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Howl BitMap:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Howl Full:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Merged Cards:                  Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     Distribute Log Buffers: 0.00ms
+[0.081s][debug][gc,phases] GC(0)     Log Buffers (ms):              Min: 0.00, Avg: 0.00, Max: 0.01, Diff: 0.01, Sum: 0.02, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Dirty Cards:                   Min: 0, Avg: 43.3, Max: 256, Diff: 256, Sum: 390, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Skipped Cards:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][info ][gc,phases] GC(0)   Evacuate Collection Set: 5.38ms
+[0.081s][debug][gc,phases] GC(0)     Ext Root Scanning (ms):        Min: 0.00, Avg: 0.07, Max: 0.14, Diff: 0.13, Sum: 0.64, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     Scan Heap Roots (ms):          Min: 0.17, Avg: 0.23, Max: 0.27, Diff: 0.10, Sum: 2.03, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Scanned Cards:                 Min: 8, Avg: 43.3, Max: 86, Diff: 78, Sum: 390, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Scanned Blocks:                Min: 1, Avg:  7.3, Max: 10, Diff: 9, Sum: 66, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Claimed Chunks:                Min: 1, Avg:  2.2, Max: 3, Diff: 2, Sum: 20, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Found Roots:                   Min: 0, Avg: 125.8, Max: 343, Diff: 343, Sum: 1132, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     Code Root Scan (ms):           Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Scanned Nmethods:              Min: 0, Avg:  1.2, Max: 11, Diff: 11, Sum: 11, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     Object Copy (ms):              Min: 4.93, Avg: 4.96, Max: 5.02, Diff: 0.09, Sum: 44.61, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     Termination (ms):              Min: 0.01, Avg: 0.08, Max: 0.12, Diff: 0.11, Sum: 0.73, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Termination Attempts:          Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 9, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     GC Worker Other (ms):          Min: 0.00, Avg: 0.01, Max: 0.04, Diff: 0.04, Sum: 0.09, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     GC Worker Total (ms):          Min: 5.32, Avg: 5.34, Max: 5.37, Diff: 0.05, Sum: 48.10, Workers: 9
+[0.081s][info ][gc,phases] GC(0)   Post Evacuate Collection Set: 0.12ms
+[0.081s][debug][gc,phases] GC(0)     NMethod List Cleanup: 0.01ms
+[0.081s][debug][gc,phases] GC(0)     Reference Processing: 0.02ms
+[0.081s][debug][gc,phases] GC(0)     Weak Processing: 0.01ms
+[0.081s][debug][gc,phases] GC(0)       VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 1, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 8, Avg:  8.0, Max: 8, Diff: 0, Sum: 8, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 1, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 34, Avg: 34.0, Max: 34, Diff: 0, Sum: 34, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.081s][debug][gc,phases] GC(0)     Post Evacuate Cleanup 1: 0.02ms
+[0.081s][debug][gc,phases] GC(0)       Merge Per-Thread State (ms):   Min: 0.01, Avg: 0.01, Max: 0.01, Diff: 0.00, Sum: 0.01, Workers: 1
+[0.081s][debug][gc,phases] GC(0)         Copied Bytes:                  Min: 4891408, Avg: 5397504.0, Max: 5756736, Diff: 865328, Sum: 48577536, Workers: 9
+[0.081s][debug][gc,phases] GC(0)         LAB Waste:                     Min: 5952, Avg: 6750.2, Max: 7528, Diff: 1576, Sum: 60752, Workers: 9
+[0.081s][debug][gc,phases] GC(0)         LAB Undo Waste:                Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)         Evac Fail Extra Cards:         Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Clear Logged Cards (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 3
+[0.081s][debug][gc,phases] GC(0)       Recalculate Used Memory (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)     Post Evacuate Cleanup 2: 0.04ms
+[0.081s][debug][gc,phases] GC(0)       Update Derived Pointers (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.081s][debug][gc,phases] GC(0)       Eagerly Reclaim Humongous Objects (ms): skipped
+[0.081s][debug][gc,phases] GC(0)         Humongous Total:               skipped
+[0.081s][debug][gc,phases] GC(0)         Humongous Candidates:          skipped
+[0.081s][debug][gc,phases] GC(0)         Humongous Reclaimed:           skipped
+[0.081s][debug][gc,phases] GC(0)       Redirty Logged Cards (ms):     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.01, Workers: 9
+[0.081s][debug][gc,phases] GC(0)         Redirtied Cards:               Min: 0, Avg: 28.3, Max: 155, Diff: 155, Sum: 255, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Resize TLABs (ms):             Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.081s][debug][gc,phases] GC(0)       Free Collection Set (ms):      Min: 0.00, Avg: 0.01, Max: 0.01, Diff: 0.01, Sum: 0.06, Workers: 9
+[0.081s][debug][gc,phases] GC(0)     Rebuild Free List: 0.03ms
+[0.081s][debug][gc,phases] GC(0)     Prepare For Mutator: 0.01ms
+[0.081s][debug][gc,phases] GC(0)     Expand Heap After Collection: 0.00ms
+[0.081s][info ][gc,phases] GC(0)   Other: 0.22ms
+[0.081s][info ][gc       ] GC(0) Pause Young (Normal) (G1 Evacuation Pause) 48M->49M(386M) 6.451ms
+[0.121s][info ][gc,phases] GC(1)   Pre Evacuate Collection Set: 0.08ms
+[0.121s][debug][gc,phases] GC(1)     Pre Evacuate Prepare: 0.01ms
+[0.121s][debug][gc,phases] GC(1)       JT Retire TLABs And Flush Logs (ms): Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.121s][debug][gc,phases] GC(1)       Non-JT Flush Logs (ms):        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)     Choose Collection Set: 0.00ms
+[0.121s][debug][gc,phases] GC(1)     Region Register: 0.07ms
+[0.121s][debug][gc,phases] GC(1)     Prepare Heap Roots: 0.00ms
+[0.121s][info ][gc,phases] GC(1)   Merge Heap Roots: 0.05ms
+[0.121s][debug][gc,phases] GC(1)     Prepare Merge Heap Roots: 0.00ms
+[0.121s][debug][gc,phases] GC(1)     Remembered Sets (ms):          Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Eager Reclaim (ms):            skipped
+[0.121s][debug][gc,phases] GC(1)       Merged Inline:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged ArrayOfCards:           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Howl:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Full:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Howl Inline:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Howl ArrayOfCards:      Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Howl BitMap:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Howl Full:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Merged Cards:                  Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     Distribute Log Buffers: 0.00ms
+[0.121s][debug][gc,phases] GC(1)     Log Buffers (ms):              Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.01, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Dirty Cards:                   Min: 0, Avg: 28.3, Max: 96, Diff: 96, Sum: 255, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Skipped Cards:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][info ][gc,phases] GC(1)   Evacuate Collection Set: 25.87ms
+[0.121s][debug][gc,phases] GC(1)     Ext Root Scanning (ms):        Min: 0.00, Avg: 0.01, Max: 0.04, Diff: 0.03, Sum: 0.13, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     Scan Heap Roots (ms):          Min: 0.00, Avg: 0.01, Max: 0.02, Diff: 0.02, Sum: 0.07, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Scanned Cards:                 Min: 0, Avg: 27.0, Max: 57, Diff: 57, Sum: 243, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Scanned Blocks:                Min: 0, Avg: 11.3, Max: 22, Diff: 22, Sum: 102, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Claimed Chunks:                Min: 0, Avg:  2.1, Max: 4, Diff: 4, Sum: 19, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Found Roots:                   Min: 0, Avg: 125.8, Max: 320, Diff: 320, Sum: 1132, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     Code Root Scan (ms):           Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Scanned Nmethods:              Min: 0, Avg:  1.2, Max: 11, Diff: 11, Sum: 11, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     Object Copy (ms):              Min: 25.71, Avg: 25.75, Max: 25.80, Diff: 0.09, Sum: 231.71, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     Termination (ms):              Min: 0.01, Avg: 0.06, Max: 0.09, Diff: 0.08, Sum: 0.56, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Termination Attempts:          Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 9, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     GC Worker Other (ms):          Min: 0.00, Avg: 0.01, Max: 0.05, Diff: 0.05, Sum: 0.13, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     GC Worker Total (ms):          Min: 25.84, Avg: 25.84, Max: 25.86, Diff: 0.02, Sum: 232.60, Workers: 9
+[0.121s][info ][gc,phases] GC(1)   Post Evacuate Collection Set: 0.14ms
+[0.121s][debug][gc,phases] GC(1)     NMethod List Cleanup: 0.00ms
+[0.121s][debug][gc,phases] GC(1)     Reference Processing: 0.02ms
+[0.121s][debug][gc,phases] GC(1)     Weak Processing: 0.01ms
+[0.121s][debug][gc,phases] GC(1)       VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 8, Avg:  8.0, Max: 8, Diff: 0, Sum: 8, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 34, Avg: 34.0, Max: 34, Diff: 0, Sum: 34, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.121s][debug][gc,phases] GC(1)     Post Evacuate Cleanup 1: 0.02ms
+[0.121s][debug][gc,phases] GC(1)       Merge Per-Thread State (ms):   Min: 0.01, Avg: 0.01, Max: 0.01, Diff: 0.00, Sum: 0.01, Workers: 1
+[0.121s][debug][gc,phases] GC(1)         Copied Bytes:                  Min: 12420640, Avg: 14300890.7, Max: 17491168, Diff: 5070528, Sum: 128708016, Workers: 9
+[0.121s][debug][gc,phases] GC(1)         LAB Waste:                     Min: 2824, Avg: 3784.9, Max: 4592, Diff: 1768, Sum: 34064, Workers: 9
+[0.121s][debug][gc,phases] GC(1)         LAB Undo Waste:                Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)         Evac Fail Extra Cards:         Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Clear Logged Cards (ms):       Min: 0.00, Avg: 0.00, Max: 0.01, Diff: 0.01, Sum: 0.01, Workers: 3
+[0.121s][debug][gc,phases] GC(1)       Recalculate Used Memory (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)     Post Evacuate Cleanup 2: 0.05ms
+[0.121s][debug][gc,phases] GC(1)       Update Derived Pointers (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.121s][debug][gc,phases] GC(1)       Eagerly Reclaim Humongous Objects (ms): skipped
+[0.121s][debug][gc,phases] GC(1)         Humongous Total:               skipped
+[0.121s][debug][gc,phases] GC(1)         Humongous Candidates:          skipped
+[0.121s][debug][gc,phases] GC(1)         Humongous Reclaimed:           skipped
+[0.121s][debug][gc,phases] GC(1)       Redirty Logged Cards (ms):     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.121s][debug][gc,phases] GC(1)         Redirtied Cards:               Min: 0, Avg: 27.3, Max: 142, Diff: 142, Sum: 246, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Resize TLABs (ms):             Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.121s][debug][gc,phases] GC(1)       Free Collection Set (ms):      Min: 0.00, Avg: 0.01, Max: 0.03, Diff: 0.03, Sum: 0.11, Workers: 9
+[0.121s][debug][gc,phases] GC(1)     Rebuild Free List: 0.04ms
+[0.121s][debug][gc,phases] GC(1)     Prepare For Mutator: 0.01ms
+[0.121s][debug][gc,phases] GC(1)     Expand Heap After Collection: 0.00ms
+[0.121s][info ][gc,phases] GC(1)   Other: 0.04ms
+[0.121s][info ][gc       ] GC(1) Pause Young (Normal) (G1 Evacuation Pause) 166M->168M(386M) 26.510ms
+[0.138s][info ][gc,phases] GC(2)   Pre Evacuate Collection Set: 0.06ms
+[0.138s][debug][gc,phases] GC(2)     Pre Evacuate Prepare: 0.01ms
+[0.138s][debug][gc,phases] GC(2)       JT Retire TLABs And Flush Logs (ms): Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.138s][debug][gc,phases] GC(2)       Non-JT Flush Logs (ms):        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)     Choose Collection Set: 0.00ms
+[0.138s][debug][gc,phases] GC(2)     Region Register: 0.05ms
+[0.138s][debug][gc,phases] GC(2)     Prepare Heap Roots: 0.00ms
+[0.138s][info ][gc,phases] GC(2)   Merge Heap Roots: 0.03ms
+[0.138s][debug][gc,phases] GC(2)     Prepare Merge Heap Roots: 0.00ms
+[0.138s][debug][gc,phases] GC(2)     Remembered Sets (ms):          Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Eager Reclaim (ms):            skipped
+[0.138s][debug][gc,phases] GC(2)       Merged Inline:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged ArrayOfCards:           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Howl:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Full:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Howl Inline:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Howl ArrayOfCards:      Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Howl BitMap:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Howl Full:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Merged Cards:                  Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     Distribute Log Buffers: 0.00ms
+[0.138s][debug][gc,phases] GC(2)     Log Buffers (ms):              Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.01, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Dirty Cards:                   Min: 0, Avg: 27.3, Max: 130, Diff: 130, Sum: 246, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Skipped Cards:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][info ][gc,phases] GC(2)   Evacuate Collection Set: 13.70ms
+[0.138s][debug][gc,phases] GC(2)     Ext Root Scanning (ms):        Min: 0.00, Avg: 0.02, Max: 0.03, Diff: 0.03, Sum: 0.15, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     Scan Heap Roots (ms):          Min: 0.00, Avg: 0.01, Max: 0.01, Diff: 0.01, Sum: 0.06, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Scanned Cards:                 Min: 0, Avg: 27.0, Max: 48, Diff: 48, Sum: 243, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Scanned Blocks:                Min: 0, Avg: 11.3, Max: 21, Diff: 21, Sum: 102, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Claimed Chunks:                Min: 0, Avg:  2.1, Max: 5, Diff: 5, Sum: 19, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Found Roots:                   Min: 0, Avg: 125.8, Max: 300, Diff: 300, Sum: 1132, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     Code Root Scan (ms):           Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Scanned Nmethods:              Min: 0, Avg:  1.2, Max: 11, Diff: 11, Sum: 11, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     Object Copy (ms):              Min: 13.39, Avg: 13.54, Max: 13.62, Diff: 0.23, Sum: 121.85, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     Termination (ms):              Min: 0.01, Avg: 0.09, Max: 0.14, Diff: 0.13, Sum: 0.79, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Termination Attempts:          Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 9, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     GC Worker Other (ms):          Min: 0.00, Avg: 0.02, Max: 0.18, Diff: 0.18, Sum: 0.22, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     GC Worker Total (ms):          Min: 13.67, Avg: 13.67, Max: 13.68, Diff: 0.02, Sum: 123.07, Workers: 9
+[0.138s][info ][gc,phases] GC(2)   Post Evacuate Collection Set: 0.18ms
+[0.138s][debug][gc,phases] GC(2)     NMethod List Cleanup: 0.00ms
+[0.138s][debug][gc,phases] GC(2)     Reference Processing: 0.00ms
+[0.138s][debug][gc,phases] GC(2)     Weak Processing: 0.01ms
+[0.138s][debug][gc,phases] GC(2)       VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 8, Avg:  8.0, Max: 8, Diff: 0, Sum: 8, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 34, Avg: 34.0, Max: 34, Diff: 0, Sum: 34, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.138s][debug][gc,phases] GC(2)     Post Evacuate Cleanup 1: 0.03ms
+[0.138s][debug][gc,phases] GC(2)       Merge Per-Thread State (ms):   Min: 0.02, Avg: 0.02, Max: 0.02, Diff: 0.00, Sum: 0.02, Workers: 1
+[0.138s][debug][gc,phases] GC(2)         Copied Bytes:                  Min: 8226552, Avg: 9652874.7, Max: 11057816, Diff: 2831264, Sum: 86875872, Workers: 9
+[0.138s][debug][gc,phases] GC(2)         LAB Waste:                     Min: 2056, Avg: 2342.2, Max: 2664, Diff: 608, Sum: 21080, Workers: 9
+[0.138s][debug][gc,phases] GC(2)         LAB Undo Waste:                Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)         Evac Fail Extra Cards:         Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Clear Logged Cards (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 3
+[0.138s][debug][gc,phases] GC(2)       Recalculate Used Memory (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)     Post Evacuate Cleanup 2: 0.08ms
+[0.138s][debug][gc,phases] GC(2)       Update Derived Pointers (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.138s][debug][gc,phases] GC(2)       Eagerly Reclaim Humongous Objects (ms): skipped
+[0.138s][debug][gc,phases] GC(2)         Humongous Total:               skipped
+[0.138s][debug][gc,phases] GC(2)         Humongous Candidates:          skipped
+[0.138s][debug][gc,phases] GC(2)         Humongous Reclaimed:           skipped
+[0.138s][debug][gc,phases] GC(2)       Redirty Logged Cards (ms):     Min: 0.00, Avg: 0.00, Max: 0.03, Diff: 0.03, Sum: 0.04, Workers: 9
+[0.138s][debug][gc,phases] GC(2)         Redirtied Cards:               Min: 0, Avg:  3.3, Max: 21, Diff: 21, Sum: 30, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Resize TLABs (ms):             Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.138s][debug][gc,phases] GC(2)       Free Collection Set (ms):      Min: 0.00, Avg: 0.01, Max: 0.02, Diff: 0.02, Sum: 0.08, Workers: 9
+[0.138s][debug][gc,phases] GC(2)     Rebuild Free List: 0.04ms
+[0.138s][debug][gc,phases] GC(2)     Prepare For Mutator: 0.00ms
+[0.138s][debug][gc,phases] GC(2)     Expand Heap After Collection: 0.00ms
+[0.138s][info ][gc,phases] GC(2)   Other: 0.03ms
+[0.138s][info ][gc       ] GC(2) Pause Young (Normal) (G1 Evacuation Pause) 235M->236M(386M) 14.327ms
+[0.144s][info ][gc,phases] GC(3)   Pre Evacuate Collection Set: 0.09ms
+[0.144s][debug][gc,phases] GC(3)     Prepare Concurrent Start: 0.02ms
+[0.144s][debug][gc,phases] GC(3)       Reset Marking State (ms):      Min: 0.01, Avg: 0.01, Max: 0.01, Diff: 0.00, Sum: 0.01, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       Note Start Of Mark (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.144s][debug][gc,phases] GC(3)     Pre Evacuate Prepare: 0.01ms
+[0.144s][debug][gc,phases] GC(3)       JT Retire TLABs And Flush Logs (ms): Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.144s][debug][gc,phases] GC(3)       Non-JT Flush Logs (ms):        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)     Choose Collection Set: 0.00ms
+[0.144s][debug][gc,phases] GC(3)     Region Register: 0.06ms
+[0.144s][debug][gc,phases] GC(3)     Prepare Heap Roots: 0.00ms
+[0.144s][info ][gc,phases] GC(3)   Merge Heap Roots: 0.03ms
+[0.144s][debug][gc,phases] GC(3)     Prepare Merge Heap Roots: 0.00ms
+[0.144s][debug][gc,phases] GC(3)     Remembered Sets (ms):          Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Eager Reclaim (ms):            skipped
+[0.144s][debug][gc,phases] GC(3)       Merged Inline:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged ArrayOfCards:           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Howl:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Full:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Howl Inline:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Howl ArrayOfCards:      Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Howl BitMap:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Howl Full:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Merged Cards:                  Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     Distribute Log Buffers: 0.00ms
+[0.144s][debug][gc,phases] GC(3)     Log Buffers (ms):              Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Dirty Cards:                   Min: 0, Avg: 10.3, Max: 93, Diff: 93, Sum: 93, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Skipped Cards:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][info ][gc,phases] GC(3)   Evacuate Collection Set: 1.35ms
+[0.144s][debug][gc,phases] GC(3)     Ext Root Scanning (ms):        Min: 0.00, Avg: 0.06, Max: 0.13, Diff: 0.13, Sum: 0.58, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     Scan Heap Roots (ms):          Min: 0.00, Avg: 0.01, Max: 0.03, Diff: 0.03, Sum: 0.06, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Scanned Cards:                 Min: 0, Avg:  8.2, Max: 45, Diff: 45, Sum: 74, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Scanned Blocks:                Min: 0, Avg:  4.9, Max: 33, Diff: 33, Sum: 44, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Claimed Chunks:                Min: 0, Avg:  2.3, Max: 16, Diff: 16, Sum: 21, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Found Roots:                   Min: 0, Avg: 148.9, Max: 972, Diff: 972, Sum: 1340, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     Code Root Scan (ms):           Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Scanned Nmethods:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     Object Copy (ms):              Min: 1.13, Avg: 1.17, Max: 1.21, Diff: 0.09, Sum: 10.55, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     Termination (ms):              Min: 0.07, Avg: 0.07, Max: 0.08, Diff: 0.01, Sum: 0.67, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Termination Attempts:          Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 9, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     GC Worker Other (ms):          Min: 0.00, Avg: 0.00, Max: 0.01, Diff: 0.01, Sum: 0.04, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     GC Worker Total (ms):          Min: 1.30, Avg: 1.32, Max: 1.34, Diff: 0.04, Sum: 11.90, Workers: 9
+[0.144s][info ][gc,phases] GC(3)   Post Evacuate Collection Set: 0.09ms
+[0.144s][debug][gc,phases] GC(3)     NMethod List Cleanup: 0.00ms
+[0.144s][debug][gc,phases] GC(3)     Reference Processing: 0.01ms
+[0.144s][debug][gc,phases] GC(3)     Weak Processing: 0.01ms
+[0.144s][debug][gc,phases] GC(3)       VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 3, Avg:  3.0, Max: 3, Diff: 0, Sum: 3, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 1, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 15, Avg: 15.0, Max: 15, Diff: 0, Sum: 15, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 44, Avg: 44.0, Max: 44, Diff: 0, Sum: 44, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.144s][debug][gc,phases] GC(3)     Post Evacuate Cleanup 1: 0.01ms
+[0.144s][debug][gc,phases] GC(3)       Merge Per-Thread State (ms):   Min: 0.01, Avg: 0.01, Max: 0.01, Diff: 0.00, Sum: 0.01, Workers: 1
+[0.144s][debug][gc,phases] GC(3)         Copied Bytes:                  Min: 1215576, Avg: 1763298.7, Max: 4476672, Diff: 3261096, Sum: 15869688, Workers: 9
+[0.144s][debug][gc,phases] GC(3)         LAB Waste:                     Min: 256, Avg: 429.3, Max: 1416, Diff: 1160, Sum: 3864, Workers: 9
+[0.144s][debug][gc,phases] GC(3)         LAB Undo Waste:                Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)         Evac Fail Extra Cards:         Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Clear Logged Cards (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 3
+[0.144s][debug][gc,phases] GC(3)       Recalculate Used Memory (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)     Post Evacuate Cleanup 2: 0.03ms
+[0.144s][debug][gc,phases] GC(3)       Update Derived Pointers (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.144s][debug][gc,phases] GC(3)       Eagerly Reclaim Humongous Objects (ms): skipped
+[0.144s][debug][gc,phases] GC(3)         Humongous Total:               skipped
+[0.144s][debug][gc,phases] GC(3)         Humongous Candidates:          skipped
+[0.144s][debug][gc,phases] GC(3)         Humongous Reclaimed:           skipped
+[0.144s][debug][gc,phases] GC(3)       Redirty Logged Cards (ms):     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.144s][debug][gc,phases] GC(3)         Redirtied Cards:               Min: 0, Avg:  3.7, Max: 22, Diff: 22, Sum: 33, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Resize TLABs (ms):             Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.144s][debug][gc,phases] GC(3)       Free Collection Set (ms):      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.01, Workers: 9
+[0.144s][debug][gc,phases] GC(3)     Rebuild Free List: 0.02ms
+[0.144s][debug][gc,phases] GC(3)     Prepare For Mutator: 0.00ms
+[0.144s][debug][gc,phases] GC(3)     Expand Heap After Collection: 0.00ms
+[0.144s][info ][gc,phases] GC(3)   Other: 0.03ms
+[0.144s][info ][gc       ] GC(3) Pause Young (Concurrent Start) (System.gc()) 241M->244M(386M) 1.844ms
+[0.144s][info ][gc       ] GC(4) Concurrent Mark Cycle
+[0.144s][info ][gc,marking] GC(4) Concurrent Scan Root Regions
+[0.145s][info ][gc,marking] GC(4) Concurrent Scan Root Regions 0.437ms
+[0.145s][info ][gc,marking] GC(4) Concurrent Mark
+[0.145s][info ][gc,marking] GC(4) Concurrent Mark From Roots
+[0.161s][info ][gc,marking] GC(4) Concurrent Mark From Roots 15.779ms
+[0.161s][info ][gc,marking] GC(4) Concurrent Preclean
+[0.161s][info ][gc,marking] GC(4) Concurrent Preclean 0.194ms
+[0.161s][debug][gc,phases ] GC(4) Finalize Marking 0.104ms
+[0.161s][debug][gc,phases ] GC(4) Reference Processing 0.005ms
+[0.161s][debug][gc,phases ] GC(4)   VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 3, Avg:  3.0, Max: 3, Diff: 0, Sum: 3, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 15, Avg: 15.0, Max: 15, Diff: 0, Sum: 15, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 44, Avg: 44.0, Max: 44, Diff: 0, Sum: 44, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)   Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.161s][debug][gc,phases ] GC(4) Weak Processing 0.086ms
+[0.161s][debug][gc,phases ] GC(4) ClassLoaderData 0.001ms
+[0.161s][debug][gc,phases ] GC(4) Trigger cleanups 0.001ms
+[0.161s][debug][gc,phases ] GC(4) G1 Complete Cleaning 0.038ms
+[0.161s][debug][gc,phases ] GC(4) Purge Unlinked NMethods 0.000ms
+[0.161s][debug][gc,phases ] GC(4) Unregister NMethods 0.025ms
+[0.161s][debug][gc,phases ] GC(4) Free Code Blobs 0.000ms
+[0.161s][debug][gc,phases ] GC(4) Purge Class Loader Data 0.001ms
+[0.161s][debug][gc,phases ] GC(4) Class Unloading 0.088ms
+[0.161s][debug][gc,phases ] GC(4) Flush Task Caches 0.010ms
+[0.161s][debug][gc,phases ] GC(4) Select For Rebuild and Reclaim Empty Regions 0.062ms
+[0.161s][debug][gc,phases ] GC(4) Report Object Count 0.000ms
+[0.161s][info ][gc        ] GC(4) Pause Remark 244M->244M(410M) 0.430ms
+[0.161s][info ][gc,marking] GC(4) Concurrent Mark 16.498ms
+[0.161s][info ][gc,marking] GC(4) Concurrent Rebuild Remembered Sets and Scrub Regions
+[0.165s][info ][gc,marking] GC(4) Concurrent Rebuild Remembered Sets and Scrub Regions 4.078ms
+[0.166s][debug][gc,phases ] GC(4) Update Remembered Set Tracking After Rebuild 0.007ms
+[0.166s][debug][gc,phases ] GC(4) Finalize Concurrent Mark Cleanup 0.002ms
+[0.166s][info ][gc        ] GC(4) Pause Cleanup 244M->244M(410M) 0.025ms
+[0.166s][info ][gc,marking] GC(4) Concurrent Clear Claimed Marks
+[0.166s][info ][gc,marking] GC(4) Concurrent Clear Claimed Marks 0.008ms
+[0.166s][info ][gc,marking] GC(4) Concurrent Cleanup for Next Mark
+[0.166s][info ][gc,marking] GC(4) Concurrent Cleanup for Next Mark 0.218ms
+[0.166s][info ][gc        ] GC(4) Concurrent Mark Cycle 21.408ms
+[0.166s][info ][gc,phases ] GC(5)   Pre Evacuate Collection Set: 0.08ms
+[0.166s][debug][gc,phases ] GC(5)     Prepare Concurrent Start: 0.02ms
+[0.166s][debug][gc,phases ] GC(5)       Reset Marking State (ms):      Min: 0.01, Avg: 0.01, Max: 0.01, Diff: 0.00, Sum: 0.01, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       Note Start Of Mark (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.166s][debug][gc,phases ] GC(5)     Pre Evacuate Prepare: 0.01ms
+[0.166s][debug][gc,phases ] GC(5)       JT Retire TLABs And Flush Logs (ms): Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.166s][debug][gc,phases ] GC(5)       Non-JT Flush Logs (ms):        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)     Choose Collection Set: 0.00ms
+[0.166s][debug][gc,phases ] GC(5)     Region Register: 0.04ms
+[0.166s][debug][gc,phases ] GC(5)     Prepare Heap Roots: 0.00ms
+[0.166s][info ][gc,phases ] GC(5)   Merge Heap Roots: 0.02ms
+[0.166s][debug][gc,phases ] GC(5)     Prepare Merge Heap Roots: 0.00ms
+[0.166s][debug][gc,phases ] GC(5)     Remembered Sets (ms):          Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Eager Reclaim (ms):            skipped
+[0.166s][debug][gc,phases ] GC(5)       Merged Inline:                 Min: 0, Avg:  0.2, Max: 2, Diff: 2, Sum: 2, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged ArrayOfCards:           Min: 0, Avg:  0.3, Max: 3, Diff: 3, Sum: 3, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Howl:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Full:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Howl Inline:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Howl ArrayOfCards:      Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Howl BitMap:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Howl Full:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Merged Cards:                  Min: 0, Avg:  3.0, Max: 27, Diff: 27, Sum: 27, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     Distribute Log Buffers: 0.00ms
+[0.166s][debug][gc,phases ] GC(5)     Log Buffers (ms):              Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.01, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Dirty Cards:                   Min: 0, Avg: 10.6, Max: 57, Diff: 57, Sum: 95, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Skipped Cards:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][info ][gc,phases ] GC(5)   Evacuate Collection Set: 0.19ms
+[0.166s][debug][gc,phases ] GC(5)     Ext Root Scanning (ms):        Min: 0.00, Avg: 0.01, Max: 0.03, Diff: 0.03, Sum: 0.09, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     Scan Heap Roots (ms):          Min: 0.00, Avg: 0.01, Max: 0.03, Diff: 0.03, Sum: 0.13, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Scanned Cards:                 Min: 0, Avg:  9.9, Max: 29, Diff: 29, Sum: 89, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Scanned Blocks:                Min: 0, Avg:  8.6, Max: 18, Diff: 18, Sum: 77, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Claimed Chunks:                Min: 0, Avg:  7.6, Max: 14, Diff: 14, Sum: 68, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Found Roots:                   Min: 0, Avg: 44.0, Max: 395, Diff: 395, Sum: 396, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     Code Root Scan (ms):           Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Scanned Nmethods:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     Object Copy (ms):              Min: 0.08, Avg: 0.08, Max: 0.10, Diff: 0.02, Sum: 0.74, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     Termination (ms):              Min: 0.05, Avg: 0.05, Max: 0.06, Diff: 0.01, Sum: 0.47, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Termination Attempts:          Min: 1, Avg:  1.2, Max: 3, Diff: 2, Sum: 11, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     GC Worker Other (ms):          Min: 0.00, Avg: 0.01, Max: 0.02, Diff: 0.01, Sum: 0.07, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     GC Worker Total (ms):          Min: 0.15, Avg: 0.17, Max: 0.18, Diff: 0.02, Sum: 1.50, Workers: 9
+[0.166s][info ][gc,phases ] GC(5)   Post Evacuate Collection Set: 0.07ms
+[0.166s][debug][gc,phases ] GC(5)     NMethod List Cleanup: 0.00ms
+[0.166s][debug][gc,phases ] GC(5)     Reference Processing: 0.00ms
+[0.166s][debug][gc,phases ] GC(5)     Weak Processing: 0.01ms
+[0.166s][debug][gc,phases ] GC(5)       VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 3, Avg:  3.0, Max: 3, Diff: 0, Sum: 3, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 15, Avg: 15.0, Max: 15, Diff: 0, Sum: 15, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 44, Avg: 44.0, Max: 44, Diff: 0, Sum: 44, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)     Post Evacuate Cleanup 1: 0.01ms
+[0.166s][debug][gc,phases ] GC(5)       Merge Per-Thread State (ms):   Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)         Copied Bytes:                  Min: 30912, Avg: 77482.7, Max: 232856, Diff: 201944, Sum: 697344, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)         LAB Waste:                     Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)         LAB Undo Waste:                Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)         Evac Fail Extra Cards:         Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Clear Logged Cards (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 3
+[0.166s][debug][gc,phases ] GC(5)       Recalculate Used Memory (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)     Post Evacuate Cleanup 2: 0.02ms
+[0.166s][debug][gc,phases ] GC(5)       Update Derived Pointers (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.166s][debug][gc,phases ] GC(5)       Eagerly Reclaim Humongous Objects (ms): skipped
+[0.166s][debug][gc,phases ] GC(5)         Humongous Total:               skipped
+[0.166s][debug][gc,phases ] GC(5)         Humongous Candidates:          skipped
+[0.166s][debug][gc,phases ] GC(5)         Humongous Reclaimed:           skipped
+[0.166s][debug][gc,phases ] GC(5)       Redirty Logged Cards (ms):     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)         Redirtied Cards:               Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Resize TLABs (ms):             Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)       Free Collection Set (ms):      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.166s][debug][gc,phases ] GC(5)     Rebuild Free List: 0.03ms
+[0.166s][debug][gc,phases ] GC(5)     Prepare For Mutator: 0.00ms
+[0.166s][debug][gc,phases ] GC(5)     Expand Heap After Collection: 0.00ms
+[0.166s][info ][gc,phases ] GC(5)   Other: 0.03ms
+[0.166s][info ][gc        ] GC(5) Pause Young (Concurrent Start) (System.gc()) 244M->243M(410M) 0.613ms
+[0.166s][info ][gc        ] GC(6) Concurrent Mark Cycle
+[0.166s][info ][gc,marking] GC(6) Concurrent Scan Root Regions
+[0.166s][info ][gc,marking] GC(6) Concurrent Scan Root Regions 0.043ms
+[0.166s][info ][gc,marking] GC(6) Concurrent Mark
+[0.166s][info ][gc,marking] GC(6) Concurrent Mark From Roots
+[0.170s][info ][gc,marking] GC(6) Concurrent Mark From Roots 3.703ms
+[0.170s][info ][gc,marking] GC(6) Concurrent Preclean
+[0.170s][info ][gc,marking] GC(6) Concurrent Preclean 0.005ms
+[0.170s][debug][gc,phases ] GC(6) Finalize Marking 0.071ms
+[0.170s][debug][gc,phases ] GC(6) Reference Processing 0.004ms
+[0.170s][debug][gc,phases ] GC(6)   VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 3, Avg:  3.0, Max: 3, Diff: 0, Sum: 3, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 15, Avg: 15.0, Max: 15, Diff: 0, Sum: 15, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 44, Avg: 44.0, Max: 44, Diff: 0, Sum: 44, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)   Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.170s][debug][gc,phases ] GC(6) Weak Processing 0.095ms
+[0.170s][debug][gc,phases ] GC(6) ClassLoaderData 0.001ms
+[0.170s][debug][gc,phases ] GC(6) Trigger cleanups 0.000ms
+[0.170s][debug][gc,phases ] GC(6) G1 Complete Cleaning 0.043ms
+[0.170s][debug][gc,phases ] GC(6) Purge Unlinked NMethods 0.004ms
+[0.171s][debug][gc,phases ] GC(6) Unregister NMethods 0.033ms
+[0.171s][debug][gc,phases ] GC(6) Free Code Blobs 0.002ms
+[0.171s][debug][gc,phases ] GC(6) Purge Class Loader Data 0.001ms
+[0.171s][debug][gc,phases ] GC(6) Class Unloading 0.109ms
+[0.171s][debug][gc,phases ] GC(6) Flush Task Caches 0.010ms
+[0.171s][debug][gc,phases ] GC(6) Select For Rebuild and Reclaim Empty Regions 0.151ms
+[0.171s][debug][gc,phases ] GC(6) Report Object Count 0.000ms
+[0.171s][info ][gc        ] GC(6) Pause Remark 243M->243M(410M) 0.480ms
+[0.171s][info ][gc,marking] GC(6) Concurrent Mark 4.247ms
+[0.171s][info ][gc,marking] GC(6) Concurrent Rebuild Remembered Sets and Scrub Regions
+[0.173s][info ][gc,marking] GC(6) Concurrent Rebuild Remembered Sets and Scrub Regions 2.735ms
+[0.174s][debug][gc,phases ] GC(6) Update Remembered Set Tracking After Rebuild 0.010ms
+[0.174s][debug][gc,phases ] GC(6) Finalize Concurrent Mark Cleanup 0.005ms
+[0.174s][info ][gc        ] GC(6) Pause Cleanup 243M->243M(410M) 0.030ms
+[0.174s][info ][gc,marking] GC(6) Concurrent Clear Claimed Marks
+[0.174s][info ][gc,marking] GC(6) Concurrent Clear Claimed Marks 0.007ms
+[0.174s][info ][gc,marking] GC(6) Concurrent Cleanup for Next Mark
+[0.174s][info ][gc,marking] GC(6) Concurrent Cleanup for Next Mark 0.093ms
+[0.174s][info ][gc        ] GC(6) Concurrent Mark Cycle 7.262ms
+[0.174s][info ][gc,phases ] GC(7)   Pre Evacuate Collection Set: 0.09ms
+[0.174s][debug][gc,phases ] GC(7)     Prepare Concurrent Start: 0.02ms
+[0.174s][debug][gc,phases ] GC(7)       Reset Marking State (ms):      Min: 0.01, Avg: 0.01, Max: 0.01, Diff: 0.00, Sum: 0.01, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       Note Start Of Mark (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.174s][debug][gc,phases ] GC(7)     Pre Evacuate Prepare: 0.01ms
+[0.174s][debug][gc,phases ] GC(7)       JT Retire TLABs And Flush Logs (ms): Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.174s][debug][gc,phases ] GC(7)       Non-JT Flush Logs (ms):        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)     Choose Collection Set: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)     Region Register: 0.06ms
+[0.174s][debug][gc,phases ] GC(7)     Prepare Heap Roots: 0.00ms
+[0.174s][info ][gc,phases ] GC(7)   Merge Heap Roots: 0.02ms
+[0.174s][debug][gc,phases ] GC(7)     Prepare Merge Heap Roots: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)     Remembered Sets (ms):          Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Eager Reclaim (ms):            skipped
+[0.174s][debug][gc,phases ] GC(7)       Merged Inline:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged ArrayOfCards:           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Howl:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Full:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Howl Inline:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Howl ArrayOfCards:      Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Howl BitMap:            Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Howl Full:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Merged Cards:                  Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     Distribute Log Buffers: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)     Log Buffers (ms):              Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Dirty Cards:                   Min: 0, Avg:  7.7, Max: 60, Diff: 60, Sum: 69, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Skipped Cards:                 Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][info ][gc,phases ] GC(7)   Evacuate Collection Set: 0.10ms
+[0.174s][debug][gc,phases ] GC(7)     Ext Root Scanning (ms):        Min: 0.00, Avg: 0.01, Max: 0.03, Diff: 0.03, Sum: 0.08, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     Scan Heap Roots (ms):          Min: 0.00, Avg: 0.01, Max: 0.02, Diff: 0.02, Sum: 0.11, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Scanned Cards:                 Min: 0, Avg:  7.7, Max: 17, Diff: 17, Sum: 69, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Scanned Blocks:                Min: 0, Avg:  7.1, Max: 13, Diff: 13, Sum: 64, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Claimed Chunks:                Min: 0, Avg:  7.0, Max: 13, Diff: 13, Sum: 63, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Found Roots:                   Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     Code Root Scan (ms):           Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Scanned Nmethods:              Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     Object Copy (ms):              Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.01, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     Termination (ms):              Min: 0.04, Avg: 0.05, Max: 0.06, Diff: 0.03, Sum: 0.42, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Termination Attempts:          Min: 1, Avg:  1.0, Max: 1, Diff: 0, Sum: 9, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     GC Worker Other (ms):          Min: 0.00, Avg: 0.01, Max: 0.01, Diff: 0.01, Sum: 0.05, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     GC Worker Total (ms):          Min: 0.07, Avg: 0.07, Max: 0.09, Diff: 0.02, Sum: 0.66, Workers: 9
+[0.174s][info ][gc,phases ] GC(7)   Post Evacuate Collection Set: 0.07ms
+[0.174s][debug][gc,phases ] GC(7)     NMethod List Cleanup: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)     Reference Processing: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)     Weak Processing: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)       VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 3, Avg:  3.0, Max: 3, Diff: 0, Sum: 3, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 15, Avg: 15.0, Max: 15, Diff: 0, Sum: 15, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 44, Avg: 44.0, Max: 44, Diff: 0, Sum: 44, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)     Post Evacuate Cleanup 1: 0.01ms
+[0.174s][debug][gc,phases ] GC(7)       Merge Per-Thread State (ms):   Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)         Copied Bytes:                  Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)         LAB Waste:                     Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)         LAB Undo Waste:                Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)         Evac Fail Extra Cards:         Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Clear Logged Cards (ms):       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 2
+[0.174s][debug][gc,phases ] GC(7)       Recalculate Used Memory (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)     Post Evacuate Cleanup 2: 0.03ms
+[0.174s][debug][gc,phases ] GC(7)       Update Derived Pointers (ms):  Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.174s][debug][gc,phases ] GC(7)       Eagerly Reclaim Humongous Objects (ms): skipped
+[0.174s][debug][gc,phases ] GC(7)         Humongous Total:               skipped
+[0.174s][debug][gc,phases ] GC(7)         Humongous Candidates:          skipped
+[0.174s][debug][gc,phases ] GC(7)         Humongous Reclaimed:           skipped
+[0.174s][debug][gc,phases ] GC(7)       Redirty Logged Cards (ms):     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)         Redirtied Cards:               Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Resize TLABs (ms):             Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)       Free Collection Set (ms):      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 9
+[0.174s][debug][gc,phases ] GC(7)     Rebuild Free List: 0.02ms
+[0.174s][debug][gc,phases ] GC(7)     Prepare For Mutator: 0.00ms
+[0.174s][debug][gc,phases ] GC(7)     Expand Heap After Collection: 0.00ms
+[0.174s][info ][gc,phases ] GC(7)   Other: 0.03ms
+[0.174s][info ][gc        ] GC(7) Pause Young (Concurrent Start) (System.gc()) 243M->243M(410M) 0.518ms
+[0.174s][info ][gc        ] GC(8) Concurrent Mark Cycle
+[0.174s][info ][gc,marking] GC(8) Concurrent Scan Root Regions
+[0.174s][info ][gc,marking] GC(8) Concurrent Scan Root Regions 0.008ms
+[0.174s][info ][gc,marking] GC(8) Concurrent Mark
+[0.174s][info ][gc,marking] GC(8) Concurrent Mark From Roots
+[0.175s][info ][gc,marking] GC(8) Concurrent Mark From Roots 0.760ms
+[0.175s][info ][gc,marking] GC(8) Concurrent Preclean
+[0.175s][info ][gc,marking] GC(8) Concurrent Preclean 0.004ms
+[0.175s][debug][gc,phases ] GC(8) Finalize Marking 0.074ms
+[0.175s][debug][gc,phases ] GC(8) Reference Processing 0.003ms
+[0.175s][debug][gc,phases ] GC(8)   VM Weak                        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 3, Avg:  3.0, Max: 3, Diff: 0, Sum: 3, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   ObjectSynchronizer Weak        Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 2, Avg:  2.0, Max: 2, Diff: 0, Sum: 2, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   JVMTI Tag Weak OopStorage      Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   StringTable Weak               Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 15, Avg: 15.0, Max: 15, Diff: 0, Sum: 15, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   ResolvedMethodTable Weak       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 44, Avg: 44.0, Max: 44, Diff: 0, Sum: 44, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   JNI Weak                       Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   StringDedup Table Weak         Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   StringDedup Requests0 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   StringDedup Requests1 Weak     Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)   Weak JFR Old Object Samples    Min: 0.00, Avg: 0.00, Max: 0.00, Diff: 0.00, Sum: 0.00, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Dead                           Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8)     Total                          Min: 0, Avg:  0.0, Max: 0, Diff: 0, Sum: 0, Workers: 1
+[0.175s][debug][gc,phases ] GC(8) Weak Processing 0.076ms
+[0.175s][debug][gc,phases ] GC(8) ClassLoaderData 0.003ms
+[0.175s][debug][gc,phases ] GC(8) Trigger cleanups 0.000ms
+[0.175s][debug][gc,phases ] GC(8) G1 Complete Cleaning 0.029ms
+[0.175s][debug][gc,phases ] GC(8) Purge Unlinked NMethods 0.002ms
+[0.175s][debug][gc,phases ] GC(8) Unregister NMethods 0.035ms
+[0.175s][debug][gc,phases ] GC(8) Free Code Blobs 0.001ms
+[0.175s][debug][gc,phases ] GC(8) Purge Class Loader Data 0.001ms
+[0.175s][debug][gc,phases ] GC(8) Class Unloading 0.086ms
+[0.175s][debug][gc,phases ] GC(8) Flush Task Caches 0.010ms
+[0.175s][debug][gc,phases ] GC(8) Select For Rebuild and Reclaim Empty Regions 0.096ms
+[0.175s][debug][gc,phases ] GC(8) Report Object Count 0.000ms
+[0.175s][info ][gc        ] GC(8) Pause Remark 243M->243M(410M) 0.378ms
+[0.175s][info ][gc,marking] GC(8) Concurrent Mark 1.189ms
+[0.175s][info ][gc,marking] GC(8) Concurrent Rebuild Remembered Sets and Scrub Regions
+[0.176s][info ][gc,marking] GC(8) Concurrent Rebuild Remembered Sets and Scrub Regions 0.711ms
+[0.176s][debug][gc,phases ] GC(8) Update Remembered Set Tracking After Rebuild 0.008ms
+[0.176s][debug][gc,phases ] GC(8) Finalize Concurrent Mark Cleanup 0.004ms
+[0.176s][info ][gc        ] GC(8) Pause Cleanup 243M->243M(410M) 0.021ms
+[0.176s][info ][gc,marking] GC(8) Concurrent Clear Claimed Marks
+[0.176s][info ][gc,marking] GC(8) Concurrent Clear Claimed Marks 0.005ms
+[0.176s][info ][gc,marking] GC(8) Concurrent Cleanup for Next Mark
+[0.176s][info ][gc,marking] GC(8) Concurrent Cleanup for Next Mark 0.081ms
+[0.176s][info ][gc        ] GC(8) Concurrent Mark Cycle 2.083ms

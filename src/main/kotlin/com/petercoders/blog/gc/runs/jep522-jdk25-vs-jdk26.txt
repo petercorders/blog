@@ -1,0 +1,26 @@
+# JEP 522 — JDK 25 vs JDK 26 플래그·로그 차이
+# JDK: openjdk version "26.0.2.1" 2026-08-18
+# 기기: Apple M5 Pro (15코어, 24GB, arm64) · macOS Darwin 25.6.0 · 캐시라인 128B
+# 명령: PrintFlagsFinal 및 gc+refine 로그 비교
+
+== G1UpdateBufferSize
+JDK25:    size_t G1UpdateBufferSize                       = 256                                       {product} {default}
+JDK26: (없음)
+
+== JDK26 에서 그 플래그를 주면
+OpenJDK 64-Bit Server VM warning: Ignoring option G1UpdateBufferSize; support was removed in 26.0
+
+== 새로 생긴 플래그 / UseCondCardMark 기본값
+-- JDK25
+     bool UseCondCardMark                          = false                                     {product} {default}
+-- JDK26
+   size_t G1PerThreadPendingCardThreshold          = 256                                    {diagnostic} {default}
+     bool UseCondCardMark                          = true                                      {product} {ergonomic}
+
+== 리파인 로그 형식 (JDK25)
+[0.084s][debug][gc,refine] Concurrent refinement: wanted 0, cards: 1069, predicted: 1069, time: 0.00ms
+[0.134s][debug][gc,refine] Concurrent refinement: wanted 1, cards: 249856, predicted: 249856, time: 0.00ms
+
+== 리파인 로그 형식 (JDK26)
+[0.003s][info ][gc,init  ] Concurrent Refinement Workers: 12
+[0.044s][debug][gc,phases] GC(0)     Merge Refinement Table: 0.00ms

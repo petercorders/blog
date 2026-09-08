@@ -27,6 +27,11 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+// gc/ 아래 실험 파일들이 각자 main 을 갖고 있어 bootJar 가 진입점을 못 고른다. 명시해 둔다.
+springBoot {
+    mainClass.set("com.petercoders.blog.BlogApplicationKt")
+}
+
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
