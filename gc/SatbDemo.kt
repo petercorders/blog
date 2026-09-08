@@ -1,5 +1,3 @@
-package com.petercoders.blog.gc
-
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -11,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *   kotlinc SatbDemo.kt -include-runtime -d satb.jar
  *   java -Xmx512m -XX:+ExplicitGCInvokesConcurrent \
  *     -Xlog:gc,gc+phases=debug,gc+marking=debug \
- *     -cp satb.jar com.petercoders.blog.gc.SatbDemoKt
+ *     -jar satb.jar
  *
  * 볼 것: Concurrent Mark From Roots 시간, Pause Remark 안의 Finalize Marking.
  */

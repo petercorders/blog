@@ -1,5 +1,3 @@
-package com.petercoders.blog.gc
-
 import java.util.concurrent.CountDownLatch
 
 /**
@@ -9,9 +7,9 @@ import java.util.concurrent.CountDownLatch
  *   kotlinc StackRoots.kt -include-runtime -d stack.jar
  *   for n in 50 500 2000; do
  *     java -Xmx1g -XX:+UseG1GC -XX:+ExplicitGCInvokesConcurrent \
- *       -Xlog:gc,gc+phases=trace,safepoint -cp stack.jar com.petercoders.blog.gc.StackRootsKt $n
+ *       -Xlog:gc,gc+phases=trace,safepoint -jar stack.jar $n
  *     java -Xmx1g -XX:+UseZGC \
- *       -Xlog:gc,gc+phases=debug,safepoint -cp stack.jar com.petercoders.blog.gc.StackRootsKt $n
+ *       -Xlog:gc,gc+phases=debug,safepoint -jar stack.jar $n
  *   done
  *
  * 볼 것: G1 은 Thread Roots (ms) 와 At safepoint 가 함께 늘고,

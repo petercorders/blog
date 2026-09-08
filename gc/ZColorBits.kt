@@ -1,5 +1,3 @@
-package com.petercoders.blog.gc
-
 import java.lang.reflect.Field
 
 /** ZGC 컬러 포인터의 하위 16비트를 배리어 없이 읽어 사이클마다 어떻게 바뀌는지 본다. */

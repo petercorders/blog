@@ -1,5 +1,3 @@
-package com.petercoders.blog.gc
-
 /**
  * G1 리멤버드 셋의 카드 집합이 InlinePtr → Array Of Cards → Howl → Full 로 갈아타는 것을 관찰한다.
  *
@@ -9,7 +7,7 @@ package com.petercoders.blog.gc
  *   kotlinc RemSetCoarsen.kt -include-runtime -d rem.jar
  *   java -Xms1g -Xmx1g -XX:+UseG1GC \
  *     -Xlog:gc,gc+init,gc+phases=debug,gc+remset=debug,gc+refine=debug \
- *     -cp rem.jar com.petercoders.blog.gc.RemSetCoarsenKt 2000000 100000
+ *     -jar rem.jar 2000000 100000
  *
  * 볼 것: Coarsening (recent) 의 Inline->AoC / AoC->Howl / Howl->Full 카운터, Merged Full, Scanned Cards.
  */
