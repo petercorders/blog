@@ -1,0 +1,7 @@
+# e7-java: 구조화된 동시성 (StructuredTaskScope) - allSuccessfulOrThrow 조인 중 한 서브태스크 실패 시 나머지 인터럽트
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / 코어 15개 / hw.cachelinesize: 128
+# 실행 명령: $(/usr/libexec/java_home -v 26)/bin/java --enable-preview --source 26 StsFail.java
+
+B interrupted at 62 ms (VirtualThread[#34]/runnable@ForkJoinPool-1-worker-1)
+join threw FailedException cause=java.lang.IllegalStateException: A failed at 66 ms

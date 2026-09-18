@@ -1,0 +1,6 @@
+# experiment: kco-e5-rint-cause
+# java -version: openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro | cores=15/15 | hw.cachelinesize: 128
+# cmd: kotlinc -cp $CO RintCause.kt -include-runtime -d rc.jar && java -cp rc.jar:$CO RintCauseKt
+A cancel():    JobCancellationException msg='StandaloneCoroutine was cancelled' cause=null suppressed=0
+B interrupt(): CancellationException msg='Blocking call was interrupted due to parent cancellation' cause=java.lang.InterruptedException: sleep interrupted

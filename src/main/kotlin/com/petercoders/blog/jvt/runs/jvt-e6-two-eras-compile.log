@@ -1,0 +1,63 @@
+# experiment: jvt-e6-two-eras-compile (StructuredTaskScope: JDK19 incubator API vs JDK26 finalized API)
+# java -version (default /usr/bin/java): openjdk version "26.0.2.1" 2026-08-18; OpenJDK Runtime Environment (build 26.0.2.1+1-7); OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# machine: Apple M5 Pro, 15 cores (physical=15 logical=15), hw.cachelinesize=128
+# commands: J19=$(/usr/libexec/java_home -v 19); J26=$(/usr/libexec/java_home -v 26)
+#   $J19/bin/javac --enable-preview --release 19 --add-modules jdk.incubator.concurrent -d out19 Jdk19Scope.java
+#   $J26/bin/javac --enable-preview --release 26 -d out26 Jdk26Scope.java
+#   $J19/bin/javap -c -p -cp out19 Jdk19Scope | grep -E 'ShutdownOnFailure|Future|StructuredTaskScope'
+#   $J26/bin/javap -c -p -cp out26 Jdk26Scope | grep -E 'Joiner|Subtask|StructuredTaskScope'
+#   $J19/bin/java --enable-preview --add-modules jdk.incubator.concurrent -cp out19 Jdk19Scope
+#   $J26/bin/java --enable-preview -cp out26 Jdk26Scope
+
+J19=/Users/kibong_home/Library/Java/JavaVirtualMachines/temurin-19.0.2/Contents/Home
+J26=/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home
+
+=== compile 19 ===
+warning: using incubating module(s): jdk.incubator.concurrent
+1 warning
+exit=0
+
+=== compile 26 ===
+Note: Jdk26Scope.java uses preview features of Java SE 26.
+Note: Recompile with -Xlint:preview for details.
+exit=0
+
+=== javap -p 19 (method signatures only; no import type in bytecode without -c) ===
+  private static java.lang.String lambda$main$1() throws java.lang.Exception;
+  private static java.lang.String lambda$main$0() throws java.lang.Exception;
+
+=== javap -p 26 ===
+  private static java.lang.String lambda$main$1() throws java.lang.Exception;
+  private static java.lang.String lambda$main$0() throws java.lang.Exception;
+
+=== javap -c -p 19 (bytecode constant-pool references) ===
+       0: new           #28                 // class jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure
+       4: invokespecial #30                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure."<init>":()V
+      14: invokevirtual #35                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure.fork:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+      24: invokevirtual #35                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure.fork:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/Future;
+      29: invokevirtual #40                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure.join:()Ljdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure;
+      32: invokevirtual #44                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure.throwIfFailed:()V
+      39: invokeinterface #53,  1           // InterfaceMethod java/util/concurrent/Future.resultNow:()Ljava/lang/Object;
+      48: invokeinterface #53,  1           // InterfaceMethod java/util/concurrent/Future.resultNow:()Ljava/lang/Object;
+      65: invokevirtual #68                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure.close:()V
+      73: invokevirtual #68                 // Method jdk/incubator/concurrent/StructuredTaskScope$ShutdownOnFailure.close:()V
+
+=== javap -c -p 26 (bytecode constant-pool references) ===
+         0: invokestatic  #28                 // InterfaceMethod java/util/concurrent/StructuredTaskScope$Joiner.allSuccessfulOrThrow:()Ljava/util/concurrent/StructuredTaskScope$Joiner;
+         3: invokestatic  #34                 // InterfaceMethod java/util/concurrent/StructuredTaskScope.open:(Ljava/util/concurrent/StructuredTaskScope$Joiner;)Ljava/util/concurrent/StructuredTaskScope;
+        13: invokeinterface #44,  2           // InterfaceMethod java/util/concurrent/StructuredTaskScope.fork:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/StructuredTaskScope$Subtask;
+        25: invokeinterface #44,  2           // InterfaceMethod java/util/concurrent/StructuredTaskScope.fork:(Ljava/util/concurrent/Callable;)Ljava/util/concurrent/StructuredTaskScope$Subtask;
+        32: invokeinterface #49,  1           // InterfaceMethod java/util/concurrent/StructuredTaskScope.join:()Ljava/lang/Object;
+        53: invokeinterface #67,  1           // InterfaceMethod java/util/concurrent/StructuredTaskScope.close:()V
+        67: invokeinterface #67,  1           // InterfaceMethod java/util/concurrent/StructuredTaskScope.close:()V
+        91: invokevirtual #78                 // Method java/util/concurrent/StructuredTaskScope$FailedException.getCause:()Ljava/lang/Throwable;
+             0    83    86   Class java/util/concurrent/StructuredTaskScope$FailedException
+
+=== run 19 ===
+WARNING: Using incubator modules: jdk.incubator.concurrent
+failed: java.lang.IllegalStateException: bad-2
+exit=0
+
+=== run 26 ===
+failed: java.lang.IllegalStateException: bad-2
+exit=0

@@ -1,0 +1,2 @@
+$ javap -p -cp susp.jar 'SuspKt$work$1' | grep -iE 'invokeSuspend|doResume|resumeWith'
+  public final java.lang.Object invokeSuspend(java.lang.Object);

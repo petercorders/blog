@@ -1,0 +1,8 @@
+# experiment: kco-e3-io-siblings
+# java -version: openjdk version "26.0.2.1" 2026-08-18; OpenJDK Runtime Environment (build 26.0.2.1+1-7); OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# machine: Apple M5 Pro, 15 cores, hw.cachelinesize=128
+# command: kotlinc -cp $CO IoSiblings.kt -include-runtime -d ios.jar && java -cp ios.jar:$CO IoSiblingsKt
+Dispatchers.IO                 421 ms  distinctWorkers= 64  peakThreads=73
+IO.limitedParallelism(256)     123 ms  distinctWorkers=256  peakThreads=264
+IO.limitedParallelism(16)     1667 ms  distinctWorkers= 16  peakThreads=264
+Default.limitedParallelism(64) === Default ? true

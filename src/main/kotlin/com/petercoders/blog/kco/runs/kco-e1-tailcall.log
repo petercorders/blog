@@ -1,0 +1,10 @@
+$ unzip -l tc.jar | grep -E 'TailCallKt\$'
+     1313  01-01-1980 09:00   TailCallKt$leaf$1.class
+     1330  01-01-1980 09:00   TailCallKt$nonTail$1.class
+     3158  01-01-1980 09:00   TailCallKt$main$1.class
+
+$ javap -c -p -cp tc.jar TailCallKt | grep -cE 'tableswitch'
+2
+
+$ java -cp "tc.jar:$CO" TailCallKt
+5

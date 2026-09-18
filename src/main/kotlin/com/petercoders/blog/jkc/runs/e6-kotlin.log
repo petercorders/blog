@@ -1,0 +1,20 @@
+# 실험: e6-kotlin (절: 취소는 둘 다 협력적이다)
+# java -version: openjdk version "26.0.2.1" 2026-08-18; OpenJDK Runtime Environment (build 26.0.2.1+1-7); OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# 명령: kotlinc -cp $CO CancelLoop.kt -include-runtime -d cl.jar && java -cp cl.jar:$CO CancelLoopKt  (JDK 26, kotlinx-coroutines-core-jvm 1.10.2)
+
+=== run 1 ===
+delay: kotlinx.coroutines.JobCancellationException
+runInterruptible: kotlinx.coroutines.JobCancellationException cause=null
+after 3s: spin isActive=false isCancelled=true isCompleted=false
+poll.isCompleted=true delay.isCompleted=true sleep(IO).isCompleted=false runInterruptible.isCompleted=true
+=== run 2 ===
+delay: kotlinx.coroutines.JobCancellationException
+runInterruptible: kotlinx.coroutines.JobCancellationException cause=null
+after 3s: spin isActive=false isCancelled=true isCompleted=false
+poll.isCompleted=true delay.isCompleted=true sleep(IO).isCompleted=false runInterruptible.isCompleted=true
+=== run 3 ===
+delay: kotlinx.coroutines.JobCancellationException
+runInterruptible: kotlinx.coroutines.JobCancellationException cause=null
+after 3s: spin isActive=false isCancelled=true isCompleted=false
+poll.isCompleted=true delay.isCompleted=true sleep(IO).isCompleted=false runInterruptible.isCompleted=true

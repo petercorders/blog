@@ -1,0 +1,15 @@
+# e3-kotlin: Default/IO 스케줄러 워커 수 및 공유 스레드 확인
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, cores=15, hw.cachelinesize: 128
+# 실행 명령: kotlinc Workers.kt -include-runtime -d workers.jar; java -cp workers.jar:coroutines.jar WorkersKt; java -Dkotlinx.coroutines.scheduler.core.pool.size=4 -cp workers.jar:coroutines.jar WorkersKt
+
+=== run1: default scheduler ===
+cores=15  Default workers=15  IO workers=64  shared=15  total=64
+sample: DefaultDispatcher-worker-1
+
+=== run2: core.pool.size=4 ===
+cores=15  Default workers=4  IO workers=64  shared=4  total=64
+sample: DefaultDispatcher-worker-1

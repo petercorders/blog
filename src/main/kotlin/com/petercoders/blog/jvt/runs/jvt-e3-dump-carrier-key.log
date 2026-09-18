@@ -1,0 +1,57 @@
+# experiment: jvt-e3-dump-carrier-key (절: 객체가 된 스택을 읽는 도구)
+# java -version: openjdk version "26.0.2.1" 2026-08-18, OpenJDK Runtime Environment (build 26.0.2.1+1-7), OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# machine: Apple M5 Pro, cores(physical/logical)=15/15, hw.cachelinesize: 128
+# commands: java VtDumpCarrier.java (JDK 26) &  jcmd PID Thread.dump_to_file -format=json carrier.json ; jcmd PID Thread.dump_to_file carrier.txt ; python3 parse carrier.json ; grep -A3 spin/nap carrier.txt
+
+--- pid.txt ---
+80963
+
+--- jcmd json dump output ---
+80963:
+Created /tmp/blog-exp-jvt-jvt-e3-dump-carrier-key/carrier.json
+
+--- jcmd plain dump output ---
+80963:
+Created /tmp/blog-exp-jvt-jvt-e3-dump-carrier-key/carrier.txt
+
+--- carrier.json (spin & nap entries, pretty) ---
+{
+  "tid": "32",
+  "time": "2026-09-10T13:09:49.587960Z",
+  "virtual": true,
+  "name": "spin",
+  "state": "RUNNABLE",
+  "stack": [
+    "VtDumpCarrier.lambda$main$0(VtDumpCarrier.java:5)",
+    "java.base/java.lang.VirtualThread.run(VirtualThread.java:475)"
+  ],
+  "carrier": "33"
+}
+{
+  "tid": "34",
+  "time": "2026-09-10T13:09:49.588058Z",
+  "virtual": true,
+  "name": "nap",
+  "state": "TIMED_WAITING",
+  "stack": [
+    "java.base/java.lang.VirtualThread.parkNanos(VirtualThread.java:805)",
+    "java.base/java.lang.VirtualThread.sleepNanos(VirtualThread.java:1001)",
+    "java.base/java.lang.Thread.sleepNanos(Thread.java:549)",
+    "java.base/java.lang.Thread.sleep(Thread.java:582)",
+    "VtDumpCarrier.lambda$main$1(VtDumpCarrier.java:6)",
+    "java.base/java.lang.VirtualThread.run(VirtualThread.java:475)"
+  ]
+}
+
+--- carrier.txt (grep -A3 spin\|nap) ---
+#32 "spin" virtual RUNNABLE 2026-09-10T13:09:49.638589Z
+    at VtDumpCarrier.lambda$main$0(VtDumpCarrier.java:5)
+    at java.base/java.lang.VirtualThread.run(VirtualThread.java:475)
+
+#34 "nap" virtual TIMED_WAITING 2026-09-10T13:09:49.638611Z
+    at java.base/java.lang.VirtualThread.parkNanos(VirtualThread.java:805)
+    at java.base/java.lang.VirtualThread.sleepNanos(VirtualThread.java:1001)
+    at java.base/java.lang.Thread.sleepNanos(Thread.java:549)
+
+--- grep carrier keyword in carrier.txt (none found -> plain dump omits carrier tid) ---
+(no matches)

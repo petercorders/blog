@@ -1,0 +1,68 @@
+# experiment: e2 (절: 멈춤이 구현된 층) - virtual thread jcmd Thread.dump_to_file (plain + json)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 (OpenJDK Runtime Environment build 26.0.2.1+1-7, OpenJDK 64-Bit Server VM build 26.0.2.1+1-7, mixed mode, sharing)
+# device: Apple M5 Pro, 15 cores (hw.physicalcpu=15 hw.logicalcpu=15), hw.cachelinesize=128
+# command: $J26/bin/java java/VtDump.java & sleep 3; jcmd $PID Thread.dump_to_file td.txt; jcmd $PID Thread.dump_to_file -format=json td.json  (J26=/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home)
+
+PID=61729
+61729:
+Created /private/tmp/claude-501/-Users-kibong-home/a2f484d0-da6b-4c45-98a5-0ae919696983/scratchpad/jkc/td2.txt
+61729:
+Created /private/tmp/claude-501/-Users-kibong-home/a2f484d0-da6b-4c45-98a5-0ae919696983/scratchpad/jkc/td2.json
+virtual threads in plain dump: 100
+--- vt-0 stack (plain dump) ---
+#32 "vt-0" virtual TIMED_WAITING 2026-09-09T11:36:49.495118Z
+    at java.base/java.lang.VirtualThread.parkNanos(VirtualThread.java:805)
+    at java.base/java.lang.VirtualThread.sleepNanos(VirtualThread.java:1001)
+    at java.base/java.lang.Thread.sleepNanos(Thread.java:549)
+    at java.base/java.lang.Thread.sleep(Thread.java:582)
+    at VtDump.lambda$main$1(VtDump.java:6)
+    at java.base/java.lang.VirtualThread.run(VirtualThread.java:475)
+
+--- yield0 frames anywhere in plain dump: 0 ---
+--- Continuation frames anywhere in plain dump: 0 ---
+yield0 frames in json: 0
+json has "virtual" key (true count): 100
+
+# --- supplementary: json entry for vt-0 (pretty-printed via python3 -c 'json.load(...)') ---
+{
+  "tid": "32",
+  "time": "2026-09-09T11:35:54.991186Z",
+  "virtual": true,
+  "name": "vt-0",
+  "state": "TIMED_WAITING",
+  "stack": [
+    "java.base/java.lang.VirtualThread.parkNanos(VirtualThread.java:805)",
+    "java.base/java.lang.VirtualThread.sleepNanos(VirtualThread.java:1001)",
+    "java.base/java.lang.Thread.sleepNanos(Thread.java:549)",
+    "java.base/java.lang.Thread.sleep(Thread.java:582)",
+    "VtDump.lambda$main$1(VtDump.java:6)",
+    "java.base/java.lang.VirtualThread.run(VirtualThread.java:475)"
+  ]
+}
+
+# --- supplementary: json entry for "main" thread, for contrast (no "virtual" key at all) ---
+{
+  "tid": "3",
+  "time": "2026-09-09T11:35:54.989377Z",
+  "name": "main",
+  "state": "WAITING",
+  "parkBlocker": {
+    "object": "java.util.concurrent.CountDownLatch$Sync@50dbb36"
+  },
+  "stack": [
+    "java.base/jdk.internal.misc.Unsafe.park(Native Method)",
+    "java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:223)",
+    "java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(AbstractQueuedSynchronizer.java:790)",
+    "java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(AbstractQueuedSynchronizer.java:1139)",
+    "java.base/java.util.concurrent.CountDownLatch.await(CountDownLatch.java:230)",
+    "java.base/java.lang.VirtualThread.joinNanos(VirtualThread.java:1032)",
+    "java.base/java.lang.Thread.join(Thread.java:1897)",
+    "java.base/java.lang.Thread.join(Thread.java:1990)",
+    "VtDump.main(VtDump.java:7)",
+    "java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)",
+    "java.base/java.lang.reflect.Method.invoke(Method.java:565)",
+    "jdk.compiler/com.sun.tools.javac.launcher.SourceLauncher.execute(SourceLauncher.java:264)",
+    "jdk.compiler/com.sun.tools.javac.launcher.SourceLauncher.run(SourceLauncher.java:138)",
+    "jdk.compiler/com.sun.tools.javac.launcher.SourceLauncher.main(SourceLauncher.java:76)"
+  ]
+}

@@ -1,0 +1,34 @@
+# experiment: tip-p7-vt-count
+# openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, cores=15, cachelinesize=128
+# commands: java -XX:StartFlightRecording=filename=vt.jfr,settings=default,jdk.VirtualThreadStart#enabled=true,jdk.VirtualThreadEnd#enabled=true VtCount.java ; jcmd Thread.dump_to_file / Thread.vthread_pollers / Thread.vthread_scheduler ; jfr summary vt.jfr
+=== jcmd Thread.dump_to_file -format=json : virtual count ===
+virtual=true count: 2000
+carrier key count: 0
+=== jcmd help | vthread ===
+Thread.vthread_pollers
+Thread.vthread_scheduler
+=== jcmd Thread.vthread_pollers ===
+22890:
+Read I/O pollers:
+[0] sun.nio.ch.KQueuePoller@554d9404 [registered = 0, owner = Thread[#2055,Read-Poller,9,InnocuousThreadGroup]]
+
+Write I/O pollers:
+[0] sun.nio.ch.KQueuePoller@42685a35 [registered = 0, owner = Thread[#2056,Write-Poller,9,InnocuousThreadGroup]]
+=== jcmd Thread.vthread_scheduler ===
+22890:
+java.util.concurrent.ForkJoinPool@59e34a8[Running, parallelism = 15, size = 15, active = 0, running = 0, steals = 2000, tasks = 0, submissions = 0, delayed = 2000]
+=== program output ===
+[0.171s][info][jfr,startup] Started recording 1. No limit specified, using maxsize=250MB as default.
+[0.171s][info][jfr,startup] 
+[0.171s][info][jfr,startup] Use jcmd 22890 JFR.dump name=1 to copy recording data to file.
+22890
+before: ThreadMXBean threadCount=8 peak=8
+during: ThreadMXBean threadCount=25 peak=25 daemon=24
+during: SchedulerMXBean parallelism=15 poolSize=15 mounted=0 queued=0
+after: ThreadMXBean threadCount=28 peak=28
+=== jfr summary (virtual thread events) ===
+ jdk.VirtualThreadEnd                     2000         23828
+ jdk.VirtualThreadStart                   2000         25828
+ jdk.VirtualThreadPinned                     0             0
+ jdk.VirtualThreadSubmitFailed               0             0

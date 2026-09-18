@@ -1,0 +1,14 @@
+# experiment: jvt-e4-maxpoolsize-clamps-parallelism
+# java -version: openjdk version "26.0.2.1" 2026-08-18
+OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# device: Apple M5 Pro, cores=15, hw.cachelinesize: 128
+# commands:
+#   J26=$(/usr/libexec/java_home -v 26)
+#   $J26/bin/java -Djdk.virtualThreadScheduler.maxPoolSize=2 VtWorkers.java
+#   $J26/bin/java -Djdk.virtualThreadScheduler.parallelism=8 -Djdk.virtualThreadScheduler.maxPoolSize=3 VtWorkers.java
+
+=== maxPoolSize=2 ===
+cores=15 carriers=2 [ForkJoinPool-1-worker-1, ForkJoinPool-1-worker-2]
+=== parallelism=8 maxPoolSize=3 ===
+cores=15 carriers=3 [ForkJoinPool-1-worker-1, ForkJoinPool-1-worker-2, ForkJoinPool-1-worker-3]

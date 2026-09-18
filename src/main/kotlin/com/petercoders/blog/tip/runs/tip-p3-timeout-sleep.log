@@ -1,0 +1,22 @@
+# experiment: tip-p3-timeout-sleep
+# openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, cores=15, hw.cachelinesize: 128
+# cmd: kotlinc -cp kotlinx-coroutines-core-jvm-1.10.2.jar TimeoutSleep.kt -include-runtime -d ts.jar && for i in 1 2 3; do java -cp ts.jar:kotlinx-coroutines-core-jvm-1.10.2.jar TimeoutSleepKt; done
+=== run 1 ===
+IO: sleep(3000)                               3019 ms  TimeoutCancellationException
+IO: runInterruptible{sleep(3000)}              103 ms  TimeoutCancellationException
+IO: delay(3000)                                109 ms  TimeoutCancellationException
+IO: runInterruptible{socket.read()}           1517 ms  SocketException
+VT: runInterruptible{socket.read()}            106 ms  SocketException
+=== run 2 ===
+IO: sleep(3000)                               3021 ms  TimeoutCancellationException
+IO: runInterruptible{sleep(3000)}              101 ms  TimeoutCancellationException
+IO: delay(3000)                                111 ms  TimeoutCancellationException
+IO: runInterruptible{socket.read()}           1514 ms  SocketException
+VT: runInterruptible{socket.read()}            108 ms  SocketException
+=== run 3 ===
+IO: sleep(3000)                               3017 ms  TimeoutCancellationException
+IO: runInterruptible{sleep(3000)}              108 ms  TimeoutCancellationException
+IO: delay(3000)                                110 ms  TimeoutCancellationException
+IO: runInterruptible{socket.read()}           1509 ms  SocketException
+VT: runInterruptible{socket.read()}            106 ms  SocketException

@@ -1,0 +1,1450 @@
+# e4: synchronized 블로킹이 새는 지점 — JDK19 preview pinning vs JDK26 synchronized unmount
+# java -version (JDK19): openjdk version "19.0.2" 2023-01-17 (Temurin-19.0.2+7) / (JDK26): openjdk version "26.0.2.1" 2026-08-18 (build 26.0.2.1+1-7)
+# device: Apple M5 Pro, cores=15, hw.cachelinesize: 128
+# commands: java --enable-preview --source 19 -Djdk.virtualThreadScheduler.parallelism=1 -Djdk.tracePinnedThreads=short Pinning.java ; java --enable-preview --source 19 -Djdk.virtualThreadScheduler.parallelism=1 -XX:StartFlightRecording=filename=pin19.jfr,settings=default Pinning.java ; jfr print --events jdk.VirtualThreadPinned pin19.jfr ; java(26) -Djdk.virtualThreadScheduler.parallelism=1 -XX:StartFlightRecording=filename=pin26.jfr,settings=default Pinning.java ; jfr print/summary pin26.jfr
+
+=== JDK 19 full java -version ===
+openjdk version "19.0.2" 2023-01-17
+OpenJDK Runtime Environment Temurin-19.0.2+7 (build 19.0.2+7)
+OpenJDK 64-Bit Server VM Temurin-19.0.2+7 (build 19.0.2+7, mixed mode)
+
+=== JDK 26 full java -version ===
+openjdk version "26.0.2.1" 2026-08-18
+OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+
+=== [1] JDK 19, --enable-preview --source 19, parallelism=1, -Djdk.tracePinnedThreads=short (full stdout+stderr) ===
+Note: java/Pinning.java uses preview features of Java SE 19.
+Note: Recompile with -Xlint:preview for details.
+Thread[#30,ForkJoinPool-1-worker-1,5,CarrierThreads]
+    Pinning.lambda$main$0(Pinning.java:8) <== monitors:1
+19.0.2+7  n=100  5195 ms
+
+=== [2] JDK 19, same config + JFR recording (program's own stdout line for this run) ===
+19.0.2+7  n=100  10352 ms
+
+=== [3] JDK 19 JFR: jdk.VirtualThreadPinned event count ===
+100
+
+=== [4] JDK 19 JFR: full jdk.VirtualThreadPinned event dump ===
+jdk.VirtualThreadPinned {
+  startTime = 20:36:41.490 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 35, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:41.595 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 37, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:41.700 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 38, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:41.804 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 39, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:41.906 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 40, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.011 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 41, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.116 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 42, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.221 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 43, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.327 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 44, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.430 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 45, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.532 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 46, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.634 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 47, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.736 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 48, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.841 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 49, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:42.945 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 50, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.050 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 51, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.155 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 52, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.256 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 53, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.357 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 54, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.461 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 55, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.565 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 56, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.670 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 57, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.773 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 58, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.877 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 59, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:43.982 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 60, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.085 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 61, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.190 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 62, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.294 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 63, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.399 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 64, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.504 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 65, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.606 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 66, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.711 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 67, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.811 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 68, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:44.912 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 69, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.015 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 70, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.119 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 71, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.219 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 72, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.321 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 73, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.426 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 74, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.527 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 75, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.630 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 76, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.731 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 77, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.836 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 78, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:45.941 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 79, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.045 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 80, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.146 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 81, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.247 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 82, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.352 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 83, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.457 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 84, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.562 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 85, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.667 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 86, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.768 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 87, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.873 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 88, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:46.974 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 89, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.079 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 90, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.185 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 91, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.287 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 92, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.391 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 93, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.497 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 94, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.599 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 95, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.702 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 96, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.805 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 97, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:47.909 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 98, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.014 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 99, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.119 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 100, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.224 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 101, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.326 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 102, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.429 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 103, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.531 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 104, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.631 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 105, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.732 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 106, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.837 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 107, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:48.942 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 108, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.044 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 109, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.149 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 110, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.249 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 111, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.354 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 112, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.459 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 113, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.559 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 114, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.664 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 115, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.766 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 116, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.871 (2026-09-09)
+  duration = 100 ms
+  eventThread = "" (javaThreadId = 117, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:49.971 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 118, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.072 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 119, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.177 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 120, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.282 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 121, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.384 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 122, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.489 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 123, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.593 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 124, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.696 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 125, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.798 (2026-09-09)
+  duration = 101 ms
+  eventThread = "" (javaThreadId = 126, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:50.899 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 127, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.003 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 128, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.107 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 129, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.211 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 130, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.316 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 131, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.421 (2026-09-09)
+  duration = 102 ms
+  eventThread = "" (javaThreadId = 132, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.523 (2026-09-09)
+  duration = 104 ms
+  eventThread = "" (javaThreadId = 133, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.627 (2026-09-09)
+  duration = 103 ms
+  eventThread = "" (javaThreadId = 134, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+jdk.VirtualThreadPinned {
+  startTime = 20:36:51.731 (2026-09-09)
+  duration = 105 ms
+  eventThread = "" (javaThreadId = 135, virtual)
+  stackTrace = [
+    java.lang.VirtualThread.parkOnCarrierThread(boolean, long) line: 578
+    java.lang.VirtualThread.parkNanos(long) line: 544
+    java.lang.VirtualThread.doSleepNanos(long) line: 713
+    java.lang.VirtualThread.sleepNanos(long) line: 681
+    java.lang.Thread.sleep(long) line: 451
+    ...
+  ]
+}
+
+
+=== [5] JDK 26, parallelism=1, JFR recording (full stdout+stderr) ===
+[0.209s][info][jfr,startup] Started recording 1. No limit specified, using maxsize=250MB as default.
+[0.209s][info][jfr,startup] 
+[0.209s][info][jfr,startup] Use jcmd 62380 JFR.dump name=1 to copy recording data to file.
+26.0.2.1+1-7  n=100  109 ms
+
+=== [6] JDK 26 JFR: jdk.VirtualThreadPinned event count ===
+0
+(pin19.jfr/pin26.jfr from the first pass gave the same counts: JDK19=100, JDK26=0 — pin26b.jfr above is the rerun kept for this log)
+
+=== [7] JDK 26 jfr summary (VirtualThreadPinned / VirtualThreadStart rows) ===
+ jdk.VirtualThreadPinned                     0             0
+ jdk.VirtualThreadStart                      0             0
+
+=== NOTE on timing anomaly ===
+First JDK19 run (tracePinnedThreads, no JFR) printed only ONE pinned-stack dump (not 100) and finished in 5195ms, not the naive 10000ms.
+This is because the FJP-based virtual-thread scheduler compensates for a pinned/blocked carrier by spawning extra carrier OS threads even with parallelism=1,
+so the 100 sequential 100ms pins do not fully serialize on one carrier, and tracePinnedThreads output for repeated identical call sites appears to be deduplicated by the JVM.
+The JFR-recording run of the same code (command [2]) instead completed in 10352ms and recorded exactly 100 jdk.VirtualThreadPinned events — matching the naive expectation.
+Both program runs are real; both output blocks above are kept verbatim.

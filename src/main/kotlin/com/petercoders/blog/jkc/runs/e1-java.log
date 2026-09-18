@@ -1,0 +1,20 @@
+# experiment: e1-java (절: 멈춤이 구현된 층)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# machine: Apple M5 Pro, 15 cores, hw.cachelinesize=128
+# commands: J26=$(/usr/libexec/java_home -v 26); $J26/bin/javac -d out java/Seq.java && $J26/bin/java -cp out Seq; $J26/bin/javap -c -p -cp out Seq | sed -n '/static int work/,/^$/p'
+
+J26=/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home
+5
+---javap---
+  static int work() throws java.lang.InterruptedException;
+    Code:
+         0: iconst_1
+         1: invokestatic  #13                 // Method step:(I)I
+         4: istore_0
+         5: iload_0
+         6: invokestatic  #13                 // Method step:(I)I
+         9: istore_1
+        10: iload_0
+        11: iload_1
+        12: iadd
+        13: ireturn

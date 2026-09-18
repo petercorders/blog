@@ -1,0 +1,57 @@
+# jvt-e1-javap-chain: 스택이 객체가 되는 순간 - javap 로 추적한 VirtualThread parkNanos -> yieldContinuation -> Continuation.yield -> yield0 -> doYield 체인, 그리고 JDK19 vs JDK26 StackChunk 필드 변화(argsize -> bottom)
+# java -version: openjdk version "26.0.2.1" 2026-08-18
+OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / cores=15 / hw.cachelinesize=128
+# 실행 명령:
+#   J26=$(/usr/libexec/java_home -v 26); J19=$(/usr/libexec/java_home -v 19)
+#   $J26/bin/javap -c -p java.lang.VirtualThread | grep -nE 'void parkNanos\(long\)|yieldContinuation|jdk/internal/vm/Continuation\.yield|parkOnCarrierThread' | head -20
+#   $J26/bin/javap -c -p jdk.internal.vm.Continuation | grep -nE 'static boolean yield\(|private boolean yield0|doYield|enterSpecial' | head
+#   $J26/bin/javap -p jdk.internal.vm.StackChunk
+#   $J19/bin/javap -p jdk.internal.vm.StackChunk
+
+=== parkNanos chain (VirtualThread, JDK 26) ===
+643:  private boolean yieldContinuation();
+649:         8: invokestatic  #284                // Method jdk/internal/vm/Continuation.yield:(Ljdk/internal/vm/ContinuationScope;)Z
+1058:        45: invokevirtual #395                // Method yieldContinuation:()Z
+1170:       273: invokevirtual #398                // Method parkOnCarrierThread:(ZJ)V
+1177:  void parkNanos(long);
+1211:        62: invokevirtual #395                // Method yieldContinuation:()Z
+1329:       314: invokevirtual #398                // Method parkOnCarrierThread:(ZJ)V
+1338:  private void parkOnCarrierThread(boolean, long);
+1616:        30: invokevirtual #395                // Method yieldContinuation:()Z
+
+=== Continuation yield chain (JDK 26) ===
+312:       122: invokestatic  #175                // Method enterSpecial:(Ljdk/internal/vm/Continuation;ZZ)V
+326:       152: invokestatic  #175                // Method enterSpecial:(Ljdk/internal/vm/Continuation;ZZ)V
+546:  private static native int doYield();
+548:  private static native void enterSpecial(jdk.internal.vm.Continuation, boolean, boolean);
+603:  public static boolean yield(jdk.internal.vm.ContinuationScope);
+641:  private boolean yield0(jdk.internal.vm.ContinuationScope, jdk.internal.vm.Continuation);
+650:        13: invokestatic  #261                // Method doYield:()I
+
+=== StackChunk JDK 26 ===
+Compiled from "StackChunk.java"
+public final class jdk.internal.vm.StackChunk {
+  private jdk.internal.vm.StackChunk parent;
+  private int size;
+  private int sp;
+  private int bottom;
+  public jdk.internal.vm.StackChunk();
+  public static void init();
+  public jdk.internal.vm.StackChunk parent();
+  public boolean isEmpty();
+}
+
+=== StackChunk JDK 19 ===
+Compiled from "StackChunk.java"
+public final class jdk.internal.vm.StackChunk {
+  private jdk.internal.vm.StackChunk parent;
+  private int size;
+  private int sp;
+  private int argsize;
+  public jdk.internal.vm.StackChunk();
+  public static void init();
+  public jdk.internal.vm.StackChunk parent();
+  public boolean isEmpty();
+}

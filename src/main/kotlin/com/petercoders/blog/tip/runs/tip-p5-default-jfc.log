@@ -1,0 +1,48 @@
+# experiment: tip-p5-default-jfc (절: ThreadMXBean이 세지 않는 것)
+# openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# device: Apple M5 Pro, 15 cores, hw.cachelinesize=128
+# cmd: grep on $J26/lib/jfr/default.jfc + unzip -p $J26/lib/src.zip (VirtualThreadSchedulerMXBean.java, JcmdVThreadCommands.java, VirtualThread.java, ThreadDumper.java) | grep -nE ...
+=== default.jfc virtual thread events ===
+66:    <event name="jdk.VirtualThreadStart">
+67-      <setting name="enabled">false</setting>
+68-      <setting name="stackTrace">true</setting>
+69-    </event>
+70-
+71:    <event name="jdk.VirtualThreadEnd">
+72-      <setting name="enabled">false</setting>
+73-    </event>
+74-
+75:    <event name="jdk.VirtualThreadPinned">
+76-      <setting name="enabled">true</setting>
+77-      <setting name="stackTrace">true</setting>
+78-      <setting name="threshold">20 ms</setting>
+79-    </event>
+--
+81:    <event name="jdk.VirtualThreadSubmitFailed">
+82-      <setting name="enabled">true</setting>
+83-      <setting name="stackTrace">true</setting>
+84-    </event>
+85-
+=== VirtualThreadSchedulerMXBean (jdk.management) ===
+49: * @since 24
+51:public interface VirtualThreadSchedulerMXBean extends PlatformManagedObject {
+58:    int getParallelism();
+83:    void setParallelism(int size);
+96:    int getPoolSize();
+107:    int getMountedVirtualThreadCount();
+116:    long getQueuedVirtualThreadCount();
+=== JcmdVThreadCommands ===
+38:public class JcmdVThreadCommands {
+46:    private static byte[] printScheduler() {
+59:    private static byte[] printPollers() {
+=== VirtualThread.run start/end event guard ===
+40:import jdk.internal.event.VirtualThreadEndEvent;
+41:import jdk.internal.event.VirtualThreadStartEvent;
+467:        if (VirtualThreadStartEvent.isTurnedOn()) {
+468:            var event = new VirtualThreadStartEvent();
+483:            if (VirtualThreadEndEvent.isTurnedOn()) {
+484:                var event = new VirtualThreadEndEvent();
+=== ThreadDumper virtual/carrier keys ===
+330:            jsonWriter.writeProperty("virtual", Boolean.TRUE);
+381:        // thread identifier of carrier, when mounted
+383:            jsonWriter.writeProperty("carrier", carrier.threadId());

@@ -1,0 +1,70 @@
+$ javap -p -constants -cp "$CO" kotlinx.coroutines.scheduling.CoroutineScheduler | grep -E 'controlState|BLOCKING_SHIFT|CREATED_MASK|BLOCKING_MASK|CPU_PERMITS_SHIFT|CPU_PERMITS_MASK|MAX_SUPPORTED_POOL_SIZE|blockingTasks|incrementBlockingTasks'
+  private volatile long controlState$volatile;
+  private static final java.util.concurrent.atomic.AtomicLongFieldUpdater controlState$volatile$FU;
+  private static final int BLOCKING_SHIFT = 21;
+  private static final long CREATED_MASK = 2097151l;
+  private static final long BLOCKING_MASK = 4398044413952l;
+  private static final int CPU_PERMITS_SHIFT = 42;
+  private static final long CPU_PERMITS_MASK = 9223367638808264704l;
+  public static final int MAX_SUPPORTED_POOL_SIZE = 2097150;
+  private final int blockingTasks(long);
+  private final long incrementBlockingTasks();
+
+$ javap -p -cp "$CO" 'kotlinx.coroutines.scheduling.CoroutineScheduler$WorkerState' | grep -E 'CPU_ACQUIRED|BLOCKING|PARKING|DORMANT|TERMINATED'
+  public static final kotlinx.coroutines.scheduling.CoroutineScheduler$WorkerState CPU_ACQUIRED;
+  public static final kotlinx.coroutines.scheduling.CoroutineScheduler$WorkerState BLOCKING;
+  public static final kotlinx.coroutines.scheduling.CoroutineScheduler$WorkerState PARKING;
+  public static final kotlinx.coroutines.scheduling.CoroutineScheduler$WorkerState DORMANT;
+  public static final kotlinx.coroutines.scheduling.CoroutineScheduler$WorkerState TERMINATED;
+
+$ javap -p -cp "$CO" 'kotlinx.coroutines.scheduling.CoroutineScheduler$Worker' — beforeTask/afterTask 존재 여부
+  private final void executeTask(kotlinx.coroutines.scheduling.Task);
+  public final kotlinx.coroutines.scheduling.Task findTask(boolean);
+  private final kotlinx.coroutines.scheduling.Task findBlockingTask();
+  private final kotlinx.coroutines.scheduling.Task findCpuTask();
+
+$ javap -p -cp "$CO" kotlinx.coroutines.scheduling.Task
+Compiled from "Tasks.kt"
+public abstract class kotlinx.coroutines.scheduling.Task implements java.lang.Runnable {
+  public long submissionTime;
+  public boolean taskContext;
+  public kotlinx.coroutines.scheduling.Task(long, boolean);
+  public kotlinx.coroutines.scheduling.Task();
+}
+
+$ javap -p -constants -cp "$CO" kotlinx.coroutines.scheduling.TasksKt | grep -iE 'blocking'
+  public static final boolean NonBlockingContext = false;
+  public static final boolean BlockingContext = true;
+  public static final boolean isBlocking(kotlinx.coroutines.scheduling.Task);
+
+$ javap -p -cp "$CO" kotlinx.coroutines.internal.LimitedDispatcher
+Compiled from "LimitedDispatcher.kt"
+public final class kotlinx.coroutines.internal.LimitedDispatcher extends kotlinx.coroutines.CoroutineDispatcher implements kotlinx.coroutines.Delay {
+  private final kotlinx.coroutines.Delay $$delegate_0;
+  private final kotlinx.coroutines.CoroutineDispatcher dispatcher;
+  private final int parallelism;
+  private final java.lang.String name;
+  private volatile int runningWorkers$volatile;
+  private final kotlinx.coroutines.internal.LockFreeTaskQueue<java.lang.Runnable> queue;
+  private final java.lang.Object workerAllocationLock;
+  private static final java.util.concurrent.atomic.AtomicIntegerFieldUpdater runningWorkers$volatile$FU;
+  public kotlinx.coroutines.internal.LimitedDispatcher(kotlinx.coroutines.CoroutineDispatcher, int, java.lang.String);
+  private final int getRunningWorkers$volatile();
+  private final void setRunningWorkers$volatile(int);
+  public kotlinx.coroutines.CoroutineDispatcher limitedParallelism(int, java.lang.String);
+  public void dispatch(kotlin.coroutines.CoroutineContext, java.lang.Runnable);
+  public void dispatchYield(kotlin.coroutines.CoroutineContext, java.lang.Runnable);
+  private final void dispatchInternal(java.lang.Runnable, kotlin.jvm.functions.Function1<? super kotlinx.coroutines.internal.LimitedDispatcher$Worker, kotlin.Unit>);
+  private final boolean tryAllocateWorker();
+  private final java.lang.Runnable obtainTaskOrDeallocateWorker();
+  public java.lang.String toString();
+  public java.lang.Object delay(long, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+  public void scheduleResumeAfterDelay(long, kotlinx.coroutines.CancellableContinuation<? super kotlin.Unit>);
+  public kotlinx.coroutines.DisposableHandle invokeOnTimeout(long, java.lang.Runnable, kotlin.coroutines.CoroutineContext);
+  private static final java.util.concurrent.atomic.AtomicIntegerFieldUpdater getRunningWorkers$volatile$FU();
+  public static final java.lang.Runnable access$obtainTaskOrDeallocateWorker(kotlinx.coroutines.internal.LimitedDispatcher);
+  public static final kotlinx.coroutines.CoroutineDispatcher access$getDispatcher$p(kotlinx.coroutines.internal.LimitedDispatcher);
+  public static final java.lang.Object access$getWorkerAllocationLock$p(kotlinx.coroutines.internal.LimitedDispatcher);
+  public static final java.util.concurrent.atomic.AtomicIntegerFieldUpdater access$getRunningWorkers$volatile$FU();
+  static {};
+}

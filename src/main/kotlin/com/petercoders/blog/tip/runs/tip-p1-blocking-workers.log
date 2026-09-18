@@ -1,0 +1,7 @@
+# experiment: tip-p1-blocking-workers
+# openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, cores=15
+# command: java -cp bw.jar:kotlinx-coroutines-core-jvm-1.10.2.jar BlockingWorkersKt (백그라운드) + jcmd <PID> Thread.dump_to_file -format=json bw.json 후 threadContainers[].threads 를 name/state/stack[0] 로 필터
+DefaultDispatcher-worker-1 TIMED_WAITING | top: java.base/java.lang.Thread.sleepNanos0(Native Method) | has joinBlocking: False
+DefaultDispatcher-worker-2 RUNNABLE | top: java.base/sun.nio.ch.SocketDispatcher.read0(Native Method) | has joinBlocking: False
+DefaultDispatcher-worker-3 TIMED_WAITING | top: java.base/jdk.internal.misc.Unsafe.park(Native Method) | has joinBlocking: True

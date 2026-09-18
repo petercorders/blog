@@ -1,0 +1,42 @@
+$ java -cp "tl.jar:$CO" TlContextKt (1회차)
+plain ThreadLocal mismatches=64/64
+  plain14 before=DefaultDispatcher-worker-14 after=DefaultDispatcher-worker-7 tl=plain58-value
+  plain6 before=DefaultDispatcher-worker-6 after=DefaultDispatcher-worker-5 tl=plain5-value
+  plain7 before=DefaultDispatcher-worker-7 after=DefaultDispatcher-worker-1 tl=plain48-value
+asContextElement mismatches=0/64
+
+$ java -cp "tl.jar:$CO" TlContextKt (2회차)
+plain ThreadLocal mismatches=62/64
+  plain5 before=DefaultDispatcher-worker-5 after=DefaultDispatcher-worker-7 tl=plain41-value
+  plain14 before=DefaultDispatcher-worker-14 after=DefaultDispatcher-worker-13 tl=plain64-value
+  plain1 before=DefaultDispatcher-worker-1 after=DefaultDispatcher-worker-2 tl=plain58-value
+asContextElement mismatches=0/64
+
+$ java -cp "tl.jar:$CO" TlContextKt (3회차)
+plain ThreadLocal mismatches=63/64
+  plain2 before=DefaultDispatcher-worker-2 after=DefaultDispatcher-worker-5 tl=plain64-value
+  plain9 before=DefaultDispatcher-worker-9 after=DefaultDispatcher-worker-8 tl=plain38-value
+  plain5 before=DefaultDispatcher-worker-5 after=DefaultDispatcher-worker-3 tl=plain37-value
+asContextElement mismatches=0/64
+
+$ javap -p -cp "$KLIB/kotlin-stdlib.jar" kotlin.coroutines.CombinedContext
+Compiled from "CoroutineContextImpl.kt"
+public final class kotlin.coroutines.CombinedContext implements kotlin.coroutines.CoroutineContext,java.io.Serializable {
+  private final kotlin.coroutines.CoroutineContext left;
+  private final kotlin.coroutines.CoroutineContext$Element element;
+  public kotlin.coroutines.CombinedContext(kotlin.coroutines.CoroutineContext, kotlin.coroutines.CoroutineContext$Element);
+  public <E extends kotlin.coroutines.CoroutineContext$Element> E get(kotlin.coroutines.CoroutineContext$Key<E>);
+  public <R> R fold(R, kotlin.jvm.functions.Function2<? super R, ? super kotlin.coroutines.CoroutineContext$Element, ? extends R>);
+  public kotlin.coroutines.CoroutineContext minusKey(kotlin.coroutines.CoroutineContext$Key<?>);
+  private final int size();
+  private final boolean contains(kotlin.coroutines.CoroutineContext$Element);
+  private final boolean containsAll(kotlin.coroutines.CombinedContext);
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+  private final java.lang.Object writeReplace();
+  private final void readObject(java.io.ObjectInputStream);
+  public kotlin.coroutines.CoroutineContext plus(kotlin.coroutines.CoroutineContext);
+  private static final java.lang.String toString$lambda$0(java.lang.String, kotlin.coroutines.CoroutineContext$Element);
+  private static final kotlin.Unit writeReplace$lambda$0(kotlin.coroutines.CoroutineContext[], kotlin.jvm.internal.Ref$IntRef, kotlin.Unit, kotlin.coroutines.CoroutineContext$Element);
+}
