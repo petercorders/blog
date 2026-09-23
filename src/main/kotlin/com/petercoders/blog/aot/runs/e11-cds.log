@@ -1,0 +1,8 @@
+e11-cds run=1 wall_ms=1265 Started BlogApplicationKt in 0.908 seconds (process running for 1.183)
+e11-cds run=2 wall_ms=1110 Started BlogApplicationKt in 0.78 seconds (process running for 1.038)
+e11-cds run=3 wall_ms=929 Started BlogApplicationKt in 0.653 seconds (process running for 0.861)
+e11-cds run=4 wall_ms=884 Started BlogApplicationKt in 0.626 seconds (process running for 0.825)
+e11-cds run=5 wall_ms=972 Started BlogApplicationKt in 0.647 seconds (process running for 0.842)
+e11-cds median_wall_ms=972
+e11-cds median_started_s=0.653
+e11-cds median_process_s=0.861

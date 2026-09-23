@@ -1,0 +1,8 @@
+e11-aot run=1 wall_ms=871 Started BlogApplicationKt in 0.45 seconds (process running for 0.785)
+e11-aot run=2 wall_ms=921 Started BlogApplicationKt in 0.487 seconds (process running for 0.779)
+e11-aot run=3 wall_ms=900 Started BlogApplicationKt in 0.483 seconds (process running for 0.817)
+e11-aot run=4 wall_ms=773 Started BlogApplicationKt in 0.444 seconds (process running for 0.705)
+e11-aot run=5 wall_ms=741 Started BlogApplicationKt in 0.427 seconds (process running for 0.665)
+e11-aot median_wall_ms=871
+e11-aot median_started_s=0.45
+e11-aot median_process_s=0.779

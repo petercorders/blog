@@ -1,0 +1,8 @@
+fatjar-baseline run=1 wall_ms=793 Started BlogApplicationKt in 0.57 seconds (process running for 0.764)
+fatjar-baseline run=2 wall_ms=727 Started BlogApplicationKt in 0.511 seconds (process running for 0.7)
+fatjar-baseline run=3 wall_ms=715 Started BlogApplicationKt in 0.518 seconds (process running for 0.688)
+fatjar-baseline run=4 wall_ms=634 Started BlogApplicationKt in 0.449 seconds (process running for 0.608)
+fatjar-baseline run=5 wall_ms=665 Started BlogApplicationKt in 0.459 seconds (process running for 0.641)
+fatjar-baseline median_wall_ms=715
+fatjar-baseline median_started_s=0.511
+fatjar-baseline median_process_s=0.688

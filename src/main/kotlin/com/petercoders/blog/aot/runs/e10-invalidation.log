@@ -1,0 +1,71 @@
+# e10 invalidation · 2026-09-22 23:30:16 · load averages: 1.98 3.51 4.64
+## control (캐시 정상)
+control AOTMode=on exit=0
+stderr_lines=       0
+2026-09-22T23:30:16.695+09:00  INFO 5729 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.127 seconds (process running for 0.242)
+
+## e10a touch (내용 그대로, mtime 만 변경)
+before: 2026-09-08 23:50:45 16441
+after : 2026-09-22 23:30:25 16441
+touch AOTMode=auto exit=0
+--- stderr(auto) ---
+2026-09-22T23:30:26.192+09:00  INFO 5757 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.38 seconds (process running for 0.554)
+touch AOTMode=on exit=1
+--- stderr(on) ---
+--- -Xlog:aot 상세 ---
+[0.006s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+[0.006s][error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+on 의 메시지(stdout):
+[0.007s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+[0.007s][error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+[0.007s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+[0.007s][error  ][aot] unrecoverable error
+
+## e10a-2 mtime 복원 후 (캐시가 되살아나는가)
+restored: 2026-09-08 23:50:45
+restore AOTMode=on exit=0
+2026-09-22T23:30:48.054+09:00  INFO 5792 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.122 seconds (process running for 0.175)
+
+## e10b jar 크기 변경(클래스 하나 추가)
+size: 16441 -> 16442
+size AOTMode=auto exit=1 stderr_lines=1
+복원 확인:
+exit=0
+
+## e10b(재실험) 크기만 변경 — 클래스 하나를 jar 에 추가한 뒤 mtime 은 원래대로 되돌린다
+size: 16441 -> 16559 / mtime: 2026-09-08 23:50:45
+size-only AOTMode=auto exit=0 stderr_lines=0
+2026-09-22T23:31:06.773+09:00  INFO 5824 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.358 seconds (process running for 0.481)
+[0.007s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', size has changed
+복원: size=16441 exit=0
+
+## 표 채우기 — 네 조건 × (auto, on) 의 종료 코드와 기본 레벨 경고 줄
+size+on exit=1 aot줄(stdout)=4 stderr=0
+-- JDK26 --
+jdk26+auto exit=0 aot줄(stdout)=4 stderr=0
+jdk26+on   exit=1 aot줄(stdout)=4 stderr=0
+-- UseCompactObjectHeaders --
+compact+auto exit=0 aot줄(stdout)=4 stderr=0
+compact+on   exit=1 aot줄(stdout)=4 stderr=0
+-- 대조군 --
+control+auto exit=0 aot줄(stdout)=0 stderr=0
+
+## 재확인 — touch(mtime) 조건에서 기본 레벨 aot 줄이 정말 0 인가
+touch+auto exit=0 stdout_aot=4 stderr_aot=0 stderr_lines=0
+기동 시간: Started BlogApplicationKt in 0.621 seconds
+복원 후: Started BlogApplicationKt in 0.221 seconds / on exit=0
+
+## 캐시 유효 vs touch 로 깨진 캐시 — 각 5회 중앙값 (AOTMode=auto)
+valid in 0.221 seconds
+valid in 0.204 seconds
+valid in 0.209 seconds
+valid in 0.222 seconds
+valid in 0.22 seconds
+broken in 0.703 seconds
+broken in 0.637 seconds
+broken in 0.645 seconds
+broken in 0.666 seconds
+broken in 0.656 seconds
+--- medians ---
+valid: median_started=0.220s values=[0.221, 0.204, 0.209, 0.222, 0.22]
+broken: median_started=0.656s values=[0.703, 0.637, 0.645, 0.666, 0.656]

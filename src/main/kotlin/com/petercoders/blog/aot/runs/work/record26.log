@@ -1,0 +1,24 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+[0.420s][warning][aot] class org/springframework/core/type/classreading/ClassFileMetadataReaderFactory cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+2026-09-19T01:17:37.187+09:00  INFO 18993 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Starting BlogApplicationKt v0.0.1-SNAPSHOT using Java 26.0.2.1 with PID 18993 (/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/blog-0.0.1-SNAPSHOT.jar started by kibong_home in /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work)
+2026-09-19T01:17:37.189+09:00  INFO 18993 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : No active profile set, falling back to 1 default profile: "default"
+[0.481s][warning][aot] class org/springframework/core/type/classreading/ClassFileMetadataReader cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.481s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationMetadata cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.481s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationMetadata$Builder cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.483s][warning][aot] class org/springframework/core/type/classreading/ClassFileMethodMetadata cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.483s][warning][aot] class org/springframework/core/type/classreading/ClassFileMethodMetadata$Source cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.486s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationDelegate cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.487s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationDelegate$Source cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+2026-09-19T01:17:37.532+09:00  INFO 18993 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.494 seconds (process running for 0.768)
+[0.785s][warning][aot] Preload Warning: Verification failed for org.springframework.boot.logging.log4j2.Log4J2LoggingSystem because a java.lang.NoClassDefFoundError was thrown: org/apache/logging/log4j/core/Filter
+[0.835s][warning][aot] Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Failed verification
+ AOTConfiguration recorded: blog26.aotconf

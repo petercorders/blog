@@ -1,0 +1,226 @@
+[0.006s][info][aot] Selected AOTMode=record because AOTCacheOutput is specified
+[0.014s][info][aot] Core region alignment: 16384
+[0.014s][info][aot] Writing binary AOTConfiguration file: /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+[0.407s][warning][aot] class org/springframework/core/type/classreading/ClassFileMetadataReaderFactory cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+2026-09-19T02:47:33.163+09:00  INFO 28709 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Starting BlogApplicationKt v0.0.1-SNAPSHOT using Java 25.0.4.1 with PID 28709 (/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/blog-0.0.1-SNAPSHOT.jar started by kibong_home in /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work)
+2026-09-19T02:47:33.164+09:00  INFO 28709 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : No active profile set, falling back to 1 default profile: "default"
+[0.466s][warning][aot] class org/springframework/core/type/classreading/ClassFileMetadataReader cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.467s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationMetadata cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.467s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationMetadata$Builder cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.470s][warning][aot] class org/springframework/core/type/classreading/ClassFileMethodMetadata cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.470s][warning][aot] class org/springframework/core/type/classreading/ClassFileMethodMetadata$Source cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.472s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationDelegate cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+[0.473s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationDelegate$Source cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/lib/spring-core-7.0.9.jar as claimed
+2026-09-19T02:47:33.525+09:00  INFO 28709 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.531 seconds (process running for 0.772)
+[0.775s][info   ][aot] Reading lambda form invokers from JDK default classlist ...
+[0.775s][info   ][aot] Parsing /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/lib/classlist (lambda form invokers only)
+[0.776s][info   ][aot] Rewriting and linking classes ...
+[0.784s][warning][aot] Preload Warning: Verification failed for org.springframework.boot.logging.log4j2.Log4J2LoggingSystem
+[0.790s][info   ][aot] Rewriting and linking classes: done
+[0.791s][info   ][aot] Regenerate MethodHandle Holder classes...
+[0.805s][info   ][aot] Regenerate MethodHandle Holder classes...done
+[0.805s][info   ][aot] Not dumping heap, reset CDSConfig::_is_using_optimized_module_handling
+[0.805s][info   ][aot] Gathering all archivable objects ... 
+[0.805s][warning][aot] Skipping jdk/internal/event/Event: JFR event class
+[0.805s][info   ][aot] Skipping jdk/internal/misc/CDS$UnregisteredClassLoader$Source: used only when dumping CDS archive
+[0.805s][warning][aot] Skipping jdk/proxy1/$Proxy8: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy9: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy10: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy11: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy24: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy23: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy22: Unsupported location
+[0.805s][info   ][aot] Skipping jdk/internal/misc/CDS$UnregisteredClassLoader: used only when dumping CDS archive
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy36: Unsupported location
+[0.805s][warning][aot] Skipping jdk/internal/event/SecurityProviderServiceEvent: JFR event class
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy2: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy41: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy40: Unsupported location
+[0.805s][warning][aot] Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Failed verification
+[0.805s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationDelegate: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy35: Unsupported location
+[0.805s][warning][aot] Skipping jdk/proxy2/$Proxy7: Unsupported location
+[0.805s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationMetadata$Builder: Unsupported location
+[0.805s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMetadataReader: Unsupported location
+[0.806s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMetadataReaderFactory: Unsupported location
+[0.806s][info   ][aot] Skipping java/lang/invoke/BoundMethodHandle$Species_J because it is dynamically generated
+[0.806s][info   ][aot] Skipping java/lang/invoke/BoundMethodHandle$Species_F because it is dynamically generated
+[0.806s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMethodMetadata: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy39: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy34: Unsupported location
+[0.806s][warning][aot] Skipping org/springframework/core/$Proxy38: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy1/$Proxy4: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy1/$Proxy3: Unsupported location
+[0.806s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationMetadata: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy32: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy33: Unsupported location
+[0.806s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationDelegate$Source: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy5: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy37: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy31: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy29: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy30: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy28: Unsupported location
+[0.806s][warning][aot] Skipping org/springframework/core/$Proxy6: Unsupported location
+[0.806s][warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMethodMetadata$Source: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy1/$Proxy0: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy1/$Proxy1: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy1/$Proxy20: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy21: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy19: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy13: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy12: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy27: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy14: Unsupported location
+[0.806s][info   ][aot] Skipping java/lang/invoke/BoundMethodHandle$Species_LI because it is dynamically generated
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy15: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy25: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy26: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy18: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy1/$Proxy17: Unsupported location
+[0.806s][warning][aot] Skipping jdk/proxy2/$Proxy16: Unsupported location
+[0.807s][info   ][aot] Gathering classes and symbols ... 
+[0.869s][info   ][aot] Sorting symbols ... 
+[0.873s][info   ][aot] Sorting classes ... 
+[0.968s][info   ][aot] Reserved output buffer space at 0x00000003c0000000 [1073741824 bytes]
+[0.978s][info   ][aot] Allocating RW objects ... 
+[0.989s][info   ][aot] done (116027 objects)
+[0.989s][info   ][aot] Allocating RO objects ... 
+[1.006s][info   ][aot] done (225105 objects)
+[1.006s][info   ][aot] Relocating embedded pointers in core regions ... 
+[1.029s][info   ][aot] Make classes shareable
+[1.047s][info   ][aot] Number of classes 5421
+[1.047s][info   ][aot]     instance classes   =  4957, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       boot             =  1973, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]         vm             =   151, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       platform         =     6, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       app              =  2978, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       unregistered     =     0, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       (enum)           =   203, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       (hidden)         =     0, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       (old)            =     0, aot-linked =     0, inited =     0
+[1.047s][info   ][aot]       (unlinked)       =     0, boot = 0, plat = 0, app = 0, unreg = 0
+[1.047s][info   ][aot]     obj array classes  =   455
+[1.047s][info   ][aot]     type array classes =     9
+[1.047s][info   ][aot]                symbols = 103659
+[1.047s][info   ][aot] Archived java heap is not supported: Programmatically disabled
+[1.047s][info   ][aot] Dumping symbol table ...
+[1.060s][info   ][aot] Archived 0 method handle intrinsics (16 bytes)
+[1.060s][info   ][aot] Adjust lambda proxy class dictionary
+[1.067s][info   ][aot] Shared file region (rw) 0: 16086040 bytes, addr 0x0000000800004000 file offset 0x00004000 crc 0x5aa755eb
+[1.070s][info   ][aot] Shared file region (ro) 1: 24315272 bytes, addr 0x0000000800f5c000 file offset 0x00f5c000 crc 0xfd85d20c
+[1.072s][info   ][aot] Shared file region (ac) 4:        0 bytes
+[1.080s][info   ][aot] Shared file region (bm) 2:   515032 bytes, addr 0x0000000000000000 file offset 0x02690000 crc 0x3888a2bd
+[1.080s][info   ][aot] Full module graph = disabled
+[1.080s][info   ][aot] Class  CP entries =  60583, archived =   8443 ( 13.9%), reverted =  13491
+[1.080s][info   ][aot] Field  CP entries =  20120, archived =   6290 ( 31.3%), reverted =    643
+[1.080s][info   ][aot] Method CP entries =  22475, archived =  10898 ( 48.5%), reverted =  11577
+[1.080s][info   ][aot] Indy   CP entries =    698, archived =      0 (  0.0%), reverted =    698
+[1.080s][info   ][aot] Platform loader initiated classes =      0
+[1.080s][info   ][aot] App      loader initiated classes =      0
+[1.080s][info   ][aot] MethodCounters                    =  17017 ( 1089088 bytes)
+[1.080s][info   ][aot] KlassTrainingData                 =    975 (   46800 bytes)
+[1.080s][info   ][aot] MethodTrainingData                =   3065 (  294240 bytes)
+Temporary AOTConfiguration recorded: /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config
+Launching child process /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java to assemble AOT cache /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot using configuration /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config
+Picked up JAVA_TOOL_OPTIONS: -Djava.class.path=/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/blog-0.0.1-SNAPSHOT.jar -Xlog:aot -XX:AOTCacheOutput=/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot -XX:AOTConfiguration=/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config -XX:AOTMode=create
+[0.001s][info][aot] Disabled all JVMTI agents during -XX:AOTMode=create
+[0.004s][info][aot] Core region alignment: 16384
+[0.004s][info][aot] trying to map AOTConfiguration file /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config
+[0.004s][info][aot] Opened AOT configuration file /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config.
+[0.004s][info][aot] The AOT configuration file was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+[0.004s][info][aot] Core region alignment: 16384
+[0.004s][info][aot] ArchiveRelocationMode: 1
+[0.004s][info][aot] ArchiveRelocationMode == 1: always map archive(s) at an alternative address
+[0.004s][info][aot] Try to map archive(s) at an alternative address
+[0.004s][info][aot] Reserved archive_space_rs [0x0000400000000000 - 0x0000400003000000] (50331648) bytes (includes protection zone)
+[0.004s][info][aot] Reserved class_space_rs   [0x0000400003000000 - 0x0000400043000000] (1073741824) bytes
+[0.005s][info][aot] Mapped static  region #0 at base 0x0000400000004000 top 0x0000400000f5c000 (ReadWrite)
+[0.005s][info][aot] Mapped static  region #1 at base 0x0000400000f5c000 top 0x0000400002690000 (ReadOnly)
+[0.005s][info][aot] Mapped static  region #2 at base 0x000000010814c000 top 0x00000001081cc000 (Bitmap)
+[0.017s][info][aot] archived module property jdk.module.main: (null)
+[0.017s][info][aot] archived module property jdk.module.addexports: (null)
+[0.017s][info][aot] archived module property jdk.module.addmods: (null)
+[0.017s][info][aot] archived module property jdk.module.enable.native.access: (null)
+[0.017s][info][aot] archived module property jdk.module.addopens: (null)
+[0.017s][info][aot] archived module property jdk.module.addreads: (null)
+[0.017s][info][aot] optimized module handling: enabled
+[0.017s][info][aot] full module graph: enabled
+[0.017s][info][aot] full module graph cannot be loaded: archive heap loading failed
+[0.017s][info][aot] initial optimized module handling: enabled
+[0.017s][info][aot] initial full module graph: disabled
+[0.017s][info][aot] Unmapping region #2 at base 0x000000010814c000 (Bitmap)
+[0.017s][info][aot] Using AOT-linked classes: false (static archive: no aot-linked classes)
+[0.027s][info][aot] JVM_StartThread() ignored: java.lang.ref.Reference$ReferenceHandler
+[0.027s][info][aot] JVM_StartThread() ignored: java.lang.ref.Finalizer$FinalizerThread
+[0.039s][info][aot] Not starting management agent during creation of AOT cache.
+Reading AOTConfiguration /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config and writing AOTCache /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot
+[0.039s][info][aot] Rewriting and linking classes ...
+[0.047s][info][aot] JVM_StartThread() ignored: jdk.internal.misc.InnocuousThread
+[0.131s][info][aot] Rewriting and linking classes: done
+[0.137s][info][aot] allocated string table for 6093 strings
+[0.137s][info][aot] string table array (single level) length = 6093
+[0.137s][info][aot] Writing AOTCache file: /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot
+[0.137s][info][aot] Gathering all archivable objects ... 
+[0.138s][warning][aot] Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Unlinked class not supported by AOTClassLinking
+[0.138s][info   ][aot] Heap range = [0x0000000380000000 - 0x0000000500000000]
+[0.152s][info   ][aot] Archived 6092 interned strings
+[0.153s][info   ][aot] Gathering classes and symbols ... 
+[0.218s][info   ][aot] Sorting symbols ... 
+[0.222s][info   ][aot] Sorting classes ... 
+[0.313s][info   ][aot] Reserved output buffer space at 0x0000000300000000 [1084227584 bytes]
+[0.324s][info   ][aot] Allocating RW objects ... 
+[0.334s][info   ][aot] done (113303 objects)
+[0.334s][info   ][aot] Allocating RO objects ... 
+[0.354s][info   ][aot] done (233734 objects)
+[0.354s][info   ][aot] Relocating embedded pointers in core regions ... 
+[0.376s][info   ][aot] Make classes shareable
+[0.396s][info   ][aot] Number of classes 6157
+[0.396s][info   ][aot]     instance classes   =  5691, aot-linked =  5691, inited =   884
+[0.396s][info   ][aot]       boot             =  2194, aot-linked =  2194, inited =   367
+[0.396s][info   ][aot]         vm             =   151, aot-linked =   151, inited =    42
+[0.396s][info   ][aot]       platform         =     6, aot-linked =     6, inited =     0
+[0.396s][info   ][aot]       app              =  3491, aot-linked =  3491, inited =   517
+[0.396s][info   ][aot]       unregistered     =     0, aot-linked =     0, inited =     0
+[0.396s][info   ][aot]       (enum)           =   203, aot-linked =   203, inited =     9
+[0.396s][info   ][aot]       (hidden)         =   733, aot-linked =   733, inited =   733
+[0.396s][info   ][aot]       (old)            =     0, aot-linked =     0, inited =     0
+[0.396s][info   ][aot]       (unlinked)       =     0, boot = 0, plat = 0, app = 0, unreg = 0
+[0.396s][info   ][aot]     obj array classes  =   457
+[0.396s][info   ][aot]     type array classes =     9
+[0.396s][info   ][aot]                symbols = 105998
+[0.398s][info   ][aot] sorting heap objects
+[0.399s][info   ][aot] computed ranks
+[0.400s][info   ][aot] sorting heap objects done
+[0.408s][info   ][aot] Size of heap region = 2274656 bytes, 45017 objects, 9371 roots, 7271 native ptrs
+[0.414s][info   ][aot] oopmap =       4 ...  568664 (  0% ... 100% =  99%)
+[0.414s][info   ][aot] ptrmap =  107496 ...  207308 ( 37% ...  72% =  35%)
+[0.414s][info   ][aot] Dumping symbol table ...
+[0.431s][info   ][aot] Archived 132 method handle intrinsics (35912 bytes)
+[0.440s][info   ][aot] Shared file region (rw) 0: 15988920 bytes, addr 0x0000000800004000 file offset 0x00004000 crc 0x2f47b478
+[0.442s][info   ][aot] Shared file region (ro) 1: 24560680 bytes, addr 0x0000000800f44000 file offset 0x00f44000 crc 0xf10d920f
+[0.449s][info   ][aot] Shared file region (ac) 4:   521072 bytes, addr 0x00000008026b4000 file offset 0x026b4000 crc 0x4ef76dfe
+[0.459s][info   ][aot] Shared file region (bm) 2:   579984 bytes, addr 0x0000000000000000 file offset 0x02734000 crc 0x2e37a100
+[0.459s][info   ][aot] Shared file region (hp) 3:  2274656 bytes, addr 0x00000004ffc00000 file offset 0x027c4000 crc 0x7491e1f0
+[0.460s][info   ][aot] Full module graph = enabled
+[0.460s][info   ][aot] Class  CP entries =  64121, archived =  23185 ( 36.2%), reverted =      0
+[0.460s][info   ][aot] Field  CP entries =  20748, archived =   6481 ( 31.2%), reverted =      0
+[0.460s][info   ][aot] Method CP entries =  22862, archived =  22769 ( 99.6%), reverted =     93
+[0.460s][info   ][aot] Indy   CP entries =    726, archived =    726 (100.0%), reverted =      0
+[0.460s][info   ][aot] Platform loader initiated classes =   1153
+[0.460s][info   ][aot] App      loader initiated classes =   1159
+[0.460s][info   ][aot] MethodCounters                    =   7075 (  452800 bytes)
+[0.460s][info   ][aot] KlassTrainingData                 =    975 (   46800 bytes)
+[0.460s][info   ][aot] MethodTrainingData                =   3065 (  294240 bytes)
+AOTCache creation is complete: /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot 43974656 bytes
+Removed temporary AOT configuration file /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog-single.aot.config

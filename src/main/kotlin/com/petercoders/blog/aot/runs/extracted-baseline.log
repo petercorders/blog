@@ -1,0 +1,8 @@
+extracted-baseline run=1 wall_ms=579 Started BlogApplicationKt in 0.417 seconds (process running for 0.553)
+extracted-baseline run=2 wall_ms=468 Started BlogApplicationKt in 0.345 seconds (process running for 0.444)
+extracted-baseline run=3 wall_ms=482 Started BlogApplicationKt in 0.362 seconds (process running for 0.462)
+extracted-baseline run=4 wall_ms=464 Started BlogApplicationKt in 0.342 seconds (process running for 0.441)
+extracted-baseline run=5 wall_ms=482 Started BlogApplicationKt in 0.358 seconds (process running for 0.459)
+extracted-baseline median_wall_ms=482
+extracted-baseline median_started_s=0.358
+extracted-baseline median_process_s=0.459

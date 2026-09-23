@@ -1,0 +1,25 @@
+ 1:22  up 17 days, 16:56, 13 users, load averages: 4.59 6.53 5.96
+replay-on run=1 total=2575 tier4=238
+replay-on run=2 total=2546 tier4=240
+replay-on run=3 total=2558 tier4=238
+replay-on run=4 total=2525 tier4=234
+replay-on run=5 total=2553 tier4=239
+replay-on median_total=2553 median_tier4=238
+replay-off run=1 total=2209 tier4=220
+replay-off run=2 total=2228 tier4=232
+replay-off run=3 total=2206 tier4=222
+replay-off run=4 total=2190 tier4=221
+replay-off run=5 total=2197 tier4=226
+replay-off median_total=2206 median_tier4=222
+wall-on run=1 wall_ms=228 started=0.134 seconds
+wall-on run=2 wall_ms=215 started=0.136 seconds
+wall-on run=3 wall_ms=214 started=0.135 seconds
+wall-on run=4 wall_ms=200 started=0.125 seconds
+wall-on run=5 wall_ms=211 started=0.136 seconds
+wall-on median_wall_ms=214 median_started_s=0.135
+wall-off run=1 wall_ms=218 started=0.145 seconds
+wall-off run=2 wall_ms=219 started=0.145 seconds
+wall-off run=3 wall_ms=242 started=0.15 seconds
+wall-off run=4 wall_ms=218 started=0.145 seconds
+wall-off run=5 wall_ms=217 started=0.143 seconds
+wall-off median_wall_ms=218 median_started_s=0.145

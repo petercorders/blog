@@ -1,0 +1,8 @@
+e11-baseline run=1 wall_ms=745 Started BlogApplicationKt in 0.544 seconds (process running for 0.708)
+e11-baseline run=2 wall_ms=763 Started BlogApplicationKt in 0.572 seconds (process running for 0.726)
+e11-baseline run=3 wall_ms=910 Started BlogApplicationKt in 0.696 seconds (process running for 0.873)
+e11-baseline run=4 wall_ms=1141 Started BlogApplicationKt in 0.872 seconds (process running for 1.075)
+e11-baseline run=5 wall_ms=1737 Started BlogApplicationKt in 1.339 seconds (process running for 1.641)
+e11-baseline median_wall_ms=910
+e11-baseline median_started_s=0.696
+e11-baseline median_process_s=0.873

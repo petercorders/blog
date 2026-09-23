@@ -1,0 +1,78 @@
+# experiment: e3-classload-perf (fat jar 기동 시 클래스 로딩 소스 분포 + At VM exit 링크/초기화 시간 — "기동 로그가 재지 않는 시간" 절 근거)
+# java -version:
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# machine: Apple M5 Pro / hw.ncpu=15 / hw.cachelinesize=128
+# command:
+#   J25=~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java
+#   JAR=~/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar
+#   $J25 -Xlog:class+load:file=$AOT/runs/fatjar-classload.log -Xlog:perf+class+link -Xlog:startuptime -jar $JAR > $AOT/runs/fatjar-perf.log 2>&1
+#   (Spring Boot 앱이 "Started BlogApplicationKt" 로그 후 자체 종료 — 별도 kill 불필요했음, exit 0)
+#   이어서 total/shared/nested/jar/file 카운트, source: 접두어 분포, At VM exit 블록, Create VM 을 집계
+
+$ $J25 -Xlog:class+load:file=$AOT/runs/fatjar-classload.log -Xlog:perf+class+link -Xlog:startuptime -jar $JAR > $AOT/runs/fatjar-perf.log 2>&1
+EXIT=0 (프로세스가 0.601s 시점에 스스로 종료 — kill 시도는 "no such process" 로 무의미해짐. 즉 이 앱은 웹서버로 떠있지 않고 시작 후 종료됨)
+
+$ echo total=$(wc -l < $AOT/runs/fatjar-classload.log)
+total= 5804
+
+$ echo shared=$(grep -c 'source: shared objects file' $AOT/runs/fatjar-classload.log)
+shared=1379
+
+$ echo nested=$(grep -c 'source: nested:' $AOT/runs/fatjar-classload.log)
+nested=0
+
+$ echo jar=$(grep -c 'source: jar:' $AOT/runs/fatjar-classload.log)
+jar=2927
+
+$ echo file=$(grep -c 'source: file:' $AOT/runs/fatjar-classload.log)
+file=73
+
+$ grep -E 'source:' $AOT/runs/fatjar-classload.log | sed -E 's/.*source: ([a-z]+:?).*/\1/' | sort | uniq -c
+  70 ch
+  73 file:
+2927 jar:
+  45 java
+ 637 jrt:
+   2 kotlin
+ 467 org
+1379 shared
+  10 sun
+
+# 위 집계는 "nested:" 문자열이 실제로는 한 번도 등장하지 않음을 보여준다(nested=0).
+# 실제 jar 접두어 라인의 원문 확인 — nested 로딩이 어떤 문자열로 찍히는지:
+$ grep 'source: jar:' $AOT/runs/fatjar-classload.log | head -3
+[0.053s][info][class,load] com.petercoders.blog.BlogApplicationKt source: jar:nested:/Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/
+[0.063s][info][class,load] kotlin.jvm.internal.Intrinsics source: jar:nested:/Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar/!BOOT-INF/lib/kotlin-stdlib-2.3.21.jar!/
+[0.063s][info][class,load] kotlin.KotlinNullPointerException source: jar:nested:/Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar/!BOOT-INF/lib/kotlin-stdlib-2.3.21.jar!/
+
+$ grep 'source: jar:' $AOT/runs/fatjar-classload.log | sed -E 's/.*(source: jar:[^!]*!).*/\1/' | sort | uniq -c | sort -rn | head -5
+2927 source: jar:nested:/Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar/!
+
+# 즉 fat jar 내부 nested jar(BOOT-INF/lib/*.jar, BOOT-INF/classes)에서 로딩된 2927개 클래스는
+# 모두 "jar:nested:...jar/!..." 접두어로 찍히지, 단독 "nested:" 문자열로는 찍히지 않는다.
+# (blog c08 절의 "nested:" 표기는 실제 JDK 25 Xlog 출력과 다르므로 "jar:nested:" 로 정정 필요)
+
+$ sed -n '/At VM exit/,/CP_MethodType/p' $AOT/runs/fatjar-perf.log
+[0.601s][info][perf,class,link] At VM exit:
+[0.601s][info][perf,class,link] ClassLoader:
+[0.601s][info][perf,class,link]   clinit:               178ms / 4615 events
+[0.601s][info][perf,class,link]   link methods:         4ms / 53431 events
+[0.601s][info][perf,class,link]   method adapters:      3ms / 476 events
+[0.601s][info][perf,class,link]   resolve...
+[0.601s][info][perf,class,link]     invokedynamic:   91ms / 745 events
+[0.601s][info][perf,class,link]     invokehandle:    0ms / 150 events
+[0.601s][info][perf,class,link]     CP_MethodHandle: 25ms / 921 events
+[0.601s][info][perf,class,link]     CP_MethodType:   0ms / 741 events
+
+$ grep 'Create VM' $AOT/runs/fatjar-perf.log
+[0.012s][info][startuptime    ] Create VM, 0.0108025 secs
+
+# 참고: fatjar-perf.log 전문 중 At VM initialization completion(VM 자체 부팅 완료 시점) 스냅샷도 남아있음 —
+# clinit: 1ms/268 events, link methods: 0ms/7268 events, method adapters: 0ms/200 events.
+# 즉 At VM exit(앱 전체 기동 완료, 0.601s)까지 클래스 링킹에 쓴 총 시간은
+# clinit 178ms + link methods 4ms + method adapters 3ms + invokedynamic 91ms + CP_MethodHandle 25ms ≈ 301ms —
+# Create VM(JVM 부트스트랩) 0.0108s(10.8ms)에 비해 훨씬 크다. "기동 로그가 재는 것"은 Create VM 10.8ms 뿐이고,
+# 이후 App 클래스(대부분 jar:nested: 2927개 + shared 1379개)의 clinit/link/invokedynamic 해석에 든 수백 ms는
+# "Started BlogApplicationKt in 0.428 seconds" 라는 Spring 자체 로그에도, Create VM 로그에도 잡히지 않는다.

@@ -1,0 +1,27 @@
+# 실험: e1-env (환경/기기 확인 — AOT 시리즈 도입 절)
+# java -version (/usr/bin/java, 시스템 기본): openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / 코어 15개 / cachelinesize 128 bytes (arm64)
+# 실행한 명령: uname -m; sysctl -n machdep.cpu.brand_string; sysctl -n hw.ncpu; sysctl -n hw.cachelinesize; uptime / $J25 -version; $J26 -version / ls -l blog-0.0.1-SNAPSHOT.jar
+# (J25=~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java, J26=~/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java)
+
+=== java -version (/usr/bin/java) ===
+openjdk version "26.0.2.1" 2026-08-18
+OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+=== uname/cpu/cores/cacheline/uptime ===
+arm64
+Apple M5 Pro
+15
+128
+ 1:16  up 17 days, 16:50, 13 users, load averages: 5.16 5.33 5.10
+
+=== J25 -version ===
+openjdk version "25.0.4.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+=== J26 -version ===
+openjdk version "26.0.2.1" 2026-08-18
+OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+=== jar ls -l ===
+-rw-r--r--@ 1 kibong_home  staff  14573458  9월  8 23:50 /Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar

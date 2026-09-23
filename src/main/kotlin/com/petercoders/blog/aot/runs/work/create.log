@@ -1,0 +1,87 @@
+Disabled all JVMTI agents during -XX:AOTMode=create
+Core region alignment: 16384
+trying to map AOTConfiguration file blog.aotconf
+Opened AOT configuration file blog.aotconf.
+The AOT configuration file was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+Core region alignment: 16384
+ArchiveRelocationMode: 1
+ArchiveRelocationMode == 1: always map archive(s) at an alternative address
+Try to map archive(s) at an alternative address
+Reserved archive_space_rs [0x00001fff00000000 - 0x00001fff03000000] (50331648) bytes (includes protection zone)
+Reserved class_space_rs   [0x00001fff03000000 - 0x00001fff43000000] (1073741824) bytes
+Mapped static  region #0 at base 0x00001fff00004000 top 0x00001fff00f5c000 (ReadWrite)
+Mapped static  region #1 at base 0x00001fff00f5c000 top 0x00001fff02690000 (ReadOnly)
+Mapped static  region #2 at base 0x0000000109e74000 top 0x0000000109ef4000 (Bitmap)
+archived module property jdk.module.main: (null)
+archived module property jdk.module.addexports: (null)
+archived module property jdk.module.addmods: (null)
+archived module property jdk.module.enable.native.access: (null)
+archived module property jdk.module.addopens: (null)
+archived module property jdk.module.addreads: (null)
+optimized module handling: enabled
+full module graph: enabled
+full module graph cannot be loaded: archive heap loading failed
+initial optimized module handling: enabled
+initial full module graph: disabled
+Unmapping region #2 at base 0x0000000109e74000 (Bitmap)
+Using AOT-linked classes: false (static archive: no aot-linked classes)
+JVM_StartThread() ignored: java.lang.ref.Reference$ReferenceHandler
+JVM_StartThread() ignored: java.lang.ref.Finalizer$FinalizerThread
+Not starting management agent during creation of AOT cache.
+Rewriting and linking classes ...
+JVM_StartThread() ignored: jdk.internal.misc.InnocuousThread
+Rewriting and linking classes: done
+allocated string table for 6093 strings
+string table array (single level) length = 6093
+Writing AOTCache file: blog.aot
+Gathering all archivable objects ... 
+Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Unlinked class not supported by AOTClassLinking
+Heap range = [0x0000000a2c800000 - 0x0000000bac800000]
+Archived 6092 interned strings
+Gathering classes and symbols ... 
+Sorting symbols ... 
+Sorting classes ... 
+Reserved output buffer space at 0x00000003c0000000 [1084227584 bytes]
+Allocating RW objects ... 
+done (113353 objects)
+Allocating RO objects ... 
+done (233759 objects)
+Relocating embedded pointers in core regions ... 
+Make classes shareable
+Number of classes 6157
+    instance classes   =  5691, aot-linked =  5691, inited =   884
+      boot             =  2194, aot-linked =  2194, inited =   367
+        vm             =   151, aot-linked =   151, inited =    42
+      platform         =     6, aot-linked =     6, inited =     0
+      app              =  3491, aot-linked =  3491, inited =   517
+      unregistered     =     0, aot-linked =     0, inited =     0
+      (enum)           =   203, aot-linked =   203, inited =     9
+      (hidden)         =   733, aot-linked =   733, inited =   733
+      (old)            =     0, aot-linked =     0, inited =     0
+      (unlinked)       =     0, boot = 0, plat = 0, app = 0, unreg = 0
+    obj array classes  =   457
+    type array classes =     9
+               symbols = 105998
+sorting heap objects
+computed ranks
+sorting heap objects done
+Size of heap region = 2274728 bytes, 45017 objects, 9371 roots, 7271 native ptrs
+oopmap =       4 ...  568682 (  0% ... 100% =  99%)
+ptrmap =  107500 ...  207314 ( 37% ...  72% =  35%)
+Dumping symbol table ...
+Archived 132 method handle intrinsics (35912 bytes)
+Shared file region (rw) 0: 15993120 bytes, addr 0x0000000800004000 file offset 0x00004000 crc 0x5dfba656
+Shared file region (ro) 1: 24559336 bytes, addr 0x0000000800f48000 file offset 0x00f48000 crc 0xc557b3fe
+Shared file region (ac) 4:   521072 bytes, addr 0x00000008026b4000 file offset 0x026b4000 crc 0x5d0ddfd4
+Shared file region (bm) 2:   580040 bytes, addr 0x0000000000000000 file offset 0x02734000 crc 0x68264b04
+Shared file region (hp) 3:  2274728 bytes, addr 0x0000000bac400000 file offset 0x027c4000 crc 0xa89b9cd9
+Full module graph = enabled
+Class  CP entries =  64121, archived =  23186 ( 36.2%), reverted =      0
+Field  CP entries =  20748, archived =   6481 ( 31.2%), reverted =      0
+Method CP entries =  22863, archived =  22770 ( 99.6%), reverted =     93
+Indy   CP entries =    726, archived =    726 (100.0%), reverted =      0
+Platform loader initiated classes =   1153
+App      loader initiated classes =   1159
+MethodCounters                    =   7084 (  453376 bytes)
+KlassTrainingData                 =    983 (   47184 bytes)
+MethodTrainingData                =   3073 (  295008 bytes)

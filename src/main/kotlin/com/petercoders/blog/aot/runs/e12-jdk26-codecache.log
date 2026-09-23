@@ -1,0 +1,25 @@
+[0.027s][debug][aot,codecache,init] Mapped 524288 bytes at address 0x00000001029b4000 at AOT Code Cache
+[0.028s][info ][aot,codecache,init] Loaded 512 AOT code entries from AOT Code Cache
+[0.028s][debug][aot,codecache,init]   Adapters:  total=512
+[0.028s][debug][aot,codecache,init]   Shared Blobs: total=0
+[0.028s][debug][aot,codecache,init]   C1 Blobs: total=0
+[0.028s][debug][aot,codecache,init]   C2 Blobs: total=0
+[0.028s][debug][aot,codecache,init]   AOT code cache size: 503960 bytes
+[0.028s][debug][aot,codecache,init] AOTStubCaching is disabled: incompatible CompressedOops::base(): 0xae4800000 vs current 0x0
+[0.028s][debug][aot,codecache,init] External addresses recorded
+[0.028s][info ][aot,codecache,init] Early stubs recorded
+[0.028s][debug][aot,codecache,init] Early shared blobs recorded
+[0.028s][debug][aot,codecache,init] Read 512 entries table at offset 475288 from AOT Code Cache
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-09-23T00:13:26.817+09:00  INFO 14739 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Starting BlogApplicationKt v0.0.1-SNAPSHOT using Java 26.0.2.1 with PID 14739 (/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/blog-0.0.1-SNAPSHOT.jar started by kibong_home in /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work)
+2026-09-23T00:13:26.818+09:00  INFO 14739 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : No active profile set, falling back to 1 default profile: "default"
+2026-09-23T00:13:26.931+09:00  INFO 14739 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.191 seconds (process running for 0.297)

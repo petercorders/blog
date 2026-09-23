@@ -1,0 +1,53 @@
+[0.002s][info][startuptime] StubRoutines generation initial stubs, 0.0000461 secs
+[0.002s][info][startuptime] SharedRuntime generate_throw_exception, 0.0000059 secs
+[0.005s][info][startuptime] Genesis, 0.0025616 secs
+[0.005s][info][startuptime] StubRoutines generation continuation stubs, 0.0000061 secs
+[0.005s][info][startuptime] SharedRuntime generate_jfr_stubs, 0.0000042 secs
+[0.005s][info][startuptime] SharedRuntime generate_throw_exception, 0.0000005 secs
+[0.005s][info][startuptime] SharedRuntime generate_throw_exception, 0.0000006 secs
+[0.005s][info][startuptime] SharedRuntime generate_throw_exception, 0.0000005 secs
+[0.005s][info][startuptime] SharedRuntime generate_throw_exception, 0.0000005 secs
+[0.006s][info][startuptime] Interpreter generation, 0.0002435 secs
+[0.006s][info][startuptime] StubRoutines generation final stubs, 0.0000431 secs
+[0.006s][info][startuptime] MethodHandles adapters generation, 0.0000108 secs
+[0.006s][info][startuptime] Start VMThread, 0.0000324 secs
+[0.010s][info][startuptime] Initialize java.lang classes, 0.0037733 secs
+[0.010s][info][startuptime] Initialize java.lang.invoke classes, 0.0001521 secs
+[0.010s][info][startuptime] StubRoutines generation compiler stubs, 0.0002138 secs
+[0.011s][info][startuptime] Initialize module system, 0.0011093 secs
+[0.012s][info][perf,class,link] At VM initialization completion:
+[0.012s][info][perf,class,link] ClassLoader:
+[0.012s][info][perf,class,link]   clinit:               1ms / 268 events
+[0.012s][info][perf,class,link]   link methods:         0ms / 7268 events
+[0.012s][info][perf,class,link]   method adapters:      0ms / 200 events
+[0.012s][info][perf,class,link]   resolve...
+[0.012s][info][perf,class,link]     invokedynamic:   0ms / 0 events
+[0.012s][info][perf,class,link]     invokehandle:    0ms / 0 events
+[0.012s][info][perf,class,link]     CP_MethodHandle: 0ms / 0 events
+[0.012s][info][perf,class,link]     CP_MethodType:   0ms / 0 events
+[0.012s][info][perf,class,link] 
+[0.012s][info][startuptime    ] Create VM, 0.0108025 secs
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-09-19T01:16:42.316+09:00  INFO 17988 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Starting BlogApplicationKt v0.0.1-SNAPSHOT using Java 25.0.4.1 with PID 17988 (/Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar started by kibong_home in /private/tmp/blog-exp-aot-e3-classload-perf)
+2026-09-19T01:16:42.317+09:00  INFO 17988 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : No active profile set, falling back to 1 default profile: "default"
+2026-09-19T01:16:42.600+09:00  INFO 17988 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.428 seconds (process running for 0.598)
+[0.601s][info][perf,class,link] At VM exit:
+[0.601s][info][perf,class,link] ClassLoader:
+[0.601s][info][perf,class,link]   clinit:               178ms / 4615 events
+[0.601s][info][perf,class,link]   link methods:         4ms / 53431 events
+[0.601s][info][perf,class,link]   method adapters:      3ms / 476 events
+[0.601s][info][perf,class,link]   resolve...
+[0.601s][info][perf,class,link]     invokedynamic:   91ms / 745 events
+[0.601s][info][perf,class,link]     invokehandle:    0ms / 150 events
+[0.601s][info][perf,class,link]     CP_MethodHandle: 25ms / 921 events
+[0.601s][info][perf,class,link]     CP_MethodType:   0ms / 741 events
+[0.601s][info][perf,class,link] 

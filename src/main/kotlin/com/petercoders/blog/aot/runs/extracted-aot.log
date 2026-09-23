@@ -1,0 +1,8 @@
+extracted-aot run=1 wall_ms=475 Started BlogApplicationKt in 0.191 seconds (process running for 0.444)
+extracted-aot run=2 wall_ms=249 Started BlogApplicationKt in 0.148 seconds (process running for 0.224)
+extracted-aot run=3 wall_ms=229 Started BlogApplicationKt in 0.133 seconds (process running for 0.208)
+extracted-aot run=4 wall_ms=243 Started BlogApplicationKt in 0.138 seconds (process running for 0.221)
+extracted-aot run=5 wall_ms=263 Started BlogApplicationKt in 0.158 seconds (process running for 0.236)
+extracted-aot median_wall_ms=249
+extracted-aot median_started_s=0.148
+extracted-aot median_process_s=0.224

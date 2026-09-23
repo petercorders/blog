@@ -1,0 +1,8 @@
+broken-cache-nowcheck run=1 wall_ms=616 Started BlogApplicationKt in 0.392 seconds (process running for 0.591)
+broken-cache-nowcheck run=2 wall_ms=539 Started BlogApplicationKt in 0.365 seconds (process running for 0.51)
+broken-cache-nowcheck run=3 wall_ms=505 Started BlogApplicationKt in 0.355 seconds (process running for 0.481)
+broken-cache-nowcheck run=4 wall_ms=498 Started BlogApplicationKt in 0.352 seconds (process running for 0.476)
+broken-cache-nowcheck run=5 wall_ms=504 Started BlogApplicationKt in 0.353 seconds (process running for 0.476)
+broken-cache-nowcheck median_wall_ms=505
+broken-cache-nowcheck median_started_s=0.355
+broken-cache-nowcheck median_process_s=0.481

@@ -1,0 +1,7 @@
+[0.002s][warning][aot] Unable to use AOT cache.
+[                    ] The AOT cache's UseCompactObjectHeaders setting (disabled) does not equal the current UseCompactObjectHeaders setting (enabled).
+[0.002s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+[0.002s][error  ][aot] Loading static archive failed.
+[0.002s][error  ][aot] Unable to map shared spaces
+Error occurred during initialization of VM
+Unable to use AOT cache.

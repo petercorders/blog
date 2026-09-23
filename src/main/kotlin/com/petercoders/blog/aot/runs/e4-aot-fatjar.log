@@ -1,0 +1,171 @@
+# experiment: e4-aot-fatjar (절: 캐시 뜨기, 그리고 fat jar 의 함정)
+# java -version (JDK25, ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# device: Apple M5 Pro, 15 cores (hw.physicalcpu=15, hw.logicalcpu=15), hw.cachelinesize=128
+# commands: AOT=~/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot ; J25=~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java ; JAR=~/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar ; WF=$AOT/runs/work-fat; mkdir -p $WF; cd $WF ; $J25 -XX:AOTMode=record -XX:AOTConfiguration=fat.aotconf -jar $JAR > record.log 2>&1 ; $J25 -XX:AOTMode=create -XX:AOTConfiguration=fat.aotconf -XX:AOTCache=fat.aot -Xlog:aot=info:file=create.log:none -jar $JAR ; ls -l fat.aotconf fat.aot ; grep -iE 'skip|exclud|unregistered|not.*archiv|warning' create.log | head -10 ; uptime ; $AOT/bench.sh fatjar-aot 5 $J25 -XX:AOTCache=$WF/fat.aot -jar $JAR ; $J25 -XX:AOTCache=$WF/fat.aot -Xlog:class+load:file=$WF/classload.log -jar $JAR > /dev/null 2>&1 ; echo total=$(wc -l < $WF/classload.log); echo shared=$(grep -c 'source: shared objects file' $WF/classload.log); echo nested=$(grep -c 'source: nested:' $WF/classload.log)
+
+=== $J25 -XX:AOTMode=record -XX:AOTConfiguration=fat.aotconf -jar $JAR > record.log 2>&1 ===
+(exit=0)
+--- record.log ---
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.1)
+
+2026-09-19T01:17:55.807+09:00  INFO 19389 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Starting BlogApplicationKt v0.0.1-SNAPSHOT using Java 25.0.4.1 with PID 19389 (/Users/kibong_home/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar started by kibong_home in /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-fat)
+2026-09-19T01:17:55.808+09:00  INFO 19389 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : No active profile set, falling back to 1 default profile: "default"
+2026-09-19T01:17:56.114+09:00  INFO 19389 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.492 seconds (process running for 0.78)
+[0.792s][warning][aot] Preload Warning: Verification failed for org.springframework.boot.logging.log4j2.Log4J2LoggingSystem
+[0.813s][warning][aot] Skipping jdk/internal/event/Event: JFR event class
+[0.813s][warning][aot] Skipping jdk/proxy1/$Proxy4: Unsupported location
+[0.813s][warning][aot] Skipping jdk/proxy1/$Proxy3: Unsupported location
+[0.813s][warning][aot] Skipping jdk/internal/event/SecurityProviderServiceEvent: JFR event class
+[0.814s][warning][aot] Skipping jdk/proxy1/$Proxy20: Unsupported location
+[0.814s][warning][aot] Skipping jdk/proxy1/$Proxy8: Unsupported location
+[0.814s][warning][aot] Skipping jdk/proxy1/$Proxy17: Unsupported location
+[0.814s][warning][aot] Skipping jdk/proxy1/$Proxy0: Unsupported location
+[0.814s][warning][aot] Skipping jdk/proxy1/$Proxy1: Unsupported location
+[0.814s][warning][aot] Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Failed verification
+ AOTConfiguration recorded: fat.aotconf
+
+=== $J25 -XX:AOTMode=create -XX:AOTConfiguration=fat.aotconf -XX:AOTCache=fat.aot -Xlog:aot=info:file=create.log:none -jar $JAR ===
+(exit=0, stdout)
+Reading AOTConfiguration fat.aotconf and writing AOTCache fat.aot
+AOTCache creation is complete: fat.aot 42631168 bytes
+
+--- create.log (full) ---
+Disabled all JVMTI agents during -XX:AOTMode=create
+Core region alignment: 16384
+trying to map AOTConfiguration file fat.aotconf
+Opened AOT configuration file fat.aotconf.
+The AOT configuration file was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+Core region alignment: 16384
+ArchiveRelocationMode: 1
+ArchiveRelocationMode == 1: always map archive(s) at an alternative address
+Try to map archive(s) at an alternative address
+Reserved archive_space_rs [0x00001ff000000000 - 0x00001ff003000000] (50331648) bytes (includes protection zone)
+Reserved class_space_rs   [0x00001ff003000000 - 0x00001ff043000000] (1073741824) bytes
+Mapped static  region #0 at base 0x00001ff000004000 top 0x00001ff000fe0000 (ReadWrite)
+Mapped static  region #1 at base 0x00001ff000fe0000 top 0x00001ff002794000 (ReadOnly)
+Mapped static  region #2 at base 0x0000000109f30000 top 0x0000000109fb4000 (Bitmap)
+archived module property jdk.module.main: (null)
+archived module property jdk.module.addexports: (null)
+archived module property jdk.module.addmods: (null)
+archived module property jdk.module.enable.native.access: (null)
+archived module property jdk.module.addopens: (null)
+archived module property jdk.module.addreads: (null)
+optimized module handling: enabled
+full module graph: enabled
+full module graph cannot be loaded: archive heap loading failed
+initial optimized module handling: enabled
+initial full module graph: disabled
+Unmapping region #2 at base 0x0000000109f30000 (Bitmap)
+Using AOT-linked classes: false (static archive: no aot-linked classes)
+JVM_StartThread() ignored: java.lang.ref.Reference$ReferenceHandler
+JVM_StartThread() ignored: java.lang.ref.Finalizer$FinalizerThread
+Not starting management agent during creation of AOT cache.
+Rewriting and linking classes ...
+JVM_StartThread() ignored: jdk.internal.misc.InnocuousThread
+Rewriting and linking classes: done
+allocated string table for 4441 strings
+string table array (single level) length = 4441
+Writing AOTCache file: fat.aot
+Gathering all archivable objects ...
+Heap range = [0x0000000b44800000 - 0x0000000cc4800000]
+Archived 4439 interned strings
+Gathering classes and symbols ...
+Sorting symbols ...
+Sorting classes ...
+Reserved output buffer space at 0x00000003c0000000 [1084227584 bytes]
+Allocating RW objects ...
+done (110876 objects)
+Allocating RO objects ...
+done (232431 objects)
+Relocating embedded pointers in core regions ...
+Make classes shareable
+Number of classes 5726
+    instance classes   =  5259, aot-linked =  2240, inited =   307
+      boot             =  2133, aot-linked =  2133, inited =   282
+        vm             =   151, aot-linked =   151, inited =    42
+      platform         =     6, aot-linked =     6, inited =     0
+      app              =   101, aot-linked =   101, inited =    25
+      unregistered     =  3019, aot-linked =     0, inited =     0
+      (enum)           =   206, aot-linked =    69, inited =     9
+      (hidden)         =   161, aot-linked =   161, inited =   161
+      (old)            =     0, aot-linked =     0, inited =     0
+      (unlinked)       =  3019, boot = 0, plat = 0, app = 0, unreg = 3019
+    obj array classes  =   458
+    type array classes =     9
+               symbols = 105953
+sorting heap objects
+computed ranks
+sorting heap objects done
+Size of heap region = 1210704 bytes, 25518 objects, 4007 roots, 3036 native ptrs
+oopmap =       4 ...  302676 (  0% ... 100% =  99%)
+ptrmap =   64059 ...  106160 ( 42% ...  70% =  27%)
+Dumping symbol table ...
+Archived 65 method handle intrinsics (17688 bytes)
+Shared file region (rw) 0: 15838608 bytes, addr 0x0000000800004000 file offset 0x00004000 crc 0xcb2c63db
+Shared file region (ro) 1: 24540312 bytes, addr 0x0000000800f20000 file offset 0x00f20000 crc 0xf1332456
+Shared file region (ac) 4:   454264 bytes, addr 0x0000000802688000 file offset 0x02688000 crc 0x7a6d19ee
+Shared file region (bm) 2:   545080 bytes, addr 0x0000000000000000 file offset 0x026f8000 crc 0xa68e8194
+Shared file region (hp) 3:  1210704 bytes, addr 0x0000000cc4400000 file offset 0x02780000 crc 0x90fa834e
+Full module graph = enabled
+Class  CP entries =  63427, archived =  13878 ( 21.9%), reverted =      0
+Field  CP entries =  20987, archived =   6695 ( 31.9%), reverted =      0
+Method CP entries =  10668, archived =  10611 ( 99.5%), reverted =     57
+Indy   CP entries =    148, archived =    148 (100.0%), reverted =      0
+Platform loader initiated classes =   1154
+App      loader initiated classes =   1160
+MethodCounters                    =   6618 (  423552 bytes)
+KlassTrainingData                 =   1096 (   52608 bytes)
+MethodTrainingData                =   3401 (  326496 bytes)
+
+=== ls -l fat.aotconf fat.aot ===
+-rw-r--r--@ 1 kibong_home  staff  42631168  9월 19 01:18 fat.aot
+-rw-r--r--@ 1 kibong_home  staff  42041344  9월 19 01:17 fat.aotconf
+
+=== grep -iE 'skip|exclud|unregistered|not.*archiv|warning' create.log | head -10 ===
+full module graph cannot be loaded: archive heap loading failed
+      unregistered     =  3019, aot-linked =     0, inited =     0
+
+=== uptime ===
+ 1:18  up 17 days, 16:52, 13 users, load averages: 7.38 6.16 5.46
+
+=== $AOT/bench.sh fatjar-aot 5 $J25 -XX:AOTCache=$WF/fat.aot -jar $JAR ===
+fatjar-aot run=1 wall_ms=513 Started BlogApplicationKt in 0.331 seconds (process running for 0.487)
+fatjar-aot run=2 wall_ms=396 Started BlogApplicationKt in 0.266 seconds (process running for 0.373)
+fatjar-aot run=3 wall_ms=397 Started BlogApplicationKt in 0.26 seconds (process running for 0.368)
+fatjar-aot run=4 wall_ms=381 Started BlogApplicationKt in 0.253 seconds (process running for 0.359)
+fatjar-aot run=5 wall_ms=432 Started BlogApplicationKt in 0.304 seconds (process running for 0.403)
+fatjar-aot median_wall_ms=397
+fatjar-aot median_started_s=0.266
+fatjar-aot median_process_s=0.373
+
+=== $J25 -XX:AOTCache=$WF/fat.aot -Xlog:class+load:file=$WF/classload.log -jar $JAR > /dev/null 2>&1 ===
+(exit=0)
+
+=== echo total / shared / nested (literal 'source: nested:', as specified in the command) ===
+total=5636
+shared=4983
+nested=0
+
+=== NOTE: literal grep pattern 'source: nested:' never matches — the actual class+load line format on this JDK is
+    'source: jar:nested:/.../BOOT-INF/lib/<x>.jar!/', not 'source: nested:'. Re-checked with the correct pattern:
+grep -c 'jar:nested:' classload.log (with fat.aot cache)      = 0
+grep -c 'jar:nested:' ../fatjar-classload.log (e3, no cache)  = 2927
+grep -c 'source: shared objects file' ../fatjar-classload.log (e3, no cache) = 1379
+
+=== reference: e2 fatjar-baseline (no cache), already on disk at ../fatjar-baseline.log ===
+fatjar-baseline median_wall_ms=715
+fatjar-baseline median_started_s=0.511
+fatjar-baseline median_process_s=0.688
+
+=== reference: e5 extracted-baseline (no cache, extracted layout), already on disk at ../extracted-baseline.log ===
+extracted-baseline median_wall_ms=482
+extracted-baseline median_started_s=0.358
+extracted-baseline median_process_s=0.459

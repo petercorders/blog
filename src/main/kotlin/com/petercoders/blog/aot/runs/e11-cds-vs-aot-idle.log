@@ -1,0 +1,52 @@
+# e11 재실험 · 유휴 상태 · 15라운드 라운드로빈 · JDK 25.0.4.1 · Apple M5 Pro(15코어)
+23:32  up 33 mins, 5 users, load averages: 2.60 3.14 4.31
+baseline wall_ms=691 Started BlogApplicationKt in 0.46 seconds
+cds wall_ms=323 Started BlogApplicationKt in 0.201 seconds
+aot wall_ms=273 Started BlogApplicationKt in 0.143 seconds
+baseline wall_ms=542 Started BlogApplicationKt in 0.382 seconds
+cds wall_ms=331 Started BlogApplicationKt in 0.231 seconds
+aot wall_ms=245 Started BlogApplicationKt in 0.142 seconds
+baseline wall_ms=580 Started BlogApplicationKt in 0.412 seconds
+cds wall_ms=313 Started BlogApplicationKt in 0.215 seconds
+aot wall_ms=242 Started BlogApplicationKt in 0.146 seconds
+baseline wall_ms=568 Started BlogApplicationKt in 0.389 seconds
+cds wall_ms=294 Started BlogApplicationKt in 0.202 seconds
+aot wall_ms=233 Started BlogApplicationKt in 0.139 seconds
+baseline wall_ms=558 Started BlogApplicationKt in 0.395 seconds
+cds wall_ms=316 Started BlogApplicationKt in 0.224 seconds
+aot wall_ms=244 Started BlogApplicationKt in 0.139 seconds
+baseline wall_ms=576 Started BlogApplicationKt in 0.413 seconds
+cds wall_ms=315 Started BlogApplicationKt in 0.219 seconds
+aot wall_ms=237 Started BlogApplicationKt in 0.142 seconds
+baseline wall_ms=557 Started BlogApplicationKt in 0.382 seconds
+cds wall_ms=298 Started BlogApplicationKt in 0.206 seconds
+aot wall_ms=224 Started BlogApplicationKt in 0.135 seconds
+baseline wall_ms=551 Started BlogApplicationKt in 0.389 seconds
+cds wall_ms=320 Started BlogApplicationKt in 0.214 seconds
+aot wall_ms=223 Started BlogApplicationKt in 0.129 seconds
+baseline wall_ms=511 Started BlogApplicationKt in 0.358 seconds
+cds wall_ms=275 Started BlogApplicationKt in 0.189 seconds
+aot wall_ms=207 Started BlogApplicationKt in 0.123 seconds
+baseline wall_ms=522 Started BlogApplicationKt in 0.367 seconds
+cds wall_ms=275 Started BlogApplicationKt in 0.187 seconds
+aot wall_ms=210 Started BlogApplicationKt in 0.127 seconds
+baseline wall_ms=511 Started BlogApplicationKt in 0.357 seconds
+cds wall_ms=274 Started BlogApplicationKt in 0.187 seconds
+aot wall_ms=208 Started BlogApplicationKt in 0.123 seconds
+baseline wall_ms=507 Started BlogApplicationKt in 0.354 seconds
+cds wall_ms=272 Started BlogApplicationKt in 0.186 seconds
+aot wall_ms=209 Started BlogApplicationKt in 0.126 seconds
+baseline wall_ms=508 Started BlogApplicationKt in 0.354 seconds
+cds wall_ms=274 Started BlogApplicationKt in 0.187 seconds
+aot wall_ms=208 Started BlogApplicationKt in 0.122 seconds
+baseline wall_ms=511 Started BlogApplicationKt in 0.357 seconds
+cds wall_ms=271 Started BlogApplicationKt in 0.184 seconds
+aot wall_ms=208 Started BlogApplicationKt in 0.123 seconds
+baseline wall_ms=516 Started BlogApplicationKt in 0.357 seconds
+cds wall_ms=271 Started BlogApplicationKt in 0.185 seconds
+aot wall_ms=211 Started BlogApplicationKt in 0.129 seconds
+23:32  up 33 mins, 5 users, load averages: 2.91 3.18 4.30
+--- medians ---
+baseline: median_wall=542ms min=507 median_started=0.382s n=15
+cds: median_wall=294ms min=271 median_started=0.201s n=15
+aot: median_wall=223ms min=207 median_started=0.129s n=15

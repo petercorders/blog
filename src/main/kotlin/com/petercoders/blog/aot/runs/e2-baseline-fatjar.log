@@ -1,0 +1,13 @@
+# 실험: e2-baseline-fatjar — Spring Boot fat jar(java -jar)로 기동, 기동 로그 문구가 재는 시간과 벽시계 시간의 차이를 본다 (5회, 중앙값)
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize: 128
+# 실행 명령: AOT=~/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot ; J25=~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java ; JAR=~/Desktop/development/blog/build/libs/blog-0.0.1-SNAPSHOT.jar ; uptime ; $AOT/bench.sh fatjar-baseline 5 $J25 -jar $JAR ; cat $AOT/runs/fatjar-baseline.log
+ 1:16  up 17 days, 16:50, 13 users, load averages: 5.49 5.38 5.12
+fatjar-baseline run=1 wall_ms=793 Started BlogApplicationKt in 0.57 seconds (process running for 0.764)
+fatjar-baseline run=2 wall_ms=727 Started BlogApplicationKt in 0.511 seconds (process running for 0.7)
+fatjar-baseline run=3 wall_ms=715 Started BlogApplicationKt in 0.518 seconds (process running for 0.688)
+fatjar-baseline run=4 wall_ms=634 Started BlogApplicationKt in 0.449 seconds (process running for 0.608)
+fatjar-baseline run=5 wall_ms=665 Started BlogApplicationKt in 0.459 seconds (process running for 0.641)
+fatjar-baseline median_wall_ms=715
+fatjar-baseline median_started_s=0.511
+fatjar-baseline median_process_s=0.688

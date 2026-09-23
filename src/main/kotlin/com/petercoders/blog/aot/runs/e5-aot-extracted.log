@@ -1,0 +1,68 @@
+# 실험: e5-aot-extracted — fat jar 를 펼친(extracted) 뒤 AOT 캐시를 적용하면 fat jar 의 함정(nested jar 라 클래스가 캐시에서 안 뜨는 문제)이 풀리는가
+# java -version (J25, ~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro / 코어 15개 / hw.cachelinesize 128 bytes
+# 실행한 명령: AOT=~/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot ; J25=~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java ; $AOT/setup.sh ; W=$AOT/runs/work; APP=$W/application/blog-0.0.1-SNAPSHOT.jar ; ls -l $W/blog.aot $W/blog.aotconf ; unzip -p $APP META-INF/MANIFEST.MF | grep -A2 'Class-Path' | head -3 ; uptime ; $AOT/bench.sh extracted-baseline 5 $J25 -jar $APP ; $AOT/bench.sh extracted-aot 5 $J25 -XX:AOTCache=$W/blog.aot -jar $APP ; $J25 -XX:AOTCache=$W/blog.aot -Xlog:class+load:file=$W/classload-aot.log -jar $APP > /dev/null 2>&1 ; echo total=$(wc -l < $W/classload-aot.log); echo shared=$(grep -c 'source: shared objects file' $W/classload-aot.log); echo jarsrc=$(grep -c 'source: jar:\|source: file:' $W/classload-aot.log) ; $J25 -XX:AOTCache=$W/blog.aot -XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal -jar $APP 2>/dev/null | grep -E ' (AOTClassLinking|AOTReplayTraining|AOTRecordTraining|AOTInvokeDynamicLinking|AOTMode|AOTAdapterCaching|AOTStubCaching) '
+
+=== setup.sh (AOT 캐시 3단계 생성: extract -> record -> create) ===
+-rw-r--r--@ 1 kibong_home  staff   43974656  9월 19 01:16 blog.aot
+-rw-r--r--@ 1 kibong_home  staff  219718777  9월 19 01:16 blog.aot.map
+-rw-r--r--@ 1 kibong_home  staff   40960000  9월 19 01:16 blog.aotconf
+APP=/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/application/blog-0.0.1-SNAPSHOT.jar
+AOT=/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog.aot
+
+=== ls -l blog.aot blog.aotconf ===
+-rw-r--r--@ 1 kibong_home  staff  43974656  9월 19 01:16 /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog.aot
+-rw-r--r--@ 1 kibong_home  staff  40960000  9월 19 01:16 /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work/blog.aotconf
+
+=== unzip -p APP META-INF/MANIFEST.MF | grep -A2 Class-Path | head -3 (extracted jar: Class-Path 로 lib/*.jar 참조, fat jar 처럼 앱 클래스를 자기 안에 nested jar 로 안 품음) ===
+Class-Path: lib/kotlin-reflect-2.3.21.jar lib/kotlin-stdlib-2.3.21.jar l
+ ib/annotations-13.0.jar lib/spring-boot-autoconfigure-4.1.1.jar lib/jak
+ arta.annotation-api-3.0.0.jar lib/snakeyaml-2.6.jar lib/logback-classic
+
+=== uptime ===
+ 1:16  up 17 days, 16:50, 13 users, load averages: 5.95 5.48 5.16
+
+=== bench.sh extracted-baseline 5 (java -jar, AOT 캐시 없음) ===
+extracted-baseline run=1 wall_ms=579 Started BlogApplicationKt in 0.417 seconds (process running for 0.553)
+extracted-baseline run=2 wall_ms=468 Started BlogApplicationKt in 0.345 seconds (process running for 0.444)
+extracted-baseline run=3 wall_ms=482 Started BlogApplicationKt in 0.362 seconds (process running for 0.462)
+extracted-baseline run=4 wall_ms=464 Started BlogApplicationKt in 0.342 seconds (process running for 0.441)
+extracted-baseline run=5 wall_ms=482 Started BlogApplicationKt in 0.358 seconds (process running for 0.459)
+extracted-baseline median_wall_ms=482
+extracted-baseline median_started_s=0.358
+extracted-baseline median_process_s=0.459
+
+=== bench.sh extracted-aot 5 (java -XX:AOTCache=blog.aot -jar, 같은 extracted jar) ===
+extracted-aot run=1 wall_ms=475 Started BlogApplicationKt in 0.191 seconds (process running for 0.444)
+extracted-aot run=2 wall_ms=249 Started BlogApplicationKt in 0.148 seconds (process running for 0.224)
+extracted-aot run=3 wall_ms=229 Started BlogApplicationKt in 0.133 seconds (process running for 0.208)
+extracted-aot run=4 wall_ms=243 Started BlogApplicationKt in 0.138 seconds (process running for 0.221)
+extracted-aot run=5 wall_ms=263 Started BlogApplicationKt in 0.158 seconds (process running for 0.236)
+extracted-aot median_wall_ms=249
+extracted-aot median_started_s=0.148
+extracted-aot median_process_s=0.224
+
+=== classload-aot.log 집계 (AOTCache 적용, -Xlog:class+load) ===
+total= 5806
+shared=5691
+jarsrc=9
+
+참고: 같은 방식으로 이전에 뜬 fatjar-classload.log (fat jar 그대로, AOT 캐시 없이 기본 CDS 만) 는 대조용:
+  total=5804, shared=1379 (source: shared objects file), jarsrc=2927 (source: jar:)
+  즉 fat jar 를 펼쳐서 캐시를 적용하면 shared 1379 -> 5691 로, jar 직접 로드는 2927 -> 9 로 바뀐다 (동일 앱, 캐시 유무/펼침 유무만 다름).
+
+=== PrintFlagsFinal | grep AOT* (AOTCache 로드 상태에서 실제 플래그 값) ===
+     bool AOTAdapterCaching                        = true                                   {diagnostic} {ergonomic}
+     bool AOTClassLinking                          = false                                     {product} {default}
+     bool AOTInvokeDynamicLinking                  = false                                  {diagnostic} {ergonomic}
+    ccstr AOTMode                                  =                                           {product} {default}
+     bool AOTRecordTraining                        = false                                  {diagnostic} {ergonomic}
+     bool AOTReplayTraining                        = true                                   {diagnostic} {ergonomic}
+     bool AOTStubCaching                           = false                                  {diagnostic} {ergonomic}
+
+=== 참고: 이 저장소에 이미 있던 e2 (fat jar, AOT 없음) 조건 (fatjar-baseline.log, uptime load avg 5.49) ===
+fatjar-baseline median_wall_ms=715
+fatjar-baseline median_started_s=0.511
+fatjar-baseline median_process_s=0.688
+
+=== 4조건 표를 위한 참고: e4 (fat jar + AOT) 로그는 이 디렉터리(aot/runs/)에 아직 존재하지 않음 — 이번 e5 실행 시점 기준으로는 fatjar-baseline / extracted-baseline / extracted-aot 3조건만 실측 확인됨. ===

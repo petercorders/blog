@@ -1,0 +1,8 @@
+nocache-nowcheck run=1 wall_ms=710 Started BlogApplicationKt in 0.434 seconds (process running for 0.637)
+nocache-nowcheck run=2 wall_ms=462 Started BlogApplicationKt in 0.339 seconds (process running for 0.439)
+nocache-nowcheck run=3 wall_ms=462 Started BlogApplicationKt in 0.338 seconds (process running for 0.436)
+nocache-nowcheck run=4 wall_ms=456 Started BlogApplicationKt in 0.338 seconds (process running for 0.435)
+nocache-nowcheck run=5 wall_ms=466 Started BlogApplicationKt in 0.345 seconds (process running for 0.443)
+nocache-nowcheck median_wall_ms=462
+nocache-nowcheck median_started_s=0.339
+nocache-nowcheck median_process_s=0.439
