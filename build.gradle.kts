@@ -21,10 +21,22 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    runtimeOnly("com.h2database:h2")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+// kco/ tip/ jkc/ 는 kotlinc 로 단독 컴파일하는 코루틴 실험 파일이라 Gradle 클래스패스에
+// kotlinx-coroutines 가 없다. Gradle 컴파일 대상에서 뺀다(이전부터 컴파일 안 되던 상태).
+sourceSets.main {
+    kotlin.exclude(
+        "com/petercoders/blog/kco/**",
+        "com/petercoders/blog/tip/**",
+        "com/petercoders/blog/jkc/**",
+    )
 }
 
 // gc/ 아래 실험 파일들이 각자 main 을 갖고 있어 bootJar 가 진입점을 못 고른다. 명시해 둔다.
@@ -40,4 +52,13 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// SPRING-INTERNALS 1편(@Transactional 프록시) 실험 러너. ./gradlew --offline -q txLab
+tasks.register<JavaExec>("txLab") {
+    group = "blog"
+    description = "@Transactional 프록시 실험 전체 실행"
+    mainClass.set("com.petercoders.blog.tx.TxLabKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardOutput = System.out
 }

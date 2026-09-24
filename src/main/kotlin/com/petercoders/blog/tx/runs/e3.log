@@ -1,0 +1,33 @@
+# experiment: e3 (§3 Kotlin 의 final 기본값과 그 경계) — all-open 플러그인 유무에 따른 javap -p 비교
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS (OpenJDK Runtime Environment Microsoft-14951866, build 25.0.4.1+1-LTS) [javap 실행에 사용한 JH=ms-25.0.4.1]; PATH 기본 java: openjdk version "26.0.2.1" 2026-08-18
+# device: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog; KC="/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc"; JH=~/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home; CP=$(find ~/.gradle/caches -name 'spring-tx-7.0.9.jar' -o -name 'spring-core-7.0.9.jar' | tr '\n' ':'); rm -rf /tmp/allopen-off; "$KC/bin/kotlinc" -cp "$CP" -d /tmp/allopen-off src/main/kotlin/com/petercoders/blog/tx/AllOpenProbe.kt; { echo '=== plugin OFF (kotlinc) ==='; $JH/bin/javap -p -cp /tmp/allopen-off com.petercoders.blog.tx.AllOpenProbe com.petercoders.blog.tx.NotAnnotated; echo '=== plugin ON (gradle, kotlin("plugin.spring")) ==='; $JH/bin/javap -p -cp build/classes/kotlin/main com.petercoders.blog.tx.AllOpenProbe com.petercoders.blog.tx.NotAnnotated; } | tee src/main/kotlin/com/petercoders/blog/tx/runs/allopen-javap.txt
+
+=== plugin OFF (kotlinc) ===
+Compiled from "AllOpenProbe.kt"
+public final class com.petercoders.blog.tx.AllOpenProbe {
+  public com.petercoders.blog.tx.AllOpenProbe();
+  public final java.lang.String defaultModality();
+  public final java.lang.String explicitFinal();
+  private final java.lang.String invisible();
+  public final java.lang.String callInvisible();
+}
+Compiled from "AllOpenProbe.kt"
+public final class com.petercoders.blog.tx.NotAnnotated {
+  public com.petercoders.blog.tx.NotAnnotated();
+  public final java.lang.String stillFinal();
+}
+=== plugin ON (gradle, kotlin("plugin.spring")) ===
+Compiled from "AllOpenProbe.kt"
+public class com.petercoders.blog.tx.AllOpenProbe {
+  public com.petercoders.blog.tx.AllOpenProbe();
+  public java.lang.String defaultModality();
+  public final java.lang.String explicitFinal();
+  private java.lang.String invisible();
+  public java.lang.String callInvisible();
+}
+Compiled from "AllOpenProbe.kt"
+public final class com.petercoders.blog.tx.NotAnnotated {
+  public com.petercoders.blog.tx.NotAnnotated();
+  public final java.lang.String stillFinal();
+}

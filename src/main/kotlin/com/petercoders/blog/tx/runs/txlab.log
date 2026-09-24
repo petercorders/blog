@@ -1,0 +1,71 @@
+# 실험: E2 — @Transactional 프록시를 통과하지 않는 8가지 호출 경로 (SPRING-INTERNALS 1편 §2)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  [실행은 Gradle 툴체인 Microsoft OpenJDK 25.0.4.1+1-LTS 로 함 — build.gradle.kts: java.toolchain.languageVersion=25]
+# 기기: Apple M5 Pro, 15코어(물리 15/논리 15), hw.cachelinesize=128 bytes
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab   (실행 후 TxLab.kt 에 spring.main.allow-circular-references=true 를 더해 재실행 — 아래 notes 참조)
+## [E1] proxy kind — spring.aop.proxy-target-class 기본값
+2026-09-23T21:16:47.752+09:00  WARN 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-23T21:16:47.752+09:00 DEBUG 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-23T21:16:47.752+09:00  WARN 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-23T21:16:47.753+09:00 DEBUG 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
+plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+
+## [E1b] proxy kind — spring.aop.proxy-target-class=false
+orderService  aop=true  cglib=false jdk=true  jdk.proxy2.$Proxy56
+plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+
+## [E2] which calls reach TransactionInterceptor
+| case | expected | actual | match | tx name |
+|---|---|---|---|---|
+| constructor(init)                  | false    | false    | true  | - |
+| @PostConstruct → own @Transactional | true     | false    | false | - |
+| external → proxy                   | true     | true     | true  | tx |
+| self-invocation this.tx()          | true     | false    | false | - |
+| self field → proxy                 | true     | true     | true  | tx |
+| private @Transactional             | false    | false    | true  | - |
+| protected @Transactional           | false    | true     | false | protectedTx |
+| final @Transactional               | false    | false    | true  | - |
+
+## [E2b] final method on a CGLIB proxy reads a constructor-injected field
+proxy class      = com.petercoders.blog.tx.BypassProbe$$SpringCGLIB$$0
+target class     = com.petercoders.blog.tx.BypassProbe
+finalTx modifier = public final
+finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springframework.jdbc.core.JdbcTemplate.getDataSource()" because "this.jdbc" is null
+
+## [E3] REQUIRES_NEW: self-invocation vs via proxy (rows left in H2)
+| path | returned | rows committed |
+|---|---|---|
+| self-invocation   | caught InnerFailed | 2 |
+| self field(proxy) | caught InnerFailed | 1 |
+| REQUIRED(proxy)   | threw UnexpectedRollbackException | 0 |
+
+## [E4] TransactionSynchronizationManager ThreadLocal slots
+--- outside a transaction (main thread)
+  resources                        = null
+  synchronizations                 = null
+  currentTransactionName           = null
+  currentTransactionReadOnly       = null
+  currentTransactionIsolationLevel = null
+  actualTransactionActive          = null
+--- inside a transaction (main thread)
+  resources                        = {HikariDataSource (HikariPool-1)=org.springframework.jdbc.datasource.ConnectionHolder@446e7065}
+  synchronizations                 = []
+  currentTransactionName           = null
+  currentTransactionReadOnly       = null
+  currentTransactionIsolationLevel = null
+  actualTransactionActive          = true
+--- same moment, another thread
+  resources                        = null
+  synchronizations                 = null
+  currentTransactionName           = null
+  currentTransactionReadOnly       = null
+  currentTransactionIsolationLevel = null
+  actualTransactionActive          = null
+
+## [E5] rollback rules (rows left in H2: 0 = rolled back, 1 = committed)
+| thrown | attribute | rows |
+|---|---|---|
+| IllegalStateException | (none) | 0 |
+| DomainFailure : Exception | (none) | 1 |
+| DomainFailure : Exception | rollbackFor=Exception | 0 |
+| IllegalStateException | rollbackFor=Exception, noRollbackFor=ISE | 1 |

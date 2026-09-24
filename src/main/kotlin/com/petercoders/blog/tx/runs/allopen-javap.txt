@@ -1,0 +1,28 @@
+=== plugin OFF (kotlinc) ===
+Compiled from "AllOpenProbe.kt"
+public final class com.petercoders.blog.tx.AllOpenProbe {
+  public com.petercoders.blog.tx.AllOpenProbe();
+  public final java.lang.String defaultModality();
+  public final java.lang.String explicitFinal();
+  private final java.lang.String invisible();
+  public final java.lang.String callInvisible();
+}
+Compiled from "AllOpenProbe.kt"
+public final class com.petercoders.blog.tx.NotAnnotated {
+  public com.petercoders.blog.tx.NotAnnotated();
+  public final java.lang.String stillFinal();
+}
+=== plugin ON (gradle, kotlin("plugin.spring")) ===
+Compiled from "AllOpenProbe.kt"
+public class com.petercoders.blog.tx.AllOpenProbe {
+  public com.petercoders.blog.tx.AllOpenProbe();
+  public java.lang.String defaultModality();
+  public final java.lang.String explicitFinal();
+  private java.lang.String invisible();
+  public java.lang.String callInvisible();
+}
+Compiled from "AllOpenProbe.kt"
+public final class com.petercoders.blog.tx.NotAnnotated {
+  public com.petercoders.blog.tx.NotAnnotated();
+  public final java.lang.String stillFinal();
+}
