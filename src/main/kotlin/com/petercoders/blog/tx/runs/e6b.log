@@ -1,0 +1,6 @@
+# 실험: e6b (SPRING-INTERNALS 1편 §5 "걸린 트랜잭션이 사는 곳") — TransactionSynchronizationManager.bindResource() 같은 키 이중 바인딩, txlab.log 의 [E4b] 구간 추출
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  [실행은 Gradle 툴체인 Microsoft OpenJDK 25.0.4.1+1-LTS 로 함]
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab
+
+## [E4b] TransactionSynchronizationManager.bindResource — same key twice
+bindResource("probe-key", "second") -> IllegalStateException: Already value [first] for key [probe-key] bound to thread

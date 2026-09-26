@@ -75,6 +75,27 @@ fun main() {
         catch (e: Throwable) { "finalReadsField() -> ${e.javaClass.name}: ${e.message}" }
     )
 
+    // ---------------------------------------------------------- E2c protected 가 왜 열렸나
+    println()
+    println("## [E2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적")
+    val target = AopProxyUtils.ultimateTargetClass(p)
+    val mProtected = target.getDeclaredMethod("protectedTx")
+    val mPrivate = target.getDeclaredMethod("privateTx")
+    println("protectedTx modifiers = ${Modifier.toString(mProtected.modifiers)}")
+    println("privateTx   modifiers = ${Modifier.toString(mPrivate.modifiers)}")
+    val tasBeans = ctx.getBeansOfType(org.springframework.transaction.interceptor.TransactionAttributeSource::class.java)
+    println("TransactionAttributeSource beans = ${tasBeans.map { "${it.key}=${it.value.javaClass.name}" }}")
+    tasBeans.values.forEach { tas ->
+        val pmo = generateSequence(tas.javaClass as Class<*>?) { it.superclass }
+            .mapNotNull { c -> c.declaredFields.firstOrNull { it.name == "publicMethodsOnly" } }
+            .firstOrNull()?.also { it.isAccessible = true }?.getBoolean(tas)
+        println("  ${tas.javaClass.simpleName}: publicMethodsOnly = $pmo")
+        println("    getTransactionAttribute(protectedTx) = ${tas.getTransactionAttribute(mProtected, target)}")
+        println("    getTransactionAttribute(privateTx)   = ${tas.getTransactionAttribute(mPrivate, target)}")
+    }
+    println("CGLIB 프록시의 오버라이드 = " +
+        Modifier.toString(p.javaClass.getDeclaredMethod("protectedTx").modifiers))
+
     // ---------------------------------------------------------- E3 REQUIRES_NEW 자기 호출
     val n = ctx.getBean(NestedProbe::class.java)
     println()
@@ -98,6 +119,17 @@ fun main() {
         val t = Thread { println("--- same moment, another thread"); dumpSlots() }
         t.start(); t.join()
     }
+
+    // ---------------------------------------------------------- E4b bindResource 이중 바인딩
+    println()
+    println("## [E4b] TransactionSynchronizationManager.bindResource — same key twice")
+    TSM.bindResource("probe-key", "first")
+    try {
+        TSM.bindResource("probe-key", "second")
+    } catch (e: IllegalStateException) {
+        println("bindResource(\"probe-key\", \"second\") -> ${e.javaClass.simpleName}: ${e.message}")
+    }
+    TSM.unbindResource("probe-key")
 
     // ---------------------------------------------------------- E5 롤백 규칙
     val r = ctx.getBean(RollbackProbe::class.java)

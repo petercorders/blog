@@ -2,11 +2,12 @@
 # java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  [실행은 Gradle 툴체인 Microsoft OpenJDK 25.0.4.1+1-LTS 로 함 — build.gradle.kts: java.toolchain.languageVersion=25]
 # 기기: Apple M5 Pro, 15코어(물리 15/논리 15), hw.cachelinesize=128 bytes
 # 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab   (실행 후 TxLab.kt 에 spring.main.allow-circular-references=true 를 더해 재실행 — 아래 notes 참조)
+
 ## [E1] proxy kind — spring.aop.proxy-target-class 기본값
-2026-09-23T21:16:47.752+09:00  WARN 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-23T21:16:47.752+09:00 DEBUG 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
-2026-09-23T21:16:47.752+09:00  WARN 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-23T21:16:47.753+09:00 DEBUG 13952 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-27T00:22:41.929+09:00  WARN 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-27T00:22:41.930+09:00 DEBUG 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-27T00:22:41.930+09:00  WARN 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-27T00:22:41.930+09:00 DEBUG 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
 orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
 plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
 
@@ -32,6 +33,15 @@ target class     = com.petercoders.blog.tx.BypassProbe
 finalTx modifier = public final
 finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springframework.jdbc.core.JdbcTemplate.getDataSource()" because "this.jdbc" is null
 
+## [E2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적
+protectedTx modifiers = protected
+privateTx   modifiers = private
+TransactionAttributeSource beans = [transactionAttributeSource=org.springframework.transaction.annotation.AnnotationTransactionAttributeSource]
+  AnnotationTransactionAttributeSource: publicMethodsOnly = false
+    getTransactionAttribute(protectedTx) = PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+    getTransactionAttribute(privateTx)   = PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+CGLIB 프록시의 오버라이드 = protected final
+
 ## [E3] REQUIRES_NEW: self-invocation vs via proxy (rows left in H2)
 | path | returned | rows committed |
 |---|---|---|
@@ -48,7 +58,7 @@ finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springfr
   currentTransactionIsolationLevel = null
   actualTransactionActive          = null
 --- inside a transaction (main thread)
-  resources                        = {HikariDataSource (HikariPool-1)=org.springframework.jdbc.datasource.ConnectionHolder@446e7065}
+  resources                        = {HikariDataSource (HikariPool-1)=org.springframework.jdbc.datasource.ConnectionHolder@3b78c683}
   synchronizations                 = []
   currentTransactionName           = null
   currentTransactionReadOnly       = null
@@ -61,6 +71,9 @@ finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springfr
   currentTransactionReadOnly       = null
   currentTransactionIsolationLevel = null
   actualTransactionActive          = null
+
+## [E4b] TransactionSynchronizationManager.bindResource — same key twice
+bindResource("probe-key", "second") -> IllegalStateException: Already value [first] for key [probe-key] bound to thread
 
 ## [E5] rollback rules (rows left in H2: 0 = rolled back, 1 = committed)
 | thrown | attribute | rows |
