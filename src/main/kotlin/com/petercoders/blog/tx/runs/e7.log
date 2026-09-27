@@ -10,3 +10,8 @@
 | DomainFailure : Exception | (none) | 1 |
 | DomainFailure : Exception | rollbackFor=Exception | 0 |
 | IllegalStateException | rollbackFor=Exception, noRollbackFor=ISE | 1 |
+
+## [E5b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름
+| thrown | attribute | rows |
+|---|---|---|
+| DomainFailure : Exception | (none) + rollbackOn=ALL_EXCEPTIONS | 0 |

@@ -16,6 +16,15 @@ import kotlin.system.exitProcess
 @SpringBootApplication(scanBasePackages = ["com.petercoders.blog.tx"])
 class TxLabApp
 
+
+// rollbackOn = ALL_EXCEPTIONS (6.2~) 를 켠 설정. Boot 의 자동 구성은
+// @ConditionalOnMissingBean(AbstractTransactionManagementConfiguration) 이라 이게 있으면 물러난다.
+@org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
+@org.springframework.context.annotation.Profile("allexc")   // 이 프로파일에서만 뜬다 — 안 그러면 첫 컨텍스트까지 켜진다
+@org.springframework.transaction.annotation.EnableTransactionManagement(
+    rollbackOn = org.springframework.transaction.annotation.RollbackOn.ALL_EXCEPTIONS)
+class AllExceptionsRollbackConfig
+
 private fun boot(vararg extra: String): ConfigurableApplicationContext =
     SpringApplicationBuilder(TxLabApp::class.java)
         .properties(
@@ -145,8 +154,26 @@ fun main() {
     run("e5-b", "DomainFailure : Exception", "(none)") { r.checkedLike(it) }
     run("e5-c", "DomainFailure : Exception", "rollbackFor=Exception") { r.checkedLikeWithRule(it) }
     run("e5-d", "IllegalStateException", "rollbackFor=Exception, noRollbackFor=ISE") { r.depthRule(it) }
-
     ctx.close()
+
+    // -------------------------------------------------- E5b 전역 스위치 rollbackOn=ALL_EXCEPTIONS
+    println()
+    println("## [E5b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름")
+    val ctx2 = SpringApplicationBuilder(TxLabApp::class.java, AllExceptionsRollbackConfig::class.java)
+        .properties(
+            "spring.main.web-application-type=none", "spring.main.banner-mode=off",
+            "spring.datasource.url=jdbc:h2:mem:txlab;DB_CLOSE_DELAY=-1",
+            "spring.datasource.driver-class-name=org.h2.Driver",
+            "spring.main.allow-circular-references=true", "logging.level.root=WARN",
+            "spring.profiles.active=allexc",
+        ).run()
+    val jdbc2 = ctx2.getBean(JdbcTemplate::class.java)
+    val r2 = ctx2.getBean(RollbackProbe::class.java)
+    println("| thrown | attribute | rows |")
+    println("|---|---|---|")
+    try { r2.checkedLike("e5b-a") } catch (_: Throwable) {}
+    println("| DomainFailure : Exception | (none) + rollbackOn=ALL_EXCEPTIONS | ${rows(jdbc2, "e5b-a")} |")
+    ctx2.close()
     exitProcess(0)
 }
 

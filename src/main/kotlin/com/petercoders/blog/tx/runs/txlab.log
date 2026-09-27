@@ -4,10 +4,10 @@
 # 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab   (실행 후 TxLab.kt 에 spring.main.allow-circular-references=true 를 더해 재실행 — 아래 notes 참조)
 
 ## [E1] proxy kind — spring.aop.proxy-target-class 기본값
-2026-09-27T00:22:41.929+09:00  WARN 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T00:22:41.930+09:00 DEBUG 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
-2026-09-27T00:22:41.930+09:00  WARN 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T00:22:41.930+09:00 DEBUG 14626 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-27T17:45:48.178+09:00  WARN 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-27T17:45:48.179+09:00 DEBUG 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-27T17:45:48.179+09:00  WARN 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-27T17:45:48.179+09:00 DEBUG 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
 orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
 plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
 
@@ -58,7 +58,7 @@ CGLIB 프록시의 오버라이드 = protected final
   currentTransactionIsolationLevel = null
   actualTransactionActive          = null
 --- inside a transaction (main thread)
-  resources                        = {HikariDataSource (HikariPool-1)=org.springframework.jdbc.datasource.ConnectionHolder@3b78c683}
+  resources                        = {HikariDataSource (HikariPool-1)=org.springframework.jdbc.datasource.ConnectionHolder@67688110}
   synchronizations                 = []
   currentTransactionName           = null
   currentTransactionReadOnly       = null
@@ -82,3 +82,8 @@ bindResource("probe-key", "second") -> IllegalStateException: Already value [fir
 | DomainFailure : Exception | (none) | 1 |
 | DomainFailure : Exception | rollbackFor=Exception | 0 |
 | IllegalStateException | rollbackFor=Exception, noRollbackFor=ISE | 1 |
+
+## [E5b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름
+| thrown | attribute | rows |
+|---|---|---|
+| DomainFailure : Exception | (none) + rollbackOn=ALL_EXCEPTIONS | 0 |
