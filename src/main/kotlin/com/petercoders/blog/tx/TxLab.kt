@@ -84,6 +84,9 @@ fun main() {
         catch (e: Throwable) { "finalReadsField() -> ${e.javaClass.name}: ${e.message}" }
     )
 
+    println("internalAutoProxyCreator = " +
+        ctx.getBean("org.springframework.aop.config.internalAutoProxyCreator").javaClass.name)
+
     // ---------------------------------------------------------- E2c protected 가 왜 열렸나
     println()
     println("## [E2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적")

@@ -4,10 +4,10 @@
 # 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab   (실행 후 TxLab.kt 에 spring.main.allow-circular-references=true 를 더해 재실행 — 아래 notes 참조)
 
 ## [E1] proxy kind — spring.aop.proxy-target-class 기본값
-2026-09-27T17:45:48.178+09:00  WARN 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T17:45:48.179+09:00 DEBUG 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
-2026-09-27T17:45:48.179+09:00  WARN 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T17:45:48.179+09:00 DEBUG 31198 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-27T21:56:12.974+09:00  WARN 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-27T21:56:12.975+09:00 DEBUG 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-09-27T21:56:12.975+09:00  WARN 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-09-27T21:56:12.975+09:00 DEBUG 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
 orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
 plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
 
@@ -32,6 +32,7 @@ proxy class      = com.petercoders.blog.tx.BypassProbe$$SpringCGLIB$$0
 target class     = com.petercoders.blog.tx.BypassProbe
 finalTx modifier = public final
 finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springframework.jdbc.core.JdbcTemplate.getDataSource()" because "this.jdbc" is null
+internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
 
 ## [E2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적
 protectedTx modifiers = protected
