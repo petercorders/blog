@@ -22,6 +22,8 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-web")   // SPRING-INTERNALS 3편(예외 처리) 실험용
     runtimeOnly("com.h2database:h2")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -59,6 +61,43 @@ tasks.register<JavaExec>("txLab") {
     group = "blog"
     description = "@Transactional 프록시 실험 전체 실행"
     mainClass.set("com.petercoders.blog.tx.TxLabKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardOutput = System.out
+}
+
+// SPRING-INTERNALS 3편(시큐리티/트랜잭션 어드바이저 순서) 실험 러너.
+// ./gradlew --offline -q secLab --args='S3'
+tasks.register<JavaExec>("secLab") {
+    group = "blog"
+    description = "시큐리티·트랜잭션 어드바이저 order/진입순서 실험"
+    mainClass.set("com.petercoders.blog.sec.SecLabKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardOutput = System.out
+}
+
+// SPRING-INTERNALS 3편(예외 처리) 실험 러너. ./gradlew --offline -q excLab
+tasks.register<JavaExec>("excLab") {
+    group = "blog"
+    description = "@RestControllerAdvice / ProblemDetail 예외 처리 실험 전체 실행"
+    mainClass.set("com.petercoders.blog.exc.ExcLabKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardOutput = System.out
+}
+
+// SPRING-INTERNALS 4편(프로퍼티 우선순위) 실험 러너. ./gradlew --offline -q propLab
+tasks.register<JavaExec>("propLab") {
+    group = "blog"
+    description = "PropertySource 우선순위와 relaxed binding 실험"
+    mainClass.set("com.petercoders.blog.prop.PropLabKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardOutput = System.out
+}
+
+// SPRING-INTERNALS 5편(@Async·@Scheduled) 실험 러너. ./gradlew --offline -q asyncLab
+tasks.register<JavaExec>("asyncLab") {
+    group = "blog"
+    description = "@Async·@Scheduled 기본값과 예외 계약 실험"
+    mainClass.set("com.petercoders.blog.async.AsyncLabKt")
     classpath = sourceSets["main"].runtimeClasspath
     standardOutput = System.out
 }
