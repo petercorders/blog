@@ -1,0 +1,31 @@
+# P4: 같은 키(prop.lab.value)를 일곱 소스에 동시에 두었을 때 승자는 누구인가
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, 15코어(물리/논리 모두 15), cachelinesize=128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && PROP_LAB_VALUE=fromOsEnv ./gradlew --offline -q propLab --args='P4'
+[P4] OS PROP_LAB_VALUE=fromOsEnv
+2026-09-28T20:11:15.777+09:00  INFO 9515 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 9515 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:11:15.779+09:00  INFO 9515 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-09-28T20:11:15.951+09:00  INFO 9515 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.369 seconds (process running for 0.52)
+[P4][00] proplab-systemEnvironment                            :: SystemEnvironmentPropertySource
+[P4][01] configurationProperties                              :: ConfigurationPropertySourcesPropertySource
+[P4][02] commandLineArgs                                      :: SimpleCommandLinePropertySource
+[P4][03] systemProperties                                     :: PropertiesPropertySource
+[P4][04] systemEnvironment                                    :: OriginAwareSystemEnvironmentPropertySource
+[P4][05] random                                               :: RandomValuePropertySource
+[P4][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j :: OriginTrackedMapPropertySource
+[P4][07] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j :: OriginTrackedMapPropertySource
+[P4][08] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j :: OriginTrackedMapPropertySource
+[P4][09] Config resource 'class path resource [application.ya :: OriginTrackedMapPropertySource
+[P4][10] applicationInfo                                      :: ApplicationInfoPropertySource
+[P4][11] defaultProperties                                    :: MapPropertySource
+[P4] winner-value=fromEnvVar
+[P4] winner-source=proplab-systemEnvironment
+[P4] holds value=fromEnvVar :: proplab-systemEnvironment
+[P4] holds value=fromEnvVar :: configurationProperties
+[P4] holds value=fromCommandLine :: commandLineArgs
+[P4] holds value=fromSystemProperty :: systemProperties
+[P4] holds value=fromOsEnv :: systemEnvironment
+[P4] holds value=fromProfileYml :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4-93526035151833/application-dev.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4-93526035151833/'
+[P4] holds value=fromImportFile :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4-93526035151833/external.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4-93526035151833/external.yml'
+[P4] holds value=fromApplicationYml :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4-93526035151833/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4-93526035151833/'
+[P4] holds value=fromDefaults :: defaultProperties

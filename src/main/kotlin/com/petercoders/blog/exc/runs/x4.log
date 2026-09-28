@@ -1,0 +1,22 @@
+# x4 — ResponseEntityExceptionHandler 를 상속만 했을 때(오버라이드 0개) 자동으로 덮이는 응답 바디
+# java -version: openjdk version "26.0.2.1" 2026-08-18
+OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / physical cores=15 logical cores=15 / hw.cachelinesize: 128
+# 명령: cd ~/Desktop/development/blog && ./gradlew -q excLab --args='X4'  (최초 실행이라 web 스타터 캐시가 없어 --offline 없이 실행함; 캐시된 이후엔 --offline 가능)
+#
+## [X4] ResponseEntityExceptionHandler 를 상속만 했을 때 자동으로 덮이는 것
+declared handle* methods (22): [handleAsyncRequestNotUsableException, handleAsyncRequestTimeoutException, handleConversionNotSupported, handleErrorResponseException, handleException, handleExceptionInternal, handleHandlerMethodValidationException, handleHttpMediaTypeNotAcceptable, handleHttpMediaTypeNotSupported, handleHttpMessageNotReadable, handleHttpMessageNotWritable, handleHttpRequestMethodNotSupported, handleMaxUploadSizeExceededException, handleMethodArgumentNotValid, handleMethodValidationException, handleMissingPathVariable, handleMissingServletRequestParameter, handleMissingServletRequestPart, handleNoHandlerFoundException, handleNoResourceFoundException, handleServletRequestBindingException, handleTypeMismatch]
+2026-09-27T23:45:57.391+09:00  WARN 76776 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 951cc4b1-2ea0-4db2-9209-ae58afaba3ab
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+| case | status | content-type | body |
+|---|---|---|---|
+| missing param          | 400 | application/problem+json   | {"detail":"Required parameter 'q' is not present.","instance":"/x4/param","status":400,"title":"Bad Request"} |
+2026-09-27T23:45:57.844+09:00  WARN 76776 --- [blog] [io-18099-exec-2] o.s.web.servlet.PageNotFound             : Request method 'POST' is not supported
+| method not allowed     | 405 | application/problem+json   | {"detail":"Method 'POST' is not supported.","instance":"/x2/ise","status":405,"title":"Method Not Allowed"} |
+| no such path           | 404 | application/problem+json   | {"detail":"No static resource x4/nope.","instance":"/x4/nope","status":404,"title":"Not Found"} |
+

@@ -1,0 +1,21 @@
+## [A3c] 가상 스레드 on · fixedRate 와 fixedDelay 대비
+t= 0s delta  start thread=scheduling-3
+t= 0s gamma  start thread=scheduling-2
+t= 2s delta  start thread=scheduling-4
+t= 3s delta  end   thread=scheduling-3
+t= 3s gamma  end   thread=scheduling-2
+t= 4s gamma  start thread=scheduling-2
+t= 4s delta  start thread=scheduling-5
+t= 5s delta  end   thread=scheduling-4
+t= 6s delta  start thread=scheduling-6
+t= 7s gamma  end   thread=scheduling-2
+t= 7s delta  end   thread=scheduling-5
+t= 7s gamma  start thread=scheduling-2
+t= 8s delta  start thread=scheduling-7
+t= 9s delta  end   thread=scheduling-6
+t=10s delta  start thread=scheduling-8
+t=10s gamma  end   thread=scheduling-2
+t=11s gamma  start thread=scheduling-2
+t=11s delta  end   thread=scheduling-7
+t=13s delta  end   thread=scheduling-8
+t=14s gamma  end   thread=scheduling-2

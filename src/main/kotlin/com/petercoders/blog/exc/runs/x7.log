@@ -1,0 +1,24 @@
+## [X7] @Async 예외의 행선지
+| case | status | content-type | body |
+|---|---|---|---|
+2026-09-28T00:24:12.640+09:00 ERROR 89700 --- [blog] [         task-1] .a.i.SimpleAsyncUncaughtExceptionHandler : Unexpected exception occurred invoking async method: public void com.petercoders.blog.exc.AsyncProbe.boomVoid()
+java.lang.IllegalStateException: async-void failure
+	at com.petercoders.blog.exc.AsyncProbe.boomVoid(ExcProbes.kt:175) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.lambda$invoke$0(AsyncExecutionInterceptor.java:112) ~[spring-aop-7.0.9.jar:7.0.9]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[na:na]
+| async void             | 200 | application/json           | {"ok":"void"} |
+| future not joined      | 200 | application/json           | {"ok":"future-not-joined"} |
+| future joined          | 541 | application/json           | {"who":"AdviceA#RuntimeException","ex":"java.util.concurrent.CompletionException"} |
+## [X7b] AsyncUncaughtExceptionHandler 를 커스텀으로 갈아끼웠을 때
+| case | status | content-type | body |
+|---|---|---|---|
+| async void             | 200 | application/json           | {"ok":"void"} |
+CountingAsyncConfig.caught = 1, last = java.lang.IllegalStateException

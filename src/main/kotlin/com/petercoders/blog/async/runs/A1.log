@@ -1,0 +1,24 @@
+# 실험: A1 — @Async가 올라타는 실행자의 정체 (가상 스레드 off vs on)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 | OpenJDK Runtime Environment (build 26.0.2.1+1-7) | OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, physical=15 logical=15 cores, hw.cachelinesize=128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q asyncLab --args='A1'   그리고   --args='A1b'
+
+=== A1 (가상 스레드 off, 기본값) ===
+## [A1] 가상 스레드 off — 등록된 실행자·스케줄러 실물
+applicationTaskExecutor 빈 존재 = true
+  class=org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor core=8 max=2147483647 queueCapacity=2147483647 keepAliveSec=60
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [applicationTaskExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = [applicationTaskExecutorAsyncConfigurer]
+@Async 가 실제로 올라탄 스레드: name=task-1 virtual=false
+
+=== A1b (spring.threads.virtual.enabled=true) ===
+## [A1b] spring.threads.virtual.enabled=true — 같은 이름, 다른 클래스
+applicationTaskExecutor 빈 존재 = true
+  class=org.springframework.core.task.SimpleAsyncTaskExecutor
+taskScheduler class=org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler (풀 크기 개념 없음)
+Executor 타입 빈 = [applicationTaskExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = [applicationTaskExecutorAsyncConfigurer]
+@Async 가 실제로 올라탄 스레드: name=task-1 virtual=true

@@ -1,0 +1,33 @@
+# 실험: P6 - 환경변수 4표기(kebab/camel/snake/upper) + 레거시 후보 3종의 relaxed binding 매칭
+# java -version(/usr/bin/java): openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  ※ gradle toolchain 은 JavaLanguageVersion 25 를 요구해 propLab 실행 프로세스 자체는 Java 25.0.4.1 로 뜬다(로그의 Starting PropLabKt using Java 25.0.4.1 참고)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize: 128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q propLab --args='P6' 2>&1 | tee src/main/kotlin/com/petercoders/blog/prop/runs/p6.log
+
+2026-09-28T20:15:48.982+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:48.989+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.293+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.523 seconds (process running for 0.967)
+[P6] env spelling=kebab var=PROP_RELAX_my-target-value bound=from-kebab
+2026-09-28T20:15:49.315+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:49.316+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.323+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.025 seconds (process running for 0.997)
+[P6] env spelling=camel var=PROP_RELAX_myTargetValue bound=from-camel
+2026-09-28T20:15:49.338+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:49.338+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.351+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.027 seconds (process running for 1.025)
+[P6] env spelling=snake var=PROP_RELAX_my_target_value bound=<null>
+2026-09-28T20:15:49.362+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:49.362+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.368+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.016 seconds (process running for 1.042)
+[P6] env spelling=upper var=PROP_RELAX_MY_TARGET_VALUE bound=from-upper
+2026-09-28T20:15:49.378+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:49.379+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.385+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.015 seconds (process running for 1.059)
+[P6] candidate var=PROP_RELAX_MYTARGETVALUE bound=from-PROP_RELAX_MYTARGETVALUE
+2026-09-28T20:15:49.397+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:49.397+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.402+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.015 seconds (process running for 1.077)
+[P6] candidate var=PROP_RELAX_MY_TARGET_VALUE bound=from-PROP_RELAX_MY_TARGET_VALUE
+2026-09-28T20:15:49.413+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 13763 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:15:49.413+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:15:49.418+09:00  INFO 13763 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.015 seconds (process running for 1.092)
+[P6] candidate var=prop_relax_mytargetvalue bound=from-prop_relax_mytargetvalue

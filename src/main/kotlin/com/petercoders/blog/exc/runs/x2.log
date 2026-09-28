@@ -1,0 +1,20 @@
+# 실험: x2 — 겹 안에서 누가 이기는가 (컨트롤러 로컬 vs @Order(1) AdviceA vs @Order(2) AdviceB)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / 15 cores / hw.cachelinesize: 128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew -q excLab --args='X2' 2>&1 | tee src/main/kotlin/com/petercoders/blog/exc/runs/x2.log
+## [X2] 컨트롤러 로컬 · @Order(1) advice · @Order(2) advice 중 누가 잡나
+상태 코드가 곧 승자다. 521=컨트롤러 로컬 / 541=AdviceA#RuntimeException
+                     542=AdviceA#IllegalArgumentException / 561=AdviceB#IllegalStateException
+2026-09-27T23:45:55.596+09:00  WARN 76736 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 4edfeb37-21dd-464c-8dbc-068cbdc9b933
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+| case | status | content-type | body |
+|---|---|---|---|
+| local ISE              | 521 | application/json           | {"who":"controller-local#ISE","ex":"java.lang.IllegalStateException"} |
+| advice ISE             | 541 | application/json           | {"who":"AdviceA#RuntimeException","ex":"java.lang.IllegalStateException"} |
+| advice IAE             | 542 | application/json           | {"who":"AdviceA#IllegalArgumentException","ex":"java.lang.IllegalArgumentException"} |
+| advice NPE             | 541 | application/json           | {"who":"AdviceA#RuntimeException","ex":"java.lang.NullPointerException"} |
+
