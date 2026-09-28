@@ -1,0 +1,32 @@
+# 실험: P2 - 프로파일 비활성(off) vs dev 활성 시, 2절 ConfigData(application-dev.yml)가
+#         PropertySource 목록에 끼어드는 자리
+# java -version: openjdk version "26.0.2.1" 2026-08-18 (OpenJDK Runtime Environment, build 26.0.2.1+1-7)
+#   (Gradle 빌드는 toolchain languageVersion=25 를 써서 앱 배너에는 "Java 25.0.4.1"로 찍힘 - 별개 JDK)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q propLab --args='P2' 2>&1 | tee src/main/kotlin/com/petercoders/blog/prop/runs/p2.log
+
+2026-09-28T20:13:24.733+09:00  INFO 11754 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 11754 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:13:24.735+09:00  INFO 11754 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-09-28T20:13:24.952+09:00  INFO 11754 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.422 seconds (process running for 0.653)
+[P2-off][00] configurationProperties                              :: ConfigurationPropertySourcesPropertySource
+[P2-off][01] systemProperties                                     :: PropertiesPropertySource
+[P2-off][02] systemEnvironment                                    :: OriginAwareSystemEnvironmentPropertySource
+[P2-off][03] random                                               :: RandomValuePropertySource
+[P2-off][04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j :: OriginTrackedMapPropertySource
+[P2-off][05] Config resource 'class path resource [application.ya :: OriginTrackedMapPropertySource
+[P2-off][06] applicationInfo                                      :: ApplicationInfoPropertySource
+[P2-off][07] defaultProperties                                    :: DefaultPropertiesPropertySource
+[P2-off] value=fromApplicationYml from=configurationProperties
+2026-09-28T20:13:24.970+09:00  INFO 11754 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 11754 (/Users/kibong_home/Desktop/development/blog/build/classes/kotlin/main started by kibong_home in /Users/kibong_home/Desktop/development/blog)
+2026-09-28T20:13:24.970+09:00  INFO 11754 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-09-28T20:13:24.974+09:00  INFO 11754 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.018 seconds (process running for 0.675)
+[P2-dev][00] configurationProperties                              :: ConfigurationPropertySourcesPropertySource
+[P2-dev][01] systemProperties                                     :: PropertiesPropertySource
+[P2-dev][02] systemEnvironment                                    :: OriginAwareSystemEnvironmentPropertySource
+[P2-dev][03] random                                               :: RandomValuePropertySource
+[P2-dev][04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j :: OriginTrackedMapPropertySource
+[P2-dev][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j :: OriginTrackedMapPropertySource
+[P2-dev][06] Config resource 'class path resource [application.ya :: OriginTrackedMapPropertySource
+[P2-dev][07] applicationInfo                                      :: ApplicationInfoPropertySource
+[P2-dev][08] defaultProperties                                    :: DefaultPropertiesPropertySource
+[P2-dev] value=fromProfileYml from=configurationProperties

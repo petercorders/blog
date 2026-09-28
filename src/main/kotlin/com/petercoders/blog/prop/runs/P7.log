@@ -1,0 +1,8 @@
+[P7] file-key=prop.relax.my-target-value
+[P7]   @Value(my-target-value)=written-as-prop.relax.my-target-value
+[P7]   @Value(myTargetValue)  =<unresolved>
+[P7]   @ConfigurationProperties=written-as-prop.relax.my-target-value
+[P7] file-key=prop.relax.myTargetValue
+[P7]   @Value(my-target-value)=written-as-prop.relax.myTargetValue
+[P7]   @Value(myTargetValue)  =written-as-prop.relax.myTargetValue
+[P7]   @ConfigurationProperties=written-as-prop.relax.myTargetValue

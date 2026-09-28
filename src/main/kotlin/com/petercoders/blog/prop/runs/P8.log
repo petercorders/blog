@@ -1,0 +1,4 @@
+[P8] bound-before=before
+[P8] env-after-change=after
+[P8] bean-reget=before
+[P8] same-instance=true

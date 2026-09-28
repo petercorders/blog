@@ -1,0 +1,10 @@
+[P3][00] configurationProperties                              :: ConfigurationPropertySourcesPropertySource
+[P3][01] systemProperties                                     :: PropertiesPropertySource
+[P3][02] systemEnvironment                                    :: OriginAwareSystemEnvironmentPropertySource
+[P3][03] random                                               :: RandomValuePropertySource
+[P3][04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-93720607844166/external.yml]' via location 'optional:file:/var/folders/cg/_z7 :: OriginTrackedMapPropertySource
+[P3][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-93720607844166/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0 :: OriginTrackedMapPropertySource
+[P3][06] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P3][07] applicationInfo                                      :: ApplicationInfoPropertySource
+[P3][08] defaultProperties                                    :: DefaultPropertiesPropertySource
+[P3] value=fromImportFile from=configurationProperties
