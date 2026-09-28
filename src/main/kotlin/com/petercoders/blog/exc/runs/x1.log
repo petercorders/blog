@@ -1,0 +1,29 @@
+# 실험: x1 — 겹 안에서 누가 이기는가 (handlerExceptionResolver composite / @RestControllerAdvice order / FilterRegistrationBean order 실물 확인)
+# java -version(/usr/bin/java): openjdk version "26.0.2.1" 2026-09-27 build 26.0.2.1+1-7, mixed mode, sharing (실제 실행 JVM은 gradle 툴체인의 25.0.4.1+1-LTS, Microsoft build)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew -q excLab --args='X1' 2>&1 | tee src/main/kotlin/com/petercoders/blog/exc/runs/x1.log
+
+## [X1] 등록된 리졸버·advice·필터 실물
+2026-09-27T23:46:31.946+09:00  WARN 77707 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: af4ec13a-e798-4afd-a3e3-affa25357bfb
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+handlerExceptionResolver = org.springframework.web.servlet.handler.HandlerExceptionResolverComposite
+  [0] org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver
+  [1] org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver
+  [2] org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver
+ExceptionHandlerExceptionResolver (composite[0]) = org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver, order = 2147483647
+
+| advice bean | type | order |
+|---|---|---|
+| AdviceA | com.petercoders.blog.exc.AdviceA | 1 |
+| AdviceB | com.petercoders.blog.exc.AdviceB | 2 |
+| InheritOnlyAdvice | com.petercoders.blog.exc.InheritOnlyAdvice | 2147483647 |
+
+| filter registration | order | class |
+|---|---|---|
+| traceFilter | -2147483638 | com.petercoders.blog.exc.TraceFilter |
+| boomFilter | -2147483628 | com.petercoders.blog.exc.BoomFilter |
+

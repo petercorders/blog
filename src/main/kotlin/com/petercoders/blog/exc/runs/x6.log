@@ -1,0 +1,9 @@
+# 실험: x6 — 필터 예외는 advice 가 아니라 컨테이너 ERROR 재디스패치가 받는다
+# java -version: openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# 기기: Apple M5 Pro, physical=15 logical=15, hw.cachelinesize: 128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q excLab --args='X5' 2>&1 | tee src/main/kotlin/com/petercoders/blog/exc/runs/x5.log ; sed -n '/\[X6\]/,$p' runs/x5.log > runs/x6.log
+## [X6] 그 요청을 실제로 받은 자리 — 디스패치 기록
+  [0] REQUEST /x5/filter-boom
+  [1] ERROR /error
+  [2] REQUEST /x2/ise
+
