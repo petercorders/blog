@@ -29,9 +29,9 @@
 | X4 (`ExcProbes.kt`: `InheritOnlyAdvice`) | `ResponseEntityExceptionHandler` 상속만 했을 때 자동으로 덮이는 예외 | 겹 안이 만드는 응답 바디 |
 | X5 (`ExcProbes.kt`: `BoomFilter`) | 필터에서 던진 예외가 advice에 닿는지 | 겹 밖 ① — 필터 |
 | X6 (`ExcProbes.kt`: `TraceFilter`) | 같은 요청의 디스패치 타입 기록(`REQUEST`/`ERROR`) | 겹 밖 ① — 필터 |
-| X7 / X7b | `@Async` 반환 타입(void/Future 방치/`join()`)별 예외 행선지, `AsyncConfigurer` 교체 | 겹 밖 ② — 비동기 스레드 (이번 편 미실행) |
+| X7 / X7b | `@Async` 반환 타입(void/Future 방치/`join()`)별 예외 행선지, `AsyncConfigurer` 교체 | 겹 밖 ② — 비동기 스레드 (X7·X7b 실측, `runs/x7.log`) |
 | X8 (`ExcProbes.kt`: `ExcService.writeThenFail`) | `TransactionSynchronization` 네 콜백(`beforeCommit`/`beforeCompletion`/`afterCommit`/`afterCompletion`)에서 던진 예외의 행선지와 커밋 여부 | 겹 밖 ③ — 트랜잭션 커밋 |
-| X9 | 다섯 경계(컨트롤러/필터/`@Async`/`beforeCommit`/`afterCompletion`)를 한 표로 종합 | 안 닿는 자리를 대신 받는 것 (이번 편 미실행) |
+| X9 | 다섯 경계(컨트롤러/필터/`@Async`/`beforeCommit`/`afterCompletion`)를 한 표로 종합 | 안 닿는 자리를 대신 받는 것 (X9 실측, `runs/x9.log`) |
 
 ## 빌드·실행 명령
 
@@ -40,6 +40,9 @@
 ./gradlew -q excLab
 
 # 이후 재실행 — 마커 하나만 다시 돌릴 때
+./gradlew --offline -q excLab --args='X7'
+./gradlew --offline -q excLab --args='X7b'
+./gradlew --offline -q excLab --args='X9'
 ./gradlew --offline -q excLab --args='X1'
 ./gradlew --offline -q excLab --args='X2'
 ./gradlew --offline -q excLab --args='X3'
@@ -61,6 +64,7 @@
 | `runs/x5.log` | X5, X6 | 필터 예외 + 디스패치 기록(X6은 X5 실행 중 함께 찍힘) |
 | `runs/x6.log` | X6 | X5 로그에서 `[X6]` 이후 구간만 발췌 |
 | `runs/x8.log` | X8 | 트랜잭션 동기화 콜백 네 자리 |
-| `runs/x7.log`, `runs/x9.log` | X7/X7b, X9 | 이번 편에서는 생성되지 않음(미실행) |
+| `runs/x7.log` | X7, X7b | `@Async` 반환 타입 세 갈래 + 핸들러 교체 카운터 |
+| `runs/x9.log` | X9 | 경계 다섯 자리 종합 |
 
 이 디렉터리는 작성 시점 기준 git에 커밋되지 않은 상태다. add/commit/push는 사용자가 직접 한다.
