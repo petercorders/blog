@@ -21,16 +21,14 @@ SPRING-INTERNALS 5편(`@Async`·`@Scheduled`)에 실린 실측의 소스와 원�
 |---|---|---|---|---|
 | A1 | 가상 스레드 off — `applicationTaskExecutor`·`taskScheduler` 실물과 풀 설정 | `runs/A1.log` | 실행자의 정체 | 반영(결정적 출력) |
 | A1b | `spring.threads.virtual.enabled=true` — 같은 이름, 다른 클래스(A1과 같은 실행에 함께 기록) | `runs/A1.log` | 실행자의 정체 | 반영(결정적 출력) |
-| A1c | 사용자 `Executor` 빈만 등록했을 때 / `spring.task.execution.mode=force`일 때 | `runs/a1c.log` | 실행자의 정체 | 반영(결정적 출력) |
+| A1c | 사용자 `Executor` 빈만 등록했을 때 / `spring.task.execution.mode=force`일 때 | `runs/A1c.log` | 실행자의 정체 | 반영(결정적 출력) |
 | A2 | `get()`·`join()`·`Future.get()` 세 갈래의 예외 클래스명 | `runs/A2.log` | 반환 타입과 행선지 | 반영(결정적 출력) |
 | A2c | `get(1, SECONDS)` 타임아웃 — 원인 없는 `TimeoutException` | `runs/A2c.log` | 반환 타입과 행선지 | 반영(결정적 출력) |
-| A3 | 기본 `pool.size=1`, `fixedRate` 2s · 본문 3s — 겹침 여부 | `runs/a3.log` | 스케줄러 계약 | 반영(결정적 출력) |
-| A3b | `spring.task.scheduling.pool.size=2` 비교군 | `runs/a3b.log` | 스케줄러 계약 | 반영(결정적 출력) |
-| A3c | 가상 스레드 on — `fixedRate` 대 `fixedDelay` | 없음(이번 라운드 미실행) | 스케줄러 계약 | 미반영 — 확인 포인트만 서술 |
-| A4 | 종료 기본값에서 실행 중 `@Async` 작업의 카운터·H2 행 | `runs/a4.log`(별도 라운드에서 생성됨, 이번 통합에는 반영 안 함) | 종료 | 미반영 — 확인 포인트만 서술 |
-| A4b | `await-termination=true` + `period=10s` 비교군 | `runs/a4b.log`(별도 라운드에서 생성됨, 이번 통합에는 반영 안 함) | 종료 | 미반영 — 확인 포인트만 서술 |
-
-`runs/a4.log`·`runs/a4b.log`는 디렉터리에 이미 존재하지만, 이번 원고 통합 라운드에 전달된 실행 결과 목록에는 포함되지 않아 본문에는 숫자를 신지 않았다. 본문에 반영하려면 다음 라운드에서 이 두 로그를 검증 대상에 포함시켜야 한다.
+| A3 | 기본 `pool.size=1`, `fixedRate` 2s · 본문 3s — 겹침 여부 | `runs/A3.log` | 스케줄러 계약 | 반영(결정적 출력) |
+| A3b | `spring.task.scheduling.pool.size=2` 비교군 | `runs/A3b.log` | 스케줄러 계약 | 반영(결정적 출력) |
+| A3c | 가상 스레드 on — `fixedRate` 대 `fixedDelay` | `runs/A3c.log` | 스케줄러 계약 | 반영(결정적 출력) |
+| A4 | 종료 기본값에서 실행 중 `@Async` 작업의 카운터·H2 행 | `runs/A4.log` | 종료 | 반영(결정적 출력) |
+| A4b | `await-termination=true` + `period=10s` 비교군 | `runs/A4b.log` | 종료 | 반영(결정적 출력) |
 
 ## 파일별 빌드·실행 명령
 
@@ -61,13 +59,13 @@ macOS(APFS)는 기본이 대소문자 비구분 파일시스템이라 로그 파
 | 파일 | 마커 |
 |---|---|
 | `runs/A1.log` | A1, A1b |
-| `runs/a1c.log` | A1c |
+| `runs/A1c.log` | A1c |
 | `runs/A2.log` | A2 |
 | `runs/A2c.log` | A2c |
-| `runs/a3.log` | A3 |
-| `runs/a3b.log` | A3b |
-| `runs/a4.log` | A4(이번 통합에는 미반영) |
-| `runs/a4b.log` | A4b(이번 통합에는 미반영) |
+| `runs/A3.log` | A3 |
+| `runs/A3b.log` | A3b |
+| `runs/A4.log` | A4 |
+| `runs/A4b.log` | A4b |
 
 `A3c`는 로그 파일이 없다(로컬에서 아직 실행되지 않음).
 
