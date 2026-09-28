@@ -1,0 +1,25 @@
+# 실험: A2 (반환 타입이 예외의 행선지를 정한다)
+# java -version: openjdk version "26.0.2.1" 2026-08-18; OpenJDK Runtime Environment (build 26.0.2.1+1-7); OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize: 128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q asyncLab --args='A2'
+## [A2] 반환 타입과 기다리는 방법이 만드는 예외 객체
+CompletableFuture.get()  caught=java.util.concurrent.ExecutionException cause=com.petercoders.blog.async.Boom
+CompletableFuture.join() caught=java.util.concurrent.CompletionException cause=com.petercoders.blog.async.Boom
+Future.get()             caught=java.util.concurrent.ExecutionException cause=com.petercoders.blog.async.Boom
+기다리지 않은 future: isCompletedExceptionally=true isDone=true
+2026-09-28T20:12:49.764+09:00 ERROR 10911 --- [blog] [         task-5] .a.i.SimpleAsyncUncaughtExceptionHandler : Unexpected exception occurred invoking async method: public void com.petercoders.blog.async.AsyncProbe.failUnit()
+
+com.petercoders.blog.async.Boom: boom-unit
+	at com.petercoders.blog.async.AsyncProbe.failUnit(AsyncProbes.kt:82) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.lambda$invoke$0(AsyncExecutionInterceptor.java:112) ~[spring-aop-7.0.9.jar:7.0.9]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[na:na]
+
+kotlin.Unit 반환: 호출자가 받은 객체 = null (핸들러로 갔다)

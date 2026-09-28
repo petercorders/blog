@@ -1,0 +1,14 @@
+# 실험: A3 — 절: @Scheduled의 스레드 하나가 만드는 계약 (rate 프로파일: fixedRate=2000 두 개, 본문 Thread.sleep(3000), 11초 관측)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q asyncLab --args='A3' 2>&1 | tee src/main/kotlin/com/petercoders/blog/async/runs/a3.log
+
+## [A3] 기본 pool.size=1 · fixedRate 2s · 실행 3s
+t= 1s alpha  start thread=scheduling-1
+t= 4s alpha  end   thread=scheduling-1
+t= 4s beta   start thread=scheduling-1
+t= 7s beta   end   thread=scheduling-1
+t= 7s alpha  start thread=scheduling-1
+t=10s alpha  end   thread=scheduling-1
+t=10s beta   start thread=scheduling-1
+t=13s beta   end   thread=scheduling-1

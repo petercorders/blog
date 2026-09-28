@@ -1,0 +1,20 @@
+# 실험: A1c — @Async 가 올라타는 실행자의 정체 (사용자 Executor 빈 등록 시 / force 모드 대비)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / 코어 15 / hw.cachelinesize 128
+# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q asyncLab --args='A1c' 2>&1 | tee src/main/kotlin/com/petercoders/blog/async/runs/a1c.log
+
+## [A1c] 사용자가 Executor 빈을 등록했을 때
+applicationTaskExecutor 빈 존재 = false
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [myOwnExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = []
+@Async 가 실제로 올라탄 스레드: name=scheduling-1 virtual=false
+## [A1c-force] 같은 상황 + spring.task.execution.mode=force
+applicationTaskExecutor 빈 존재 = true
+  class=org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor core=8 max=2147483647 queueCapacity=2147483647 keepAliveSec=60
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [applicationTaskExecutor, myOwnExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = [applicationTaskExecutorAsyncConfigurer]
+@Async 가 실제로 올라탄 스레드: name=task-1 virtual=false
