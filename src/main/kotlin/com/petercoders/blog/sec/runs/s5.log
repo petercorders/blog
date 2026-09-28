@@ -1,0 +1,11 @@
+# 실험: [S5] SpEL 평가 횟수 — @PreAuthorize(호출당 1회 기대) vs @PostFilter(원소 수만큼 기대), n=0/3/10
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / 15코어(sysctl -n hw.physicalcpu) / hw.cachelinesize: 128
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S5' | tee src/main/kotlin/com/petercoders/blog/sec/runs/s5.log
+## [S5] SpEL 평가 횟수 — @PreAuthorize 1회 vs @PostFilter 원소 수
+| annotation    | input size | spel evals | returned size  |
+|---------------|------------|------------|----------------|
+| @PreAuthorize | -          | 1          | -              |
+| @PostFilter   | 0          | 0          | 0              |
+| @PostFilter   | 3          | 3          | 3              |
+| @PostFilter   | 10         | 10         | 10             |

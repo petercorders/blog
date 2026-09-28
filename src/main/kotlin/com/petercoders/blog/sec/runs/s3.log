@@ -1,0 +1,27 @@
+# 실험: [S3] 시큐리티 어드바이저 vs 트랜잭션 어드바이저 order/진입순서
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S3'
+## [S3] 시큐리티 어드바이저 vs 트랜잭션 어드바이저 — order 값과 진입 순서
+
+### 1) Ordered.getOrder() 를 어드바이저 빈에서 직접 읽는다
+| bean name | class | order |
+|---|---|---|
+| authorizeReturnObjectAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 450 |
+| authorizeReturnObjectMethodInterceptor | org.springframework.security.authorization.method.AuthorizeReturnObjectMethodInterceptor | 450 |
+| org.springframework.transaction.config.internalTransactionAdvisor | org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor | 2147483647 |
+| postAuthorizeAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 500 |
+| postAuthorizeAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 500 |
+| postFilterAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 600 |
+| postFilterAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 600 |
+| preAuthorizeAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 200 |
+| preAuthorizeAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 200 |
+| preFilterAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 100 |
+| preFilterAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 100 |
+
+### 3) Ordered.LOWEST_PRECEDENCE = 2147483647
+
+### 2) 진입 순서를 결과로 판정 — @PreAuthorize SpEL 평가 시점의 isActualTransactionActive()
+[markTx] tag=preauthorize isActualTransactionActive=false
+probe() -> probe body executed
+markTx 평가 시점 isActualTransactionActive() = false

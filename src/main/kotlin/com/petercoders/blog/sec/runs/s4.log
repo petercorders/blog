@@ -1,0 +1,21 @@
+# 실험: [S4] @PostAuthorize 거부인데 @Transactional 이 커밋을 먼저 마쳐 sec_log 행이 남는가 (기본 order)
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S4' | tee src/main/kotlin/com/petercoders/blog/sec/runs/s4.log
+## [S4] 기본 order — @PostAuthorize(500, 바깥) + @Transactional(LOWEST_PRECEDENCE, 안쪽), 거부돼도 행이 남는가
+
+[S4] 어드바이저 order 재확인
+| bean name | class | order |
+|---|---|---|
+| org.springframework.transaction.config.internalTransactionAdvisor | org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor | 2147483647 |
+| postAuthorizeAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 500 |
+
+--- (a) 통과 케이스: withdraw("s4-allow", "alice")
+proxy class = com.petercoders.blog.sec.OrderProbe$$SpringCGLIB$$0
+withdraw() returned without throwing: Account(ownerId=alice)
+sec_log rows where tag='s4-allow' = 1
+
+--- (b) 거부 케이스: withdraw("s4-deny", "bob")
+proxy class = com.petercoders.blog.sec.OrderProbe$$SpringCGLIB$$0
+withdraw() threw org.springframework.security.authorization.AuthorizationDeniedException: Access Denied
+sec_log rows where tag='s4-deny' = 1

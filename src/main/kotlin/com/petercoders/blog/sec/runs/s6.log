@@ -1,0 +1,12 @@
+# 실험: [S6] 거부가 던지는 것 — AuthorizationDeniedException 의 타입 호환성과 @HandleAuthorizationDenied 대체값
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro / 15코어(sysctl -n hw.physicalcpu) / hw.cachelinesize: 128
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S6'
+
+## [S6] 거부가 던지는 것 — 예외 타입과 @HandleAuthorizationDenied 대체값
+
+denied() 예외 클래스    = org.springframework.security.authorization.AuthorizationDeniedException
+  AccessDeniedException 으로 잡히나 = true
+  AuthorizationDeniedException 인가 = true
+  getAuthorizationResult() = ExpressionAuthorizationDecision [granted=false, expressionAttribute=hasRole('NOPE')]
+deniedWithFallback()   -> 가려진 값(핸들러가 돌려줌)

@@ -1,0 +1,37 @@
+// 실험: S2 — SecureProbe 여덟 경로(1편 BypassProbe와 동형) x admin/user 두 권한, 16행 판정
+// java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+// 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+//       (gradle java toolchain 25 실사용: openjdk 25.0.4.1 2026-08-18 LTS, Microsoft build)
+// 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S2' | tee src/main/kotlin/com/petercoders/blog/sec/runs/s2.log
+//
+// 참고: 최초 두 번의 시도는 환경 문제로 실패했다(태그가 붙은 대로 기록):
+//  1) secLab 태스크/SecLab.kt 자체가 아직 없어 'Task secLab not found' — 동시에 실행 중이던
+//     s1/s3/s4/s5 서브에이전트들이 sec 패키지를 만드는 동안 이 s2 서브에이전트가 SecProbesS2.kt
+//     (SecureProbe + runS2)를 추가하고 SecLab.kt when-분기에 "S2" -> runS2(ctx) 를 얹었다.
+//  2) SecureProbe 생성자가 preInstantiateSingletons 중 sec_log 테이블 생성 전에 insert를 시도해
+//     BadSqlGrammarException — 생성자/afterInit 안에서 create table if not exists 로 해결.
+//  3) self 필드 자기주입이 순환참조로 거부됨(1편 BypassProbe와 같은 사유) — boot() 프로퍼티에
+//     spring.main.allow-circular-references=true 를 추가해 해결.
+//  4) 동시 편집 중이던 SecProbesS4.kt/SecLab.kt에 runS4 가 두 번 정의돼 있어 컴파일 충돌 —
+//     SecLab.kt 쪽의 예전 인라인 정의(중복)를 지워 해결(S4/S4b 서브에이전트 소유 코드는 그대로 둠).
+// 아래는 위 네 가지를 고친 뒤 실제로 통과한 실행의 stdout 전체(발췌 없음)다.
+// ---------------------------------------------------------------------------
+## [S2] SecureProbe — 1편 BypassProbe와 같은 여덟 경로 x admin/user 두 권한
+| case | auth | thrown | rows |
+|---|---|---|---|
+| constructor(init)        | admin | -                          |    1 |
+| constructor(init)        | user  | -                          |    1 |
+| @PostConstruct           | admin | -                          |    1 |
+| @PostConstruct           | user  | -                          |    1 |
+| external → proxy         | admin | -                          |    1 |
+| external → proxy         | user  | AuthorizationDeniedException |    0 |
+| self-invocation this.    | admin | -                          |    1 |
+| self-invocation this.    | user  | -                          |    1 |
+| self field → proxy       | admin | -                          |    1 |
+| self field → proxy       | user  | AuthorizationDeniedException |    0 |
+| private                  | admin | -                          |    1 |
+| private                  | user  | -                          |    1 |
+| protected                | admin | -                          |    1 |
+| protected                | user  | AuthorizationDeniedException |    0 |
+| final                    | admin | NullPointerException       |    0 |
+| final                    | user  | NullPointerException       |    0 |

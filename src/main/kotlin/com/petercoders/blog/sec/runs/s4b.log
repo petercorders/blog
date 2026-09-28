@@ -1,0 +1,15 @@
+# 실험: [S4b] @EnableTransactionManagement(order=0, proxyTargetClass=true) profile=txouter — S4 와 글자 그대로 같은 호출 재실행, 어드바이저 order 뒤집은 뒤 비교
+# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, 15 cores (physical 15), hw.cachelinesize=128
+# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S4b' | tee src/main/kotlin/com/petercoders/blog/sec/runs/s4b.log
+## [S4b] TxOuterConfig(@EnableTransactionManagement(order=0, proxyTargetClass=true)) profile=txouter — S4 와 글자 그대로 같은 호출
+
+[S4b] 어드바이저 order 재확인
+| bean name | class | order |
+|---|---|---|
+| org.springframework.transaction.config.internalTransactionAdvisor | org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor | 0 |
+| postAuthorizeAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 500 |
+
+proxy class = com.petercoders.blog.sec.OrderProbe$$SpringCGLIB$$1
+withdraw() threw org.springframework.security.authorization.AuthorizationDeniedException: Access Denied
+sec_log rows where tag='s4b-a' = 0

@@ -1,0 +1,25 @@
+# 실험: SPRING-INTERNALS 2편 S1 — 메서드 시큐리티 어드바이저 등록(internalAutoProxyCreator / Advisor 빈 목록·order / preAuthorizeAuthorizationMethodInterceptor 실제 클래스)
+# java -version: openjdk version "26.0.2.1" 2026-08-18; OpenJDK Runtime Environment (build 26.0.2.1+1-7); OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# 명령: cd ~/Desktop/development/blog && ./gradlew -q secLab --args='S1' | tee src/main/kotlin/com/petercoders/blog/sec/runs/s1.log
+
+## [S1] 메서드 시큐리티 어드바이저 등록
+spring-security-core version = 7.1.1
+spring-core version           = 7.0.9
+internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
+
+| advisor bean name | actual class | order |
+|---|---|---|
+| authorizeReturnObjectAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 450 |
+| authorizeReturnObjectMethodInterceptor | org.springframework.security.authorization.method.AuthorizeReturnObjectMethodInterceptor | 450 |
+| org.springframework.transaction.config.internalTransactionAdvisor | org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor | 2147483647 |
+| postAuthorizeAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 500 |
+| postAuthorizeAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 500 |
+| postFilterAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 600 |
+| postFilterAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 600 |
+| preAuthorizeAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 200 |
+| preAuthorizeAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 200 |
+| preFilterAuthorizationAdvisor | org.springframework.security.config.annotation.method.configuration.MethodSecurityAdvisorRegistrar$AdvisorWrapper | 100 |
+| preFilterAuthorizationMethodInterceptor | org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor | 100 |
+
+preAuthorizeAuthorizationMethodInterceptor class = org.springframework.security.config.annotation.method.configuration.DeferringMethodInterceptor
