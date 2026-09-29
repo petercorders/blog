@@ -1,0 +1,14 @@
+# experiment: jvt-e8-carrier-count-3runs (기본 실행을 3회 반복해 캐리어 수의 비결정성을 본다)
+# java -version: openjdk version "26.0.2.1" 2026-08-18
+# machine: Apple M5 Pro, 15 cores (hw.ncpu)
+# command: for i in 1 2 3; do $J26/bin/java VtWorkers.java; done
+
+---default run 1---
+cores=15 carriers=15 [ForkJoinPool-1-worker-1, ForkJoinPool-1-worker-10, ForkJoinPool-1-worker-11, ForkJoinPool-1-worker-12, ForkJoinPool-1-worker-13, ForkJoinPool-1-worker-14, ForkJoinPool-1-worker-15, ForkJoinPool-1-worker-2, ForkJoinPool-1-worker-3, ForkJoinPool-1-worker-4, ForkJoinPool-1-worker-5, ForkJoinPool-1-worker-6, ForkJoinPool-1-worker-7, ForkJoinPool-1-worker-8, ForkJoinPool-1-worker-9]
+---default run 2---
+cores=15 carriers=8 [ForkJoinPool-1-worker-1, ForkJoinPool-1-worker-2, ForkJoinPool-1-worker-3, ForkJoinPool-1-worker-4, ForkJoinPool-1-worker-5, ForkJoinPool-1-worker-6, ForkJoinPool-1-worker-7, ForkJoinPool-1-worker-8]
+---default run 3---
+cores=15 carriers=15 [ForkJoinPool-1-worker-1, ForkJoinPool-1-worker-10, ForkJoinPool-1-worker-11, ForkJoinPool-1-worker-12, ForkJoinPool-1-worker-13, ForkJoinPool-1-worker-14, ForkJoinPool-1-worker-15, ForkJoinPool-1-worker-2, ForkJoinPool-1-worker-3, ForkJoinPool-1-worker-4, ForkJoinPool-1-worker-5, ForkJoinPool-1-worker-6, ForkJoinPool-1-worker-7, ForkJoinPool-1-worker-8, ForkJoinPool-1-worker-9]
+
+---parallelism=4 run---
+cores=15 carriers=4 [ForkJoinPool-1-worker-1, ForkJoinPool-1-worker-2, ForkJoinPool-1-worker-3, ForkJoinPool-1-worker-4]
