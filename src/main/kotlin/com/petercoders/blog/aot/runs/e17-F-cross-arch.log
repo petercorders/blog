@@ -1,0 +1,33 @@
+# experiment: e17-F — 아키텍처가 다른 같은 JDK(Temurin 25.0.4.1 arm64 ↔ x64/Rosetta 2)
+# date: 2026-10-08 04:00:42 +0900
+# uptime:  4:00  up 13 days,  3:50, 6 users, load averages: 4.80 5.70 11.05
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks-aot/tem25041-arm/jdk-25.0.4.1+1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks-aot/tem25041-x64/jdk-25.0.4.1+1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS, mixed mode)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# x64 java 의 아키텍처: Mach-O 64-bit executable x86_64
+arm64 training+assembly exit=0 wall_ms=5314 size=43548672
+x64(Rosetta) training+assembly exit=0 wall_ms=15349 size=43741184
+[arm64캐시→arm64] auto exit=0 class+load total=5802 shared=5604 nonshared=198 on exit=0 Started BlogApplicationKt in 0.478 seconds
+    why:[info][aot] ArchiveRelocationMode: 1
+    why:[info][aot] ArchiveRelocationMode == 1: always map archive(s) at an alternative address
+[arm64캐시→x64] auto exit=0 class+load total=5667 shared=0 nonshared=5667 on exit=1 Started BlogApplicationKt in 3.429 seconds
+    auto:[warning][aot] The AOT cache was created by a different version or build of HotSpot
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    why:[info][aot]              actual: OpenJDK 64-Bit Server VM (25.0.4.1+1-LTS) for bsd-aarch64 JRE (25.0.4.1+1-LTS), built on 2026-08-18T00:00:00Z with clang Apple LLVM 15.0.0 (clang-1500.1.0.2.5)
+    why:[warning][aot] The AOT cache was created by a different version or build of HotSpot
+[x64캐시→x64] auto exit=0 class+load total=5802 shared=5604 nonshared=198 on exit=0 Started BlogApplicationKt in 7.07 seconds
+    why:[info][aot] ArchiveRelocationMode: 1
+    why:[info][aot] ArchiveRelocationMode == 1: always map archive(s) at an alternative address
+[x64캐시→arm64] auto exit=0 class+load total=5667 shared=0 nonshared=5667 on exit=1 Started BlogApplicationKt in 0.489 seconds
+    auto:[warning][aot] The AOT cache was created by a different version or build of HotSpot
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    why:[info][aot] _jvm_ident expected: OpenJDK 64-Bit Server VM (25.0.4.1+1-LTS) for bsd-aarch64 JRE (25.0.4.1+1-LTS), built on 2026-08-18T00:00:00Z with clang Apple LLVM 15.0.0 (clang-1500.1.0.2.5)
+    why:[warning][aot] The AOT cache was created by a different version or build of HotSpot

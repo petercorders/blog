@@ -1,0 +1,46 @@
+# experiment: e13-c — e10b 크기 조건 재실행 3회 — 1바이트 덧붙이기(1차 시도 추정) vs 클래스 추가 후 mtime 복원(재실험 방식)
+# date: 2026-10-08 03:30:21 +0900
+# uptime:  3:30  up 13 days,  3:19, 6 users, load averages: 38.87 26.17 14.96
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# gate[dirD]: AOTMode=on exit=0 
+## try 1 — (c1) 1바이트 덧붙이고 mtime 복원
+size: 16441 -> 16442 mtime: 2026-09-08 23:50:45
+c1 auto exit=1 stdout_aot=0 stderr_lines=1
+Error: Invalid or corrupt jarfile application/blog-0.0.1-SNAPSHOT.jar
+## try 1 — (c2) Marker 클래스 추가(jar uf) 후 mtime 복원
+size: 16441 -> 16783 mtime: 2026-09-08 23:50:45
+c2 auto exit=0 stdout_aot=4 stderr_lines=0
+[0.008s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', size has changed
+[0.008s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+Started BlogApplicationKt in 0.446 seconds
+c2 on exit=1 stdout_aot=4 stderr_lines=0
+## try 2 — (c1) 1바이트 덧붙이고 mtime 복원
+size: 16441 -> 16442 mtime: 2026-09-08 23:50:45
+c1 auto exit=1 stdout_aot=0 stderr_lines=1
+Error: Invalid or corrupt jarfile application/blog-0.0.1-SNAPSHOT.jar
+## try 2 — (c2) Marker 클래스 추가(jar uf) 후 mtime 복원
+size: 16441 -> 16783 mtime: 2026-09-08 23:50:45
+c2 auto exit=0 stdout_aot=4 stderr_lines=0
+[0.009s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', size has changed
+[0.009s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+Started BlogApplicationKt in 0.524 seconds
+c2 on exit=1 stdout_aot=4 stderr_lines=0
+## try 3 — (c1) 1바이트 덧붙이고 mtime 복원
+size: 16441 -> 16442 mtime: 2026-09-08 23:50:45
+c1 auto exit=1 stdout_aot=0 stderr_lines=1
+Error: Invalid or corrupt jarfile application/blog-0.0.1-SNAPSHOT.jar
+## try 3 — (c2) Marker 클래스 추가(jar uf) 후 mtime 복원
+size: 16441 -> 16783 mtime: 2026-09-08 23:50:45
+c2 auto exit=0 stdout_aot=4 stderr_lines=0
+[0.010s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', size has changed
+[0.010s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+Started BlogApplicationKt in 0.605 seconds
+c2 on exit=1 stdout_aot=4 stderr_lines=0
+## 1바이트 덧붙인 jar 를 캐시 없이 띄우면(캐시와 무관하게 jar 자체가 깨졌는지)
+c1 nocache exit=1 stderr_lines=1
+Error: Invalid or corrupt jarfile application/blog-0.0.1-SNAPSHOT.jar
+# gate[dirD-restored]: AOTMode=on exit=0 

@@ -1,0 +1,36 @@
+# experiment: r2-pre-oldcache — 옛 runs/work 캐시가 무효였던 이유(앱 jar mtime)와 mtime 복원 후 회복
+# date: 2026-10-08 03:21:25 +0900
+# uptime:  3:21  up 13 days,  3:10, 6 users, load averages: 4.81 7.48 6.37
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# command: (cd runs/work && java -XX:AOTCache=blog.aot -XX:AOTMode=on -jar application/blog-0.0.1-SNAPSHOT.jar)
+## 현재(복원 후): 2026-09-08 23:50:45 16441
+2026-10-08T03:21:25.668+09:00  INFO 87847 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.132 seconds (process running for 0.192)
+on exit=0
+## nowcheck 당시 상태 재현: touch -t 202609232001.05 (nowcheck 로그 시각의 mtime)
+mtime: 2026-09-23 20:01:05 16441
+[0.007s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+[0.007s][error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+[0.007s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+[0.007s][error  ][aot] unrecoverable error
+on exit=1
+[0.007s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+[0.007s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+[0.007s][error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+[0.007s][error  ][aot] Unable to map shared spaces
+2026-10-08T03:21:26.202+09:00  INFO 87855 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.371 seconds (process running for 0.5)
+auto exit=0
+## 되돌림: touch -t 202609082350.45 (캐시가 기록한 값)
+mtime: 2026-09-08 23:50:45 16441
+2026-10-08T03:21:26.398+09:00  INFO 87868 --- [blog] [           main] com.petercoders.blog.BlogApplicationKt   : Started BlogApplicationKt in 0.12 seconds (process running for 0.172)
+on exit=0
+## nowcheck 로그 3개의 생성·수정 시각(stat birth / mtime)
+  nocache-nowcheck.log birth=2026-09-23 20:00:56 mtime=2026-09-23 20:00:58
+  broken-cache-nowcheck.log birth=2026-09-23 20:01:05 mtime=2026-09-23 20:01:08
+  valid-cache-nowcheck.log birth=2026-09-23 20:01:16 mtime=2026-09-23 20:01:18
+## 해석: broken 이 20:01:05 에 앱 jar 를 touch 했고(jar mtime 20:01:05 와 broken 로그 birth 가 같다),
+##       valid 는 그 뒤 20:01:16 에 돌았으며 mtime 은 2026-10-08 까지 되돌려지지 않았다.
+##       따라서 valid-cache-nowcheck(0.352s)는 무효 캐시(fallback) 상태의 측정이다. 세 조건 모두 사실상 캐시 없이 돈 값이다.

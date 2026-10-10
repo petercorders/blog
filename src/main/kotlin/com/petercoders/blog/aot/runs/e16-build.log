@@ -1,0 +1,22 @@
+# experiment: e16-build — agent 빌드
+# date: 2026-10-08 03:47:23 +0900
+# uptime:  3:47  up 13 days,  3:36, 6 users, load averages: 6.97 14.03 17.74
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+javac exit=0
+native agent for JDK 25 built (headers /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/include)
+native agent for JDK 26 built (headers /Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/include)
+native agent for JDK 27 built (headers /private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks/jdk-27+35/Contents/Home/include)
+total 71056
+drwxr-xr-x@ 3 kibong_home  staff        96 10월  8 03:47 cls
+-rw-r--r--@ 1 kibong_home  staff  35408939 10월  8 03:45 dd-java-agent-1.67.0.jar
+-rwxr-xr-x@ 1 kibong_home  staff     33576 10월  8 03:47 libe16native-25.dylib
+-rwxr-xr-x@ 1 kibong_home  staff     33576 10월  8 03:47 libe16native-26.dylib
+-rwxr-xr-x@ 1 kibong_home  staff     33576 10월  8 03:47 libe16native-27.dylib
+-rw-r--r--@ 1 kibong_home  staff       793 10월  8 03:47 noop.jar
+-rw-r--r--@ 1 kibong_home  staff        29 10월  8 03:47 noop.mf
+-rw-r--r--@ 1 kibong_home  staff      2261 10월  8 03:47 transform.jar
+-rw-r--r--@ 1 kibong_home  staff        34 10월  8 03:47 transform.mf

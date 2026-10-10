@@ -1,0 +1,2 @@
+# f3c9bfb 트리에서 Java toolchain 만 25 → 21 로 바꾼다(JDK 21 에서 class file 69 를 못 읽는다). 의존성은 그대로
+21

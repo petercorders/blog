@@ -1,0 +1,24 @@
+# experiment: e13-b — 조건마다 -Xlog:class+load 1회 — shared objects file 비율
+# date: 2026-10-08 03:29:59 +0900
+# uptime:  3:29  up 13 days,  3:19, 6 users, load averages: 39.71 25.67 14.58
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# dirB 앱 jar mtime: 2026-10-08 03:23:45 (dirA: 2026-09-08 23:50:45)
+# command: (cd <dir> && java -Xlog:class+load:file=<f>:none <opts>) 후 grep -c 'source: shared objects file' / grep -c 'source:'
+F0 exit=0
+F0 class+load total=5804 shared=1379 (23.8%) nonshared=4425 jar:nested=2927
+F1 exit=0
+F1 class+load total=5637 shared=4924 (87.4%) nonshared=713 jar:nested=5
+E0 exit=0
+E0 class+load total=5662 shared=1365 (24.1%) nonshared=4297 jar:nested=0
+E1 exit=0
+E1 class+load total=5802 shared=5604 (96.6%) nonshared=198 jar:nested=0
+E2 exit=0
+E2 class+load total=5667 shared=0 (0.0%) nonshared=5667 jar:nested=0
+# 운영 절 bash #3 형태(위와 같은 집계를 한 줄 명령으로):
+#   java -Xlog:class+load -XX:AOTCache=app.aot -jar application/app.jar | grep -c "source: shared objects file"
+E1 one-liner shared=5604
+E2 one-liner shared=0

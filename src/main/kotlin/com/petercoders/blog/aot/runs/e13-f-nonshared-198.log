@@ -1,0 +1,236 @@
+# experiment: e13-f — E1 class+load 중 캐시 밖 198줄의 내역(새 실행 없음, 원본 로그 재집계)
+# date: 2026-10-08 10:42:48 +0900
+# 입력 1: runs/work-r2/classload-e13-E1.log (e13-b 원본) sha256 a3d2ba5cbebab7fc…
+# 입력 2: runs/work-r2/dirA/train-e21-25.out (e21 JDK 25 training, -Xlog:aot=info) sha256 0d4d29d650a57f04…
+## JDK 25 training 의 Skipping(Proxy 제외)
+    [warning][aot] Skipping jdk/internal/event/Event: JFR event class
+    [info   ][aot] Skipping jdk/internal/misc/CDS$UnregisteredClassLoader$Source: used only when dumping CDS archive
+    [info   ][aot] Skipping jdk/internal/misc/CDS$UnregisteredClassLoader: used only when dumping CDS archive
+    [warning][aot] Skipping jdk/internal/event/SecurityProviderServiceEvent: JFR event class
+    [warning][aot] Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Failed verification
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationDelegate: Unsupported location
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationMetadata$Builder: Unsupported location
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMetadataReader: Unsupported location
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMetadataReaderFactory: Unsupported location
+    [info   ][aot] Skipping java/lang/invoke/BoundMethodHandle$Species_J because it is dynamically generated
+    [info   ][aot] Skipping java/lang/invoke/BoundMethodHandle$Species_F because it is dynamically generated
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMethodMetadata: Unsupported location
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationMetadata: Unsupported location
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileAnnotationDelegate$Source: Unsupported location
+    [warning][aot] Skipping org/springframework/core/type/classreading/ClassFileMethodMetadata$Source: Unsupported location
+    [info   ][aot] Skipping java/lang/invoke/BoundMethodHandle$Species_LI because it is dynamically generated
+    [warning][aot] Skipping org/springframework/boot/logging/log4j2/Log4J2LoggingSystem: Unlinked class not supported by AOTClassLinking
+    Proxy 의 Skipping(Unsupported location): 42
+E1 class+load total=5802 shared=5604 nonshared=198
+D 경계: 런타임 load 순서 5717번째 줄(DefaultLifecycleProcessor 의 첫 lambda)
+[A] 26 — training 이 사유를 남기고 뺀 클래스와 그 nest 의 lambda·TypeSwitch
+[B] 42 — dynamic Proxy(source __dynamic_proxy__)
+[C] 48 — method handle 구현 클래스(source __JVM_LookupDefineClass__)
+[D] 76 — onRefresh 종료 지점 뒤에 처음 load 된 클래스(Lifecycle 시작·Started 줄·runner·종료)
+[E] 6 — refresh 중 load 됐는데 캐시에 없는 lambda(원인 미특정)
+    A 내역: 클래스 11(Log4J2LoggingSystem 1, ClassFile* 8, jdk.internal.event 2) + nest 의 lambda·TypeSwitch 15
+    D 내역: JDK 모듈(jrt:) 50, 앱 클래스패스 jar 5, lambda 21
+합계 26 + 42 + 48 + 76 + 6 = 198
+## [A] 전문
+     5605 org.springframework.boot.logging.log4j2.Log4J2LoggingSystem  <- spring-boot-4.1.1.jar
+     5617 jdk.internal.event.Event  <- jrt:/java.base
+     5618 jdk.internal.event.SecurityProviderServiceEvent  <- jrt:/java.base
+     5632 org.springframework.core.type.classreading.ClassFileMetadataReaderFactory  <- spring-core-7.0.9.jar
+     5655 org.springframework.core.type.classreading.ClassFileMetadataReader  <- spring-core-7.0.9.jar
+     5656 org.springframework.core.type.classreading.ClassFileAnnotationMetadata  <- spring-core-7.0.9.jar
+     5657 org.springframework.core.type.classreading.ClassFileAnnotationMetadata$Builder  <- spring-core-7.0.9.jar
+     5658 org.springframework.core.type.classreading.ClassFileAnnotationMetadata$$Lambda/0x0000018003007430  <- org.springframework.core.type.classreading.ClassFileAnnotationMetadata
+     5659 org.springframework.core.type.classreading.ClassFileAnnotationMetadata$$TypeSwitch/0x0000018003007670  <- org.springframework.core.type.classreading.ClassFileAnnotationMetadata
+     5660 org.springframework.core.type.classreading.ClassFileMethodMetadata  <- spring-core-7.0.9.jar
+     5661 org.springframework.core.type.classreading.ClassFileMethodMetadata$$Lambda/0x0000018003007b80  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5662 org.springframework.core.type.classreading.ClassFileMethodMetadata$Source  <- spring-core-7.0.9.jar
+     5663 org.springframework.core.type.classreading.ClassFileMethodMetadata$$Lambda/0x000001800300a000  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5664 org.springframework.core.type.classreading.ClassFileMethodMetadata$$Lambda/0x000001800300a260  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5665 org.springframework.core.type.classreading.ClassFileMethodMetadata$$Lambda/0x000001800300a4b0  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5666 org.springframework.core.type.classreading.ClassFileMethodMetadata$$Lambda/0x000001800300a700  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5667 org.springframework.core.type.classreading.ClassFileAnnotationDelegate  <- spring-core-7.0.9.jar
+     5668 org.springframework.core.type.classreading.ClassFileAnnotationDelegate$$Lambda/0x000001800300ab38  <- org.springframework.core.type.classreading.ClassFileAnnotationDelegate
+     5669 org.springframework.core.type.classreading.ClassFileAnnotationDelegate$$Lambda/0x000001800300ad88  <- org.springframework.core.type.classreading.ClassFileAnnotationDelegate
+     5671 org.springframework.core.type.classreading.ClassFileAnnotationDelegate$Source  <- spring-core-7.0.9.jar
+     5672 org.springframework.core.type.classreading.ClassFileAnnotationDelegate$$TypeSwitch/0x000001800300b1f8  <- org.springframework.core.type.classreading.ClassFileAnnotationDelegate
+     5673 org.springframework.core.type.classreading.ClassFileAnnotationDelegate$$TypeSwitch/0x000001800300b408  <- org.springframework.core.type.classreading.ClassFileAnnotationDelegate
+     5674 org.springframework.core.type.classreading.ClassFileAnnotationMetadata$Builder$$Lambda/0x000001800300b618  <- org.springframework.core.type.classreading.ClassFileAnnotationMetadata
+     5678 org.springframework.core.type.classreading.ClassFileMethodMetadata$Source$$Lambda/0x000001800300c000  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5679 org.springframework.core.type.classreading.ClassFileMethodMetadata$Source$$Lambda/0x000001800300c240  <- org.springframework.core.type.classreading.ClassFileMethodMetadata
+     5680 org.springframework.core.type.classreading.ClassFileAnnotationMetadata$Builder$$Lambda/0x000001800300c488  <- org.springframework.core.type.classreading.ClassFileAnnotationMetadata
+## [B] 전문
+     5607 jdk.proxy1.$Proxy0  <- __dynamic_proxy__
+     5608 jdk.proxy1.$Proxy1  <- __dynamic_proxy__
+     5611 jdk.proxy2.$Proxy2  <- __dynamic_proxy__
+     5612 jdk.proxy1.$Proxy3  <- __dynamic_proxy__
+     5613 jdk.proxy1.$Proxy4  <- __dynamic_proxy__
+     5629 jdk.proxy2.$Proxy5  <- __dynamic_proxy__
+     5630 org.springframework.core.$Proxy6  <- __dynamic_proxy__
+     5631 jdk.proxy2.$Proxy7  <- __dynamic_proxy__
+     5633 jdk.proxy1.$Proxy8  <- __dynamic_proxy__
+     5634 jdk.proxy2.$Proxy9  <- __dynamic_proxy__
+     5635 jdk.proxy2.$Proxy10  <- __dynamic_proxy__
+     5636 jdk.proxy2.$Proxy11  <- __dynamic_proxy__
+     5637 jdk.proxy2.$Proxy12  <- __dynamic_proxy__
+     5638 jdk.proxy2.$Proxy13  <- __dynamic_proxy__
+     5639 jdk.proxy2.$Proxy14  <- __dynamic_proxy__
+     5640 jdk.proxy2.$Proxy15  <- __dynamic_proxy__
+     5641 jdk.proxy2.$Proxy16  <- __dynamic_proxy__
+     5642 jdk.proxy1.$Proxy17  <- __dynamic_proxy__
+     5643 jdk.proxy2.$Proxy18  <- __dynamic_proxy__
+     5644 jdk.proxy2.$Proxy19  <- __dynamic_proxy__
+     5645 jdk.proxy1.$Proxy20  <- __dynamic_proxy__
+     5646 jdk.proxy2.$Proxy21  <- __dynamic_proxy__
+     5647 jdk.proxy2.$Proxy22  <- __dynamic_proxy__
+     5648 jdk.proxy2.$Proxy23  <- __dynamic_proxy__
+     5649 jdk.proxy2.$Proxy24  <- __dynamic_proxy__
+     5675 jdk.proxy2.$Proxy25  <- __dynamic_proxy__
+     5676 jdk.proxy2.$Proxy26  <- __dynamic_proxy__
+     5677 jdk.proxy2.$Proxy27  <- __dynamic_proxy__
+     5681 jdk.proxy2.$Proxy28  <- __dynamic_proxy__
+     5682 jdk.proxy2.$Proxy29  <- __dynamic_proxy__
+     5683 jdk.proxy2.$Proxy30  <- __dynamic_proxy__
+     5684 jdk.proxy2.$Proxy31  <- __dynamic_proxy__
+     5685 jdk.proxy2.$Proxy32  <- __dynamic_proxy__
+     5686 jdk.proxy2.$Proxy33  <- __dynamic_proxy__
+     5687 jdk.proxy2.$Proxy34  <- __dynamic_proxy__
+     5688 jdk.proxy2.$Proxy35  <- __dynamic_proxy__
+     5689 jdk.proxy2.$Proxy36  <- __dynamic_proxy__
+     5690 jdk.proxy2.$Proxy37  <- __dynamic_proxy__
+     5705 org.springframework.core.$Proxy38  <- __dynamic_proxy__
+     5708 jdk.proxy2.$Proxy39  <- __dynamic_proxy__
+     5711 jdk.proxy2.$Proxy40  <- __dynamic_proxy__
+     5715 jdk.proxy2.$Proxy41  <- __dynamic_proxy__
+## [C] 전문
+     5606 java.lang.invoke.LambdaForm$MH/0x0000018003000800  <- __JVM_LookupDefineClass__
+     5609 java.lang.invoke.LambdaForm$MH/0x0000018003000c00  <- __JVM_LookupDefineClass__
+     5610 java.lang.invoke.LambdaForm$MH/0x0000018003001000  <- __JVM_LookupDefineClass__
+     5615 java.lang.invoke.LambdaForm$MH/0x0000018003001400  <- __JVM_LookupDefineClass__
+     5616 java.lang.invoke.LambdaForm$MH/0x0000018003001800  <- __JVM_LookupDefineClass__
+     5620 java.lang.invoke.LambdaForm$MH/0x0000018003001c00  <- __JVM_LookupDefineClass__
+     5621 java.lang.invoke.LambdaForm$MH/0x0000018003002000  <- __JVM_LookupDefineClass__
+     5622 java.lang.invoke.LambdaForm$MH/0x0000018003002400  <- __JVM_LookupDefineClass__
+     5624 java.lang.invoke.LambdaForm$MH/0x0000018003002800  <- __JVM_LookupDefineClass__
+     5625 java.lang.invoke.LambdaForm$MH/0x0000018003002c00  <- __JVM_LookupDefineClass__
+     5626 java.lang.invoke.LambdaForm$MH/0x0000018003003000  <- __JVM_LookupDefineClass__
+     5627 java.lang.invoke.LambdaForm$MH/0x0000018003003400  <- __JVM_LookupDefineClass__
+     5628 java.lang.invoke.LambdaForm$MH/0x0000018003003800  <- __JVM_LookupDefineClass__
+     5651 java.lang.invoke.LambdaForm$MH/0x0000018003008000  <- __JVM_LookupDefineClass__
+     5652 java.lang.invoke.LambdaForm$MH/0x0000018003008400  <- __JVM_LookupDefineClass__
+     5653 java.lang.invoke.LambdaForm$MH/0x0000018003008800  <- __JVM_LookupDefineClass__
+     5670 java.lang.String$$StringConcat/0x0000018003008c00  <- __JVM_LookupDefineClass__
+     5691 java.lang.invoke.BoundMethodHandle$Species_LI  <- __JVM_LookupDefineClass__
+     5692 java.lang.invoke.LambdaForm$DMH/0x0000018003009000  <- __JVM_LookupDefineClass__
+     5693 java.lang.invoke.LambdaForm$MH/0x0000018003009400  <- __JVM_LookupDefineClass__
+     5694 java.lang.invoke.LambdaForm$DMH/0x0000018003009800  <- __JVM_LookupDefineClass__
+     5695 java.lang.invoke.LambdaForm$BMH/0x0000018003009c00  <- __JVM_LookupDefineClass__
+     5696 java.lang.invoke.LambdaForm$MH/0x0000018003010000  <- __JVM_LookupDefineClass__
+     5697 java.lang.invoke.LambdaForm$MH/0x0000018003010400  <- __JVM_LookupDefineClass__
+     5698 java.lang.invoke.LambdaForm$MH/0x0000018003010800  <- __JVM_LookupDefineClass__
+     5699 java.lang.invoke.LambdaForm$DMH/0x0000018003010c00  <- __JVM_LookupDefineClass__
+     5700 java.lang.invoke.LambdaForm$MH/0x0000018003011000  <- __JVM_LookupDefineClass__
+     5701 java.lang.invoke.LambdaForm$MH/0x0000018003011400  <- __JVM_LookupDefineClass__
+     5702 java.lang.invoke.LambdaForm$MH/0x0000018003011800  <- __JVM_LookupDefineClass__
+     5703 java.lang.invoke.LambdaForm$MH/0x0000018003011c00  <- __JVM_LookupDefineClass__
+     5706 java.lang.invoke.LambdaForm$MH/0x0000018003012000  <- __JVM_LookupDefineClass__
+     5707 java.lang.invoke.LambdaForm$MH/0x0000018003012400  <- __JVM_LookupDefineClass__
+     5709 java.lang.invoke.LambdaForm$MH/0x0000018003012800  <- __JVM_LookupDefineClass__
+     5710 java.lang.invoke.LambdaForm$MH/0x0000018003012c00  <- __JVM_LookupDefineClass__
+     5712 java.lang.invoke.LambdaForm$MH/0x0000018003013000  <- __JVM_LookupDefineClass__
+     5713 java.lang.invoke.LambdaForm$MH/0x0000018003013400  <- __JVM_LookupDefineClass__
+     5714 java.lang.invoke.LambdaForm$MH/0x0000018003013800  <- __JVM_LookupDefineClass__
+     5716 java.lang.invoke.LambdaForm$DMH/0x0000018003013c00  <- __JVM_LookupDefineClass__
+     5718 java.lang.invoke.LambdaForm$DMH/0x0000018003014000  <- __JVM_LookupDefineClass__
+     5719 java.lang.invoke.LambdaForm$DMH/0x0000018003014400  <- __JVM_LookupDefineClass__
+     5720 java.lang.invoke.LambdaForm$MH/0x0000018003014800  <- __JVM_LookupDefineClass__
+     5722 java.lang.invoke.LambdaForm$DMH/0x0000018003014c00  <- __JVM_LookupDefineClass__
+     5723 java.lang.invoke.LambdaForm$MH/0x0000018003015000  <- __JVM_LookupDefineClass__
+     5725 java.lang.invoke.LambdaForm$DMH/0x0000018003015400  <- __JVM_LookupDefineClass__
+     5791 java.lang.invoke.LambdaForm$DMH/0x0000018003015800  <- __JVM_LookupDefineClass__
+     5793 java.lang.invoke.LambdaForm$DMH/0x0000018003015c00  <- __JVM_LookupDefineClass__
+     5794 java.lang.invoke.LambdaForm$DMH/0x0000018003018000  <- __JVM_LookupDefineClass__
+     5795 java.lang.invoke.LambdaForm$MH/0x0000018003018400  <- __JVM_LookupDefineClass__
+## [D] 전문
+     5717 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x000001800300eb40  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5721 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x000001800300ed80  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5724 org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroupMember  <- spring-context-7.0.9.jar
+     5726 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x000001800300f1e8  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5727 org.springframework.core.ResolvableType$WildcardBounds  <- spring-core-7.0.9.jar
+     5728 org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport$$Lambda/0x000001800300f668  <- org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport
+     5729 org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport$$Lambda/0x000001800300f8a8  <- org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport
+     5730 jdk.internal.math.ToDecimal  <- jrt:/java.base
+     5731 jdk.internal.math.DoubleToDecimal  <- jrt:/java.base
+     5732 java.lang.management.ManagementFactory  <- jrt:/java.management
+     5733 java.lang.management.PlatformManagedObject  <- jrt:/java.management
+     5734 java.lang.management.RuntimeMXBean  <- jrt:/java.management
+     5735 java.lang.management.ManagementFactory$PlatformMBeanFinder  <- jrt:/java.management
+     5736 sun.management.spi.PlatformMBeanProvider  <- jrt:/java.management
+     5737 com.sun.management.internal.PlatformMBeanProviderImpl  <- jrt:/jdk.management
+     5738 sun.management.spi.PlatformMBeanProvider$PlatformComponent  <- jrt:/java.management
+     5739 com.sun.management.internal.PlatformMBeanProviderImpl$1  <- jrt:/jdk.management
+     5740 com.sun.management.internal.PlatformMBeanProviderImpl$2  <- jrt:/jdk.management
+     5741 com.sun.management.internal.PlatformMBeanProviderImpl$3  <- jrt:/jdk.management
+     5742 jdk.management.HotSpotAOTCacheMXBean  <- jrt:/jdk.management
+     5743 com.sun.management.internal.PlatformMBeanProviderImpl$4  <- jrt:/jdk.management
+     5744 jdk.management.VirtualThreadSchedulerMXBean  <- jrt:/jdk.management
+     5745 com.sun.management.internal.PlatformMBeanProviderImpl$5  <- jrt:/jdk.management
+     5746 com.sun.management.internal.PlatformMBeanProviderImpl$6  <- jrt:/jdk.management
+     5747 com.sun.management.DiagnosticCommandMBean  <- jrt:/jdk.management
+     5748 sun.management.NotificationEmitterSupport  <- jrt:/java.management
+     5749 com.sun.management.internal.DiagnosticCommandImpl  <- jrt:/jdk.management
+     5750 sun.management.ManagementFactoryHelper  <- jrt:/java.management
+     5751 sun.management.VMManagement  <- jrt:/java.management
+     5752 sun.management.VMManagementImpl  <- jrt:/java.management
+     5753 com.sun.management.internal.PlatformMBeanProviderImpl$7  <- jrt:/jdk.management
+     5754 jdk.management.jfr.internal.FlightRecorderMXBeanProvider  <- jrt:/jdk.management.jfr
+     5755 java.lang.management.DefaultPlatformMBeanProvider  <- jrt:/java.management
+     5756 java.lang.management.DefaultPlatformMBeanProvider$1  <- jrt:/java.management
+     5757 java.lang.management.DefaultPlatformMBeanProvider$2  <- jrt:/java.management
+     5758 java.lang.management.DefaultPlatformMBeanProvider$3  <- jrt:/java.management
+     5759 java.lang.management.DefaultPlatformMBeanProvider$4  <- jrt:/java.management
+     5760 java.lang.management.DefaultPlatformMBeanProvider$5  <- jrt:/java.management
+     5761 java.lang.management.DefaultPlatformMBeanProvider$6  <- jrt:/java.management
+     5762 java.lang.management.DefaultPlatformMBeanProvider$7  <- jrt:/java.management
+     5763 java.lang.management.DefaultPlatformMBeanProvider$8  <- jrt:/java.management
+     5764 sun.management.ManagementFactoryHelper$LoggingMXBeanAccess  <- jrt:/java.management
+     5765 java.lang.management.DefaultPlatformMBeanProvider$9  <- jrt:/java.management
+     5766 java.lang.management.DefaultPlatformMBeanProvider$10  <- jrt:/java.management
+     5767 java.lang.management.DefaultPlatformMBeanProvider$11  <- jrt:/java.management
+     5768 jdk.management.jfr.FlightRecorderMXBean  <- jrt:/jdk.management.jfr
+     5769 jdk.management.jfr.internal.FlightRecorderMXBeanProvider$SingleMBeanComponent  <- jrt:/jdk.management.jfr
+     5770 java.util.HashMap$ValueSpliterator  <- jrt:/java.base
+     5771 java.lang.management.ManagementFactory$PlatformMBeanFinder$$Lambda/0x00000180030489a8  <- java.lang.management.ManagementFactory
+     5772 java.lang.management.ManagementFactory$PlatformMBeanFinder$$Lambda/0x0000018003048c08  <- java.lang.management.ManagementFactory
+     5773 java.util.stream.ReduceOps$2  <- jrt:/java.base
+     5774 java.util.stream.ReduceOps$2ReducingSink  <- jrt:/java.base
+     5775 sun.management.RuntimeImpl  <- jrt:/java.management
+     5776 sun.management.spi.PlatformMBeanProvider$PlatformComponent$$Lambda/0x0000018003049778  <- sun.management.spi.PlatformMBeanProvider
+     5777 sun.management.spi.PlatformMBeanProvider$PlatformComponent$$Lambda/0x00000180030499d8  <- sun.management.spi.PlatformMBeanProvider
+     5778 org.springframework.boot.SpringApplicationRunListeners$$Lambda/0x000001800300fae8  <- org.springframework.boot.SpringApplicationRunListeners
+     5779 org.springframework.core.ResolvableType$WildcardBounds$Kind  <- spring-core-7.0.9.jar
+     5780 org.springframework.boot.Runner  <- spring-boot-4.1.1.jar
+     5781 org.springframework.boot.SpringApplication$FactoryAwareOrderSourceProvider  <- spring-boot-4.1.1.jar
+     5782 java.util.IdentityHashMap$IdentityHashMapSpliterator  <- jrt:/java.base
+     5783 java.util.IdentityHashMap$KeySpliterator  <- jrt:/java.base
+     5784 org.springframework.boot.SpringApplication$$Lambda/0x0000018003016a90  <- org.springframework.boot.SpringApplication
+     5785 java.util.stream.SortedOps$SizedRefSortingSink  <- jrt:/java.base
+     5786 org.springframework.boot.SpringApplicationRunListeners$$Lambda/0x0000018003016cd0  <- org.springframework.boot.SpringApplicationRunListeners
+     5787 java.util.IdentityHashMap$KeyIterator  <- jrt:/java.base
+     5788 java.util.WeakHashMap$HashIterator  <- jrt:/java.base
+     5789 java.util.WeakHashMap$KeyIterator  <- jrt:/java.base
+     5790 org.springframework.boot.SpringApplicationShutdownHook$$Lambda/0x0000018003017110  <- org.springframework.boot.SpringApplicationShutdownHook
+     5792 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x0000018003017350  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5796 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x0000018003017590  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5797 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x00000180030177e0  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5798 org.springframework.context.support.DefaultLifecycleProcessor$$Lambda/0x0000018003017a18  <- org.springframework.context.support.DefaultLifecycleProcessor
+     5799 org.springframework.beans.factory.support.DefaultListableBeanFactory$$Lambda/0x0000018003017c48  <- org.springframework.beans.factory.support.DefaultListableBeanFactory
+     5800 org.springframework.beans.factory.support.DefaultListableBeanFactory$$Lambda/0x000001800301c000  <- org.springframework.beans.factory.support.DefaultListableBeanFactory
+     5801 org.springframework.boot.SpringApplicationShutdownHook$$Lambda/0x000001800301c258  <- org.springframework.boot.SpringApplicationShutdownHook
+     5802 org.springframework.boot.SpringApplicationShutdownHook$$Lambda/0x000001800301c498  <- org.springframework.boot.SpringApplicationShutdownHook
+## [E] 전문
+     5614 org.springframework.core.convert.TypeDescriptor$$Lambda/0x0000018003000510  <- org.springframework.core.convert.TypeDescriptor
+     5619 java.util.Comparator$$Lambda/0x0000018003041288  <- java.util.Comparator
+     5623 java.util.Map$Entry$$Lambda/0x0000018003041530  <- java.util.Map
+     5650 org.springframework.core.convert.TypeDescriptor$$Lambda/0x0000018003006950  <- org.springframework.core.convert.TypeDescriptor
+     5654 java.util.Comparator$$Lambda/0x0000018003041ef8  <- java.util.Comparator
+     5704 org.springframework.core.convert.TypeDescriptor$$Lambda/0x000001800300df48  <- org.springframework.core.convert.TypeDescriptor

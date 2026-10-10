@@ -1,0 +1,2 @@
+# f3c9bfb 의 의존성(spring-boot-starter, kotlin-reflect)에 더하는 것 — 하나뿐이다
+implementation("org.springframework.boot:spring-boot-starter-web")

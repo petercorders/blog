@@ -1,0 +1,85 @@
+# experiment: e15-jdk25 — training·운영 옵션 불일치 격자
+# date: 2026-10-08 03:34:40 +0900
+# uptime:  3:34  up 13 days,  3:24, 6 users, load averages: 38.14 30.54 19.24
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# cache app25.aot: training 옵션 [] size=43548672
+# cache app25-serial.aot: training 옵션 [-XX:+UseSerialGC] size=43450368
+# cache app25-r8m.aot: training 옵션 [-XX:G1HeapRegionSize=8m] size=43565056
+# 이 기기에서 옵션 없이 고른 GC·Heap: G1HeapRegionSize=4194304 MaxHeapSize=6442450944 UseCompressedOops=true UseG1GC=true 
+# command: (cd dirA && java <운영 옵션> -XX:AOTCache=<cache> [-XX:AOTMode=on] -jar application/blog-0.0.1-SNAPSHOT.jar)
+## G1(기본)로 만든 캐시
+cache=app25.aot run=[기본] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-XX:+UseSerialGC] gc=UseSerialGC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-XX:+UseParallelGC] gc=UseParallelGC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-XX:+UseZGC] gc=UseZGC  auto_exit=0 shared=0/5667 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.081s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+cache=app25.aot run=[-Xmx256m] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-Xmx4g] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-XX:G1HeapRegionSize=16m] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-XX:-UseCompressedOops] gc=UseG1GC  auto_exit=0 shared=0/5667 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.010s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+cache=app25.aot run=[-Xmx40g] gc=UseG1GC  auto_exit=0 shared=0/5667 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.009s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+cache=app25.aot run=[-XX:+UseCompactObjectHeaders] gc=UseG1GC  auto_exit=0 shared=0/5669 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.012s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+## 컨테이너 한도 흉내(docker 대신): CPU 1개·메모리 512MB 로 ergonomics 를 바꾼다
+cache=app25.aot run=[-XX:ActiveProcessorCount=1 -XX:MaxRAM=512m] gc=UseSerialGC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25.aot run=[-XX:ActiveProcessorCount=4 -XX:MaxRAM=4g] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+## Serial 로 만든 캐시(작은 CI 러너에서 training 했다는 상황)
+cache=app25-serial.aot run=[기본] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25-serial.aot run=[-XX:+UseSerialGC] gc=UseSerialGC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25-serial.aot run=[-XX:+UseZGC] gc=UseZGC  auto_exit=0 shared=0/5667 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.005s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+## G1HeapRegionSize=8m 로 만든 캐시(phase 오버레이: training 8m → 운영 16m)
+cache=app25-r8m.aot run=[-XX:G1HeapRegionSize=8m] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25-r8m.aot run=[-XX:G1HeapRegionSize=16m] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0
+cache=app25-r8m.aot run=[기본] gc=UseG1GC  auto_exit=0 shared=5604/5802 on_exit=0 stderr_lines=0

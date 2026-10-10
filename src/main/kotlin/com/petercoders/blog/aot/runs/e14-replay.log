@@ -1,0 +1,42 @@
+# experiment: e14-replay — B 캐시에서 profile 재생(AOTReplayTraining)만 끈 대조 — 라운드로빈 10회
+# date: 2026-10-08 03:45:04 +0900
+# uptime:  3:45  up 13 days,  3:34, 6 users, load averages: 6.10 17.84 19.49
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+## round 1 uptime: 6.10 17.84 19.49
+B r=1 port_seen_ms=472 first200_ms=499 first_req_ms=27.6 p50_ms=0.56 p99_ms=27.60 n=100 started_s=0.248 process_s=0.467 exit=143
+Bnr r=1 port_seen_ms=332 first200_ms=360 first_req_ms=28.3 p50_ms=0.62 p99_ms=28.28 n=100 started_s=0.253 process_s=0.327 exit=143
+## round 2 uptime: 6.10 17.84 19.49
+Bnr r=2 port_seen_ms=354 first200_ms=383 first_req_ms=29.3 p50_ms=0.64 p99_ms=29.34 n=100 started_s=0.271 process_s=0.349 exit=143
+B r=2 port_seen_ms=347 first200_ms=379 first_req_ms=31.4 p50_ms=0.76 p99_ms=31.41 n=100 started_s=0.265 process_s=0.342 exit=143
+## round 3 uptime: 6.18 17.66 19.42
+B r=3 port_seen_ms=481 first200_ms=518 first_req_ms=37.3 p50_ms=0.87 p99_ms=37.33 n=100 started_s=0.375 process_s=0.474 exit=143
+Bnr r=3 port_seen_ms=524 first200_ms=570 first_req_ms=46.7 p50_ms=1.00 p99_ms=46.65 n=100 started_s=0.408 process_s=0.517 exit=143
+## round 4 uptime: 6.18 17.66 19.42
+Bnr r=4 port_seen_ms=628 first200_ms=680 first_req_ms=52.0 p50_ms=1.30 p99_ms=51.96 n=100 started_s=0.498 process_s=0.62 exit=143
+B r=4 port_seen_ms=792 first200_ms=879 first_req_ms=86.2 p50_ms=2.39 p99_ms=86.20 n=100 started_s=0.619 process_s=0.781 exit=143
+## round 5 uptime: 6.18 17.66 19.42
+B r=5 port_seen_ms=1266 first200_ms=1373 first_req_ms=107.3 p50_ms=2.50 p99_ms=107.25 n=100 started_s=0.977 process_s=1.249 exit=143
+Bnr r=5 port_seen_ms=1387 first200_ms=1499 first_req_ms=111.3 p50_ms=2.27 p99_ms=111.30 n=100 started_s=1.087 process_s=1.371 exit=143
+## round 6 uptime: 8.80 18.01 19.53
+Bnr r=6 port_seen_ms=972 first200_ms=1049 first_req_ms=77.0 p50_ms=1.53 p99_ms=77.00 n=100 started_s=0.727 process_s=0.958 exit=143
+B r=6 port_seen_ms=316 first200_ms=343 first_req_ms=27.1 p50_ms=0.58 p99_ms=27.06 n=100 started_s=0.235 process_s=0.31 exit=143
+## round 7 uptime: 8.50 17.80 19.45
+B r=7 port_seen_ms=299 first200_ms=324 first_req_ms=25.2 p50_ms=0.61 p99_ms=25.16 n=100 started_s=0.223 process_s=0.294 exit=143
+Bnr r=7 port_seen_ms=326 first200_ms=352 first_req_ms=26.5 p50_ms=0.56 p99_ms=26.51 n=100 started_s=0.251 process_s=0.321 exit=143
+## round 8 uptime: 8.50 17.80 19.45
+Bnr r=8 port_seen_ms=331 first200_ms=357 first_req_ms=26.8 p50_ms=0.65 p99_ms=26.78 n=100 started_s=0.257 process_s=0.326 exit=143
+B r=8 port_seen_ms=348 first200_ms=379 first_req_ms=30.8 p50_ms=0.76 p99_ms=30.84 n=100 started_s=0.266 process_s=0.343 exit=143
+## round 9 uptime: 8.50 17.80 19.45
+B r=9 port_seen_ms=666 first200_ms=699 first_req_ms=32.6 p50_ms=0.74 p99_ms=32.58 n=100 started_s=0.337 process_s=0.661 exit=143
+Bnr r=9 port_seen_ms=385 first200_ms=423 first_req_ms=37.6 p50_ms=1.01 p99_ms=37.58 n=100 started_s=0.297 process_s=0.38 exit=143
+## round 10 uptime: 8.50 17.80 19.45
+Bnr r=10 port_seen_ms=430 first200_ms=459 first_req_ms=29.6 p50_ms=0.66 p99_ms=29.61 n=100 started_s=0.333 process_s=0.424 exit=143
+B r=10 port_seen_ms=361 first200_ms=395 first_req_ms=34.3 p50_ms=0.79 p99_ms=34.28 n=100 started_s=0.279 process_s=0.355 exit=143
+B n=10 port_seen_ms=416 first200_ms=447 first_req_ms=32.0 p50_ms=0.76
+Bnr n=10 port_seen_ms=408 first200_ms=441 first_req_ms=33.6 p50_ms=0.83
+sign: B < Bnr (first_req_ms) in 6/10 rounds
+ratio B/Bnr first_req (round median) = 0.970

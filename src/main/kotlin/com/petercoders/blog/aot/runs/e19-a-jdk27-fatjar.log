@@ -1,0 +1,63 @@
+# experiment: e19-a — JDK 27 fat jar + AOT Cache: 저장 범위
+# date: 2026-10-08 03:48:56 +0900
+# uptime:  3:48  up 13 days,  3:38, 6 users, load averages: 4.44 11.59 16.47
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks/jdk-27+35/Contents/Home/bin/java):
+#   openjdk version "27" 2026-09-15
+#   OpenJDK Runtime Environment Temurin-27+35 (build 27+35)
+#   OpenJDK 64-Bit Server VM Temurin-27+35 (build 27+35, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# cache /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/fat/fat27.aot size=24576000
+# cache /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/app27.aot size=45481984
+## train-fat27.out — assembly 표
+     instance classes   =  2055, aot-linked =     0, inited =     0
+       boot             =  1974, aot-linked =     0, inited =     0
+         vm             =   153, aot-linked =     0, inited =     0
+       platform         =     6, aot-linked =     0, inited =     0
+       app              =    75, aot-linked =     0, inited =     0
+       unregistered     =     0, aot-linked =     0, inited =     0
+       (hidden)         =     0, aot-linked =     0, inited =     0
+     instance classes   =  2221, aot-linked =  2221, inited =   425
+       boot             =  2115, aot-linked =  2115, inited =   400
+         vm             =   153, aot-linked =   153, inited =    59
+       platform         =     6, aot-linked =     6, inited =     0
+       app              =   100, aot-linked =   100, inited =    25
+       unregistered     =     0, aot-linked =     0, inited =     0
+       (hidden)         =   166, aot-linked =   166, inited =   166
+Not loaded from "file:" code source 줄 = 3515
+    [0.999s][info][aot] Skipping com/petercoders/blog/BlogApplicationKt: Not loaded from "file:" code source
+    [1.012s][info][aot] Skipping kotlin/jvm/internal/Intrinsics: Not loaded from "file:" code source
+## train-app27.out — assembly 표
+     instance classes   =  4935, aot-linked =     0, inited =     0
+       boot             =  1958, aot-linked =     0, inited =     0
+         vm             =   153, aot-linked =     0, inited =     0
+       platform         =     6, aot-linked =     0, inited =     0
+       app              =  2971, aot-linked =     0, inited =     0
+       unregistered     =     0, aot-linked =     0, inited =     0
+       (hidden)         =     0, aot-linked =     0, inited =     0
+     instance classes   =  5640, aot-linked =  5640, inited =   969
+       boot             =  2167, aot-linked =  2167, inited =   469
+         vm             =   153, aot-linked =   153, inited =    59
+       platform         =     6, aot-linked =     6, inited =     0
+       app              =  3467, aot-linked =  3467, inited =   500
+       unregistered     =     0, aot-linked =     0, inited =     0
+       (hidden)         =   705, aot-linked =   705, inited =   705
+Not loaded from "file:" code source 줄 = 0
+## 운영 class+load(JDK 27)
+F1 exit=0 class+load total=5902 shared=2221 nonshared=3681 jar:nested=2927
+F0 exit=0 class+load total=5862 shared=1401 nonshared=4461 jar:nested=2927
+E1 exit=0 class+load total=5854 shared=5640 nonshared=214
+## 대조: JDK 25 fat 캐시의 같은 표(r2 사전 절차 training 출력에는 -Xlog:aot=info 가 없어 다시 만든다)
+     instance classes   =  5041, aot-linked =     0, inited =     0
+       boot             =  1946, aot-linked =     0, inited =     0
+         vm             =   151, aot-linked =     0, inited =     0
+       platform         =     6, aot-linked =     0, inited =     0
+       app              =    75, aot-linked =     0, inited =     0
+       unregistered     =  3014, aot-linked =     0, inited =     0
+       (hidden)         =     0, aot-linked =     0, inited =     0
+     instance classes   =  5199, aot-linked =  2185, inited =   303
+       boot             =  2079, aot-linked =  2079, inited =   278
+         vm             =   151, aot-linked =   151, inited =    42
+       platform         =     6, aot-linked =     6, inited =     0
+       app              =   100, aot-linked =   100, inited =    25
+       unregistered     =  3014, aot-linked =     0, inited =     0
+       (hidden)         =   157, aot-linked =   157, inited =   157

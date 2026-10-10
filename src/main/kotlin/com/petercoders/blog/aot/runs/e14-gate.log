@@ -1,0 +1,14 @@
+# experiment: e14-gate — 만든 캐시마다 AOTMode=on 게이트
+# date: 2026-10-08 03:39:39 +0900
+# uptime:  3:39  up 13 days,  3:29, 6 users, load averages: 15.25 28.61 22.49
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# gate[web-onrefresh.aot]: AOTMode=on exit=0 
+# gate[web-onrefresh1.aot]: AOTMode=on exit=0 
+# gate[web-load.aot]: AOTMode=on exit=0 
+# gate[web-term.aot]: AOTMode=on exit=0 
+# gate[web-load1.aot]: AOTMode=on exit=0 
+# gate[web-mx.aot]: AOTMode=on exit=0 

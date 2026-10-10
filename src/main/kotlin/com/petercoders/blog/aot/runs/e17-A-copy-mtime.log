@@ -1,0 +1,12 @@
+# experiment: e17-A — 파일 복사 방식과 mtime(로컬 대응: docker COPY 는 재지 않았다)
+# date: 2026-10-08 04:01:37 +0900
+# uptime:  4:01  up 13 days,  3:51, 6 users, load averages: 5.73 5.82 10.79
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+[cp -R] 앱 jar mtime=2026-10-08 04:01:37 lib mtime=2026-10-08 → AOTMode=on exit=1 timestamp has changed
+[cp -Rp] 앱 jar mtime=2026-09-08 23:50:45 lib mtime=1980-02-01 → AOTMode=on exit=0 
+[rsync -a] 앱 jar mtime=2026-09-08 23:50:45 lib mtime=1980-02-01 → AOTMode=on exit=0 
+[rsync -r] 앱 jar mtime=2026-10-08 04:01:39 lib mtime=2026-10-08 → AOTMode=on exit=1 timestamp has changed

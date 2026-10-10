@@ -1,0 +1,70 @@
+# experiment: e18 — SharedArchiveFile + AOTCache 동시 지정
+# date: 2026-10-08 03:33:39 +0900
+# uptime:  3:33  up 13 days,  3:23, 6 users, load averages: 44.79 30.39 18.46
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+## JDK 25 — app25.jsa size=24428544 / app25.aot size=43548672
+### java -XX:SharedArchiveFile=app25.jsa -jar …  → exit=0 shared=5366/5583 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+--- stderr ---
+Started BlogApplicationKt in 0.251 seconds
+### java -XX:AOTCache=app25.aot -jar …  → exit=0 shared=5604/5802 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+--- stderr ---
+Started BlogApplicationKt in 0.182 seconds
+### java -XX:SharedArchiveFile=app25.jsa -XX:AOTCache=app25.aot -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+### java -XX:SharedArchiveFile=app25.jsa -XX:AOTCache=app25.aot -XX:AOTMode=on -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+### java -Xshare:on -XX:AOTCache=app25.aot -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+### java -Xshare:off -XX:AOTCache=app25.aot -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+## JDK 26 — app26.jsa size=24494080 / app26.aot size=45105152
+### java -XX:SharedArchiveFile=app26.jsa -jar …  → exit=0 shared=5394/5621 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+--- stderr ---
+Started BlogApplicationKt in 0.599 seconds
+### java -XX:AOTCache=app26.aot -jar …  → exit=0 shared=5640/5850 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+--- stderr ---
+Started BlogApplicationKt in 0.671 seconds
+### java -XX:SharedArchiveFile=app26.jsa -XX:AOTCache=app26.aot -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+### java -XX:SharedArchiveFile=app26.jsa -XX:AOTCache=app26.aot -XX:AOTMode=on -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+### java -Xshare:on -XX:AOTCache=app26.aot -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---
+### java -Xshare:off -XX:AOTCache=app26.aot -jar …  → exit=1 shared=0/0 stderr_lines=0
+--- stdout(Spring 로그 제외) ---
+Error occurred during initialization of VM
+Option AOTCache cannot be used at the same time with -Xshare:on, -Xshare:auto, -Xshare:off, -Xshare:dump, DumpLoadedClassList, SharedClassListFile, or SharedArchiveFile
+--- stderr ---

@@ -1,0 +1,26 @@
+# experiment: e19-e — JDK 27 AOTMode=on 의 CompressedOops::base 불일치 빈도(20회씩)
+# date: 2026-10-08 04:05:29 +0900
+# uptime:  4:05  up 13 days,  3:54, 6 users, load averages: 4.77 5.45 9.54
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks/jdk-27+35/Contents/Home/bin/java):
+#   openjdk version "27" 2026-09-15
+#   OpenJDK Runtime Environment Temurin-27+35 (build 27+35)
+#   OpenJDK 64-Bit Server VM Temurin-27+35 (build 27+35, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# app27-compat.aot exit=0 size=45481984
+  [app27.aot] try=4 exit=1 incompatible CompressedOops::base(): 0x0 vs current 0xb86000000
+  [app27.aot] try=8 exit=1 incompatible CompressedOops::base(): 0x0 vs current 0xa48000000
+  [app27.aot] try=19 exit=1 incompatible CompressedOops::base(): 0x0 vs current 0xa28000000
+[app27.aot] AOTMode=on ok=17 fail=3 / 20
+    운영 Heap address(성공한 실행의 gc+init):   20 ? 
+[app27-compat.aot] AOTMode=on ok=20 fail=0 / 20
+    운영 Heap address(성공한 실행의 gc+init):   20 ? 
+## 같은 조건 auto(기본값)에서는 어떻게 되나(실패 메시지가 찍힐 때도 캐시를 쓰는가)
+  auto try=1 exit=0 class+load total=5854 shared=5640 nonshared=214 
+  auto try=2 exit=0 class+load total=5854 shared=5640 nonshared=214 
+  auto try=3 exit=0 class+load total=5854 shared=5640 nonshared=214 
+  auto try=4 exit=0 class+load total=5854 shared=5640 nonshared=214 
+  auto try=5 exit=0 class+load total=5854 shared=5640 nonshared=214 
+  auto try=6 exit=0 class+load total=5854 shared=5640 nonshared=214 
+## 대조: JDK 25·26 에서 같은 방식으로 AOTMode=on 20회(app25.aot / app26.aot, dirA)
+[JDK 25 app25.aot] AOTMode=on ok=20 fail=0 / 20
+[JDK 26 app26.aot] AOTMode=on ok=20 fail=0 / 20

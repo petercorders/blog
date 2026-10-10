@@ -1,0 +1,47 @@
+# experiment: e19-c — AOTMode=required / on × 유효·깨진 캐시
+# date: 2026-10-08 03:50:58 +0900
+# uptime:  3:50  up 13 days,  3:40, 6 users, load averages: 15.84 13.68 16.71
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks/jdk-27+35/Contents/Home/bin/java):
+#   openjdk version "27" 2026-09-15
+#   OpenJDK Runtime Environment Temurin-27+35 (build 27+35)
+#   OpenJDK 64-Bit Server VM Temurin-27+35 (build 27+35, mixed mode, sharing)
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# dirA = 유효(app27.aot), dirB = 앱 jar touch 로 깨진 배치. dirB 에 JDK 27 캐시를 만든 뒤 다시 touch 한다
+# dirB 앱 jar mtime 2026-10-08 03:51:06
+JDK27 auto dirA exit=0 Started BlogApplicationKt in 0.552 seconds
+JDK27 auto dirB exit=0 Started BlogApplicationKt in 1.905 seconds
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] Unable to map shared spaces
+JDK27 on dirA exit=0 Started BlogApplicationKt in 0.603 seconds
+JDK27 on dirB exit=1 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    [error  ][aot] unrecoverable error
+    Error occurred during initialization of VM
+JDK27 required dirA exit=0 Started BlogApplicationKt in 0.552 seconds
+JDK27 required dirB exit=1 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    [error  ][aot] unrecoverable error
+    Error occurred during initialization of VM
+## JDK 25·26 에 required 를 주면
+JDK25 required exit=1
+    Unrecognized value required for AOTMode. Must be one of the following: off, record, create, auto, on
+    Improperly specified VM option 'AOTMode=required'
+    Error: Could not create the Java Virtual Machine.
+JDK26 required exit=1
+    Unrecognized value required for AOTMode. Must be one of the following: off, record, create, auto, on
+    Improperly specified VM option 'AOTMode=required'
+    Error: Could not create the Java Virtual Machine.

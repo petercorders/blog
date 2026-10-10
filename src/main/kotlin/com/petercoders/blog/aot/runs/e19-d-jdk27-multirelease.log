@@ -1,0 +1,32 @@
+# experiment: e19-d — JDK 27 training 의 multi-release(ClassFile*) 경고
+# date: 2026-10-08 03:51:11 +0900
+# uptime:  3:51  up 13 days,  3:40, 6 users, load averages: 23.87 15.70 17.38
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks/jdk-27+35/Contents/Home/bin/java):
+#   openjdk version "27" 2026-09-15
+#   OpenJDK Runtime Environment Temurin-27+35 (build 27+35)
+#   OpenJDK 64-Bit Server VM Temurin-27+35 (build 27+35, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+cannot be archived(warning) 줄 = 8
+    org/springframework/core/type/classreading/ClassFileMetadataReaderFactory
+    org/springframework/core/type/classreading/ClassFileMetadataReader
+    org/springframework/core/type/classreading/ClassFileAnnotationMetadata
+    org/springframework/core/type/classreading/ClassFileAnnotationMetadata$Builder
+    org/springframework/core/type/classreading/ClassFileMethodMetadata
+    org/springframework/core/type/classreading/ClassFileMethodMetadata$Source
+    org/springframework/core/type/classreading/ClassFileAnnotationDelegate
+    org/springframework/core/type/classreading/ClassFileAnnotationDelegate$Source
+Skipping 줄(info 포함) 사유별:
+      51 info | Unsupported location
+       7 info | nest host class org/springframework/core/type/classreading/ClassFileMethodMetadata is excluded
+       4 info | nest host class org/springframework/core/type/classreading/ClassFileAnnotationMetadata is excluded
+       4 info | nest host class org/springframework/core/type/classreading/ClassFileAnnotationDelegate is excluded
+       3 info | dynamically generated
+       2 info | used only when dumping CDS archive
+       2 info | JFR event class
+       1 warning | Failed verification
+       1 info | verification constraint org/springframework/core/type/classreading/ClassFileMetadataReaderFactory is excluded
+       1 info | verification constraint org/springframework/boot/logging/log4j2/Log4J2LoggingSystem is excluded
+Proxy Skipping = 43
+운영 class+load 에서 __dynamic_proxy__ = 43, ClassFile* 줄 출처:
+    org.springframework.core.type.classreading.ClassFileMetadataReaderFactory source: file:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/applic
+    org.springframework.core.type.classreading.ClassFileMetadataReader source: file:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/l

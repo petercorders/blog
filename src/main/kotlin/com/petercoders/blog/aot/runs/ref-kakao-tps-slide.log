@@ -1,0 +1,12 @@
+# experiment: ref-kakao-tps-slide — if(kakao)2024 'GraalVM 도입으로 JVM 백엔드 애플리케이션의 구동 초기 성능 문제 해결하기' TPS 2145 vs 1607 이 어느 구간 값인가
+# date: 2026-10-08
+# source: https://files.speakerdeck.com/presentations/c3a8804487fe46fe90f88aabfd8ffb6b/1107_nathan.k_kakao.pdf (HTTP 200, 23,301,182 B, 42쪽)
+# command: pdftotext -f N -l N kakao.pdf - ; pdftoppm -f 30 -l 32 -png kakao.pdf (이미지를 눈으로 확인)
+p29 text: 앱 기동 직후 응답시간 / 낮을수록 좋음 / Hotspot: Eclipse Temurin OpenJDK JRE 22.0.1, GraalVM: Oracle GraalVM 22.0.2, CPU 4 cores, JVM Heap 1GiB
+p30 text: Hotspot 기동 직후 처리량 (그래프: x축 Time since start (seconds) 0~180, HotSpot TPS 가 0 근처에서 약 75초까지 오르고 그 뒤 2000~2300 에서 평탄)
+p31 text: GraalVM Native 기동 직후 처리량 (그래프: 시작 직후부터 1500~1700 에서 평탄)
+p32 text: TPS 비교 / 2145 TPS / 1607 TPS / 25% 차이 / 높을수록 좋음
+p32 image: p30·p31 과 같은 0~180초 그래프를 겹친 것. 2145·1607 화살표는 x 약 90초 지점부터 180초까지의 평탄 구간 위에 그어져 있다(눈으로 읽은 위치).
+p35 text: TPS 비교 (with PGO) / 2145 TPS / 1980 TPS / 8% 차이
+## 판정: 2145 vs 1607 은 '기동 직후 0초 시점'의 값이 아니라, 같은 180초 측정에서 HotSpot 워밍업(약 75초)이 끝난 뒤 평탄 구간의 값이다.
+##       본문에서는 "기동 후 180초 측정 중 워밍업이 끝난 평탄 구간(약 90~180초)의 TPS" 로 쓸 수 있다. 장시간 정상 상태 측정이라는 표기는 슬라이드에 없다.

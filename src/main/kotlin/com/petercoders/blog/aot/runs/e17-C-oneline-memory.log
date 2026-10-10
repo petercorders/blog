@@ -1,0 +1,13 @@
+# experiment: e17-C — 한 줄 방식 training 의 메모리(부모 JVM + assembly 자식 JVM)
+# date: 2026-10-08 04:01:39 +0900
+# uptime:  4:01  up 13 days,  3:51, 6 users, load averages: 5.73 5.82 10.79
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+exit=0 samples=43 max_java_processes=2 peak_total_rss_mb=1160
+두 JVM 이 함께 떠 있던 구간: 4.13s ~ 5.70s, 그 구간 최대 합계 RSS 1160 MB
+부모 하나만 있던 구간 최대 RSS 780 MB
+    Picked up JAVA_TOOL_OPTIONS: -Xms512m -Xmx512m -XX:+AlwaysPreTouch -Dspring.context.exit=onRefresh -XX:AOTCacheOutput=mem.aot -XX:AOTConfiguration=mem.aot.config -XX:AOTMode=create
+    AOTCache creation is complete: mem.aot 43548672 bytes

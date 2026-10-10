@@ -1,0 +1,206 @@
+# experiment: e13-a — F0/F1/E0/E1/E2 같은 라운드 라운드로빈 30회
+# date: 2026-10-08 04:09:16 +0900
+# uptime:  4:09  up 13 days,  3:58, 6 users, load averages: 3.70 5.31 8.65
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# dirB 앱 jar mtime: 2026-10-08 03:51:06 (dirA: 2026-09-08 23:50:45)
+# 사전 게이트
+# gate[E1]: AOTMode=on exit=0 
+# gate[F1]: AOTMode=on exit=0 
+# gate[E2-expect-fail]: AOTMode=on exit=1 [0.022s][warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed [0.022s][error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure) [0.022s][error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details. 
+# command: (cd <dir> && java <opts>) — F0: fat/ -jar · F1: fat/ -XX:AOTCache=fat25.aot -jar · E0: dirA -jar application/… · E1: dirA -XX:AOTCache=app25.aot · E2: dirB(앱 jar touch) -XX:AOTCache=app25.aot (auto)
+## round 1 uptime: 3.70 5.31 8.65
+F0 r=1 wall_ms=591 exit=0 Started BlogApplicationKt in 0.414 seconds (process running for 0.57)
+F1 r=1 wall_ms=360 exit=0 Started BlogApplicationKt in 0.235 seconds (process running for 0.333)
+E0 r=1 wall_ms=518 exit=0 Started BlogApplicationKt in 0.385 seconds (process running for 0.499)
+E1 r=1 wall_ms=7052 exit=0 Started BlogApplicationKt in 6.954 seconds (process running for 0.438)
+E2 r=1 wall_ms=756 exit=0 Started BlogApplicationKt in 0.397 seconds (process running for 0.731)
+## round 2 uptime: 3.70 5.31 8.65
+F1 r=2 wall_ms=362 exit=0 Started BlogApplicationKt in 0.238 seconds (process running for 0.335)
+E0 r=2 wall_ms=455 exit=0 Started BlogApplicationKt in 0.331 seconds (process running for 0.427)
+E1 r=2 wall_ms=210 exit=0 Started BlogApplicationKt in 0.126 seconds (process running for 0.188)
+E2 r=2 wall_ms=501 exit=0 Started BlogApplicationKt in 0.353 seconds (process running for 0.476)
+F0 r=2 wall_ms=560 exit=0 Started BlogApplicationKt in 0.386 seconds (process running for 0.536)
+## round 3 uptime: 3.72 5.29 8.62
+E0 r=3 wall_ms=451 exit=0 Started BlogApplicationKt in 0.33 seconds (process running for 0.426)
+E1 r=3 wall_ms=210 exit=0 Started BlogApplicationKt in 0.132 seconds (process running for 0.19)
+E2 r=3 wall_ms=546 exit=0 Started BlogApplicationKt in 0.383 seconds (process running for 0.516)
+F0 r=3 wall_ms=705 exit=0 Started BlogApplicationKt in 0.507 seconds (process running for 0.68)
+F1 r=3 wall_ms=573 exit=0 Started BlogApplicationKt in 0.374 seconds (process running for 0.529)
+## round 4 uptime: 3.72 5.29 8.62
+E1 r=4 wall_ms=322 exit=0 Started BlogApplicationKt in 0.206 seconds (process running for 0.289)
+E2 r=4 wall_ms=927 exit=0 Started BlogApplicationKt in 0.674 seconds (process running for 0.894)
+F0 r=4 wall_ms=1298 exit=0 Started BlogApplicationKt in 0.936 seconds (process running for 1.243)
+F1 r=4 wall_ms=1389 exit=0 Started BlogApplicationKt in 0.953 seconds (process running for 1.285)
+E0 r=4 wall_ms=1907 exit=0 Started BlogApplicationKt in 1.45 seconds (process running for 1.83)
+## round 5 uptime: 11.05 6.86 9.15
+E2 r=5 wall_ms=1836 exit=0 Started BlogApplicationKt in 1.254 seconds (process running for 1.768)
+F0 r=5 wall_ms=1374 exit=0 Started BlogApplicationKt in 0.939 seconds (process running for 1.31)
+F1 r=5 wall_ms=902 exit=0 Started BlogApplicationKt in 0.603 seconds (process running for 0.832)
+E0 r=5 wall_ms=1086 exit=0 Started BlogApplicationKt in 0.79 seconds (process running for 1.03)
+E1 r=5 wall_ms=518 exit=0 Started BlogApplicationKt in 0.286 seconds (process running for 0.455)
+## round 6 uptime: 10.64 6.85 9.13
+F0 r=6 wall_ms=1375 exit=0 Started BlogApplicationKt in 1.007 seconds (process running for 1.319)
+F1 r=6 wall_ms=948 exit=0 Started BlogApplicationKt in 0.645 seconds (process running for 0.878)
+E0 r=6 wall_ms=1266 exit=0 Started BlogApplicationKt in 0.954 seconds (process running for 1.21)
+E1 r=6 wall_ms=514 exit=0 Started BlogApplicationKt in 0.32 seconds (process running for 0.456)
+E2 r=6 wall_ms=1236 exit=0 Started BlogApplicationKt in 0.895 seconds (process running for 1.19)
+## round 7 uptime: 10.19 6.81 9.10
+F1 r=7 wall_ms=852 exit=0 Started BlogApplicationKt in 0.579 seconds (process running for 0.787)
+E0 r=7 wall_ms=1117 exit=0 Started BlogApplicationKt in 0.835 seconds (process running for 1.061)
+E1 r=7 wall_ms=461 exit=0 Started BlogApplicationKt in 0.284 seconds (process running for 0.405)
+E2 r=7 wall_ms=1059 exit=0 Started BlogApplicationKt in 0.752 seconds (process running for 1.012)
+F0 r=7 wall_ms=1253 exit=0 Started BlogApplicationKt in 0.901 seconds (process running for 1.202)
+## round 8 uptime: 9.69 6.77 9.07
+E0 r=8 wall_ms=1098 exit=0 Started BlogApplicationKt in 0.819 seconds (process running for 1.042)
+E1 r=8 wall_ms=455 exit=0 Started BlogApplicationKt in 0.283 seconds (process running for 0.401)
+E2 r=8 wall_ms=1080 exit=0 Started BlogApplicationKt in 0.759 seconds (process running for 1.024)
+F0 r=8 wall_ms=1320 exit=0 Started BlogApplicationKt in 0.931 seconds (process running for 1.266)
+F1 r=8 wall_ms=938 exit=0 Started BlogApplicationKt in 0.647 seconds (process running for 0.879)
+## round 9 uptime: 10.36 6.95 9.13
+E1 r=9 wall_ms=587 exit=0 Started BlogApplicationKt in 0.371 seconds (process running for 0.529)
+E2 r=9 wall_ms=1444 exit=0 Started BlogApplicationKt in 1.046 seconds (process running for 1.378)
+F0 r=9 wall_ms=1407 exit=0 Started BlogApplicationKt in 0.993 seconds (process running for 1.349)
+F1 r=9 wall_ms=956 exit=0 Started BlogApplicationKt in 0.653 seconds (process running for 0.891)
+E0 r=9 wall_ms=1192 exit=0 Started BlogApplicationKt in 0.878 seconds (process running for 1.134)
+## round 10 uptime: 10.09 6.95 9.11
+E2 r=10 wall_ms=1108 exit=0 Started BlogApplicationKt in 0.786 seconds (process running for 1.058)
+F0 r=10 wall_ms=1274 exit=0 Started BlogApplicationKt in 0.911 seconds (process running for 1.222)
+F1 r=10 wall_ms=957 exit=0 Started BlogApplicationKt in 0.654 seconds (process running for 0.894)
+E0 r=10 wall_ms=1349 exit=0 Started BlogApplicationKt in 1.023 seconds (process running for 1.285)
+E1 r=10 wall_ms=664 exit=0 Started BlogApplicationKt in 0.359 seconds (process running for 0.58)
+## round 11 uptime: 9.92 6.97 9.11
+F0 r=11 wall_ms=1476 exit=0 Started BlogApplicationKt in 1.054 seconds (process running for 1.416)
+F1 r=11 wall_ms=415 exit=0 Started BlogApplicationKt in 0.237 seconds (process running for 0.376)
+E0 r=11 wall_ms=475 exit=0 Started BlogApplicationKt in 0.352 seconds (process running for 0.452)
+E1 r=11 wall_ms=200 exit=0 Started BlogApplicationKt in 0.123 seconds (process running for 0.177)
+E2 r=11 wall_ms=7708 exit=0 Started BlogApplicationKt in 0.368 seconds (process running for 0.496)
+## round 12 uptime: 9.29 6.89 9.06
+F1 r=12 wall_ms=585 exit=0 Started BlogApplicationKt in 0.253 seconds (process running for 0.558)
+E0 r=12 wall_ms=463 exit=0 Started BlogApplicationKt in 0.341 seconds (process running for 0.437)
+E1 r=12 wall_ms=199 exit=0 Started BlogApplicationKt in 0.124 seconds (process running for 0.178)
+E2 r=12 wall_ms=519 exit=0 Started BlogApplicationKt in 0.358 seconds (process running for 0.491)
+F0 r=12 wall_ms=547 exit=0 Started BlogApplicationKt in 0.38 seconds (process running for 0.527)
+## round 13 uptime: 9.29 6.89 9.06
+E0 r=13 wall_ms=442 exit=0 Started BlogApplicationKt in 0.326 seconds (process running for 0.422)
+E1 r=13 wall_ms=201 exit=0 Started BlogApplicationKt in 0.126 seconds (process running for 0.178)
+E2 r=13 wall_ms=504 exit=0 Started BlogApplicationKt in 0.353 seconds (process running for 0.475)
+F0 r=13 wall_ms=667 exit=0 Started BlogApplicationKt in 0.481 seconds (process running for 0.639)
+F1 r=13 wall_ms=523 exit=0 Started BlogApplicationKt in 0.34 seconds (process running for 0.479)
+## round 14 uptime: 9.10 6.89 9.05
+E1 r=14 wall_ms=309 exit=0 Started BlogApplicationKt in 0.196 seconds (process running for 0.281)
+E2 r=14 wall_ms=843 exit=0 Started BlogApplicationKt in 0.595 seconds (process running for 0.796)
+F0 r=14 wall_ms=1195 exit=0 Started BlogApplicationKt in 0.854 seconds (process running for 1.139)
+F1 r=14 wall_ms=1240 exit=0 Started BlogApplicationKt in 0.885 seconds (process running for 1.162)
+E0 r=14 wall_ms=2012 exit=0 Started BlogApplicationKt in 1.49 seconds (process running for 1.92)
+## round 15 uptime: 8.85 6.88 9.03
+E2 r=15 wall_ms=2516 exit=0 Started BlogApplicationKt in 1.532 seconds (process running for 2.442)
+F0 r=15 wall_ms=1493 exit=0 Started BlogApplicationKt in 1.014 seconds (process running for 1.432)
+F1 r=15 wall_ms=947 exit=0 Started BlogApplicationKt in 0.635 seconds (process running for 0.882)
+E0 r=15 wall_ms=1154 exit=0 Started BlogApplicationKt in 0.86 seconds (process running for 1.101)
+E1 r=15 wall_ms=472 exit=0 Started BlogApplicationKt in 0.276 seconds (process running for 0.421)
+## round 16 uptime: 8.39 6.81 9.00
+F0 r=16 wall_ms=1282 exit=0 Started BlogApplicationKt in 0.92 seconds (process running for 1.23)
+F1 r=16 wall_ms=894 exit=0 Started BlogApplicationKt in 0.603 seconds (process running for 0.84)
+E0 r=16 wall_ms=1104 exit=0 Started BlogApplicationKt in 0.829 seconds (process running for 1.055)
+E1 r=16 wall_ms=498 exit=0 Started BlogApplicationKt in 0.311 seconds (process running for 0.448)
+E2 r=16 wall_ms=1234 exit=0 Started BlogApplicationKt in 0.866 seconds (process running for 1.159)
+## round 17 uptime: 8.11 6.78 8.97
+F1 r=17 wall_ms=971 exit=0 Started BlogApplicationKt in 0.671 seconds (process running for 0.898)
+E0 r=17 wall_ms=1772 exit=0 Started BlogApplicationKt in 1.412 seconds (process running for 1.691)
+E1 r=17 wall_ms=855 exit=0 Started BlogApplicationKt in 0.541 seconds (process running for 0.764)
+E2 r=17 wall_ms=1948 exit=0 Started BlogApplicationKt in 1.344 seconds (process running for 1.87)
+F0 r=17 wall_ms=1577 exit=0 Started BlogApplicationKt in 1.077 seconds (process running for 1.513)
+## round 18 uptime: 9.19 7.06 9.05
+E0 r=18 wall_ms=1199 exit=0 Started BlogApplicationKt in 0.86 seconds (process running for 1.116)
+E1 r=18 wall_ms=457 exit=0 Started BlogApplicationKt in 0.272 seconds (process running for 0.4)
+E2 r=18 wall_ms=1091 exit=0 Started BlogApplicationKt in 0.777 seconds (process running for 1.04)
+F0 r=18 wall_ms=1257 exit=0 Started BlogApplicationKt in 0.88 seconds (process running for 1.199)
+F1 r=18 wall_ms=950 exit=0 Started BlogApplicationKt in 0.625 seconds (process running for 0.874)
+## round 19 uptime: 8.85 7.03 9.03
+E1 r=19 wall_ms=547 exit=0 Started BlogApplicationKt in 0.342 seconds (process running for 0.489)
+E2 r=19 wall_ms=1331 exit=0 Started BlogApplicationKt in 0.937 seconds (process running for 1.276)
+F0 r=19 wall_ms=1419 exit=0 Started BlogApplicationKt in 1.017 seconds (process running for 1.361)
+F1 r=19 wall_ms=978 exit=0 Started BlogApplicationKt in 0.649 seconds (process running for 0.892)
+E0 r=19 wall_ms=1220 exit=0 Started BlogApplicationKt in 0.895 seconds (process running for 1.153)
+## round 20 uptime: 8.38 6.96 8.99
+E2 r=20 wall_ms=1168 exit=0 Started BlogApplicationKt in 0.799 seconds (process running for 1.095)
+F0 r=20 wall_ms=1325 exit=0 Started BlogApplicationKt in 0.956 seconds (process running for 1.268)
+F1 r=20 wall_ms=953 exit=0 Started BlogApplicationKt in 0.653 seconds (process running for 0.887)
+E0 r=20 wall_ms=1169 exit=0 Started BlogApplicationKt in 0.863 seconds (process running for 1.103)
+E1 r=20 wall_ms=417 exit=0 Started BlogApplicationKt in 0.253 seconds (process running for 0.385)
+## round 21 uptime: 8.03 6.91 8.96
+F0 r=21 wall_ms=566 exit=0 Started BlogApplicationKt in 0.396 seconds (process running for 0.542)
+F1 r=21 wall_ms=368 exit=0 Started BlogApplicationKt in 0.234 seconds (process running for 0.332)
+E0 r=21 wall_ms=472 exit=0 Started BlogApplicationKt in 0.35 seconds (process running for 0.449)
+E1 r=21 wall_ms=199 exit=0 Started BlogApplicationKt in 0.122 seconds (process running for 0.176)
+E2 r=21 wall_ms=508 exit=0 Started BlogApplicationKt in 0.359 seconds (process running for 0.485)
+## round 22 uptime: 8.03 6.91 8.96
+F1 r=22 wall_ms=6854 exit=0 Started BlogApplicationKt in 6.701 seconds (process running for 0.6)
+E0 r=22 wall_ms=632 exit=0 Started BlogApplicationKt in 0.356 seconds (process running for 0.602)
+E1 r=22 wall_ms=211 exit=0 Started BlogApplicationKt in 0.132 seconds (process running for 0.187)
+E2 r=22 wall_ms=496 exit=0 Started BlogApplicationKt in 0.344 seconds (process running for 0.468)
+F0 r=22 wall_ms=534 exit=0 Started BlogApplicationKt in 0.371 seconds (process running for 0.513)
+## round 23 uptime: 7.55 6.83 8.92
+E0 r=23 wall_ms=453 exit=0 Started BlogApplicationKt in 0.334 seconds (process running for 0.43)
+E1 r=23 wall_ms=197 exit=0 Started BlogApplicationKt in 0.124 seconds (process running for 0.176)
+E2 r=23 wall_ms=506 exit=0 Started BlogApplicationKt in 0.346 seconds (process running for 0.478)
+F0 r=23 wall_ms=616 exit=0 Started BlogApplicationKt in 0.436 seconds (process running for 0.589)
+F1 r=23 wall_ms=462 exit=0 Started BlogApplicationKt in 0.315 seconds (process running for 0.433)
+## round 24 uptime: 7.55 6.83 8.92
+E1 r=24 wall_ms=282 exit=0 Started BlogApplicationKt in 0.177 seconds (process running for 0.253)
+E2 r=24 wall_ms=734 exit=0 Started BlogApplicationKt in 0.526 seconds (process running for 0.706)
+F0 r=24 wall_ms=899 exit=0 Started BlogApplicationKt in 0.631 seconds (process running for 0.866)
+F1 r=24 wall_ms=734 exit=0 Started BlogApplicationKt in 0.481 seconds (process running for 0.682)
+E0 r=24 wall_ms=1286 exit=0 Started BlogApplicationKt in 0.984 seconds (process running for 1.222)
+## round 25 uptime: 10.07 7.36 9.10
+E2 r=25 wall_ms=1878 exit=0 Started BlogApplicationKt in 1.35 seconds (process running for 1.808)
+F0 r=25 wall_ms=1972 exit=0 Started BlogApplicationKt in 1.318 seconds (process running for 1.888)
+F1 r=25 wall_ms=1081 exit=0 Started BlogApplicationKt in 0.736 seconds (process running for 1.02)
+E0 r=25 wall_ms=1208 exit=0 Started BlogApplicationKt in 0.88 seconds (process running for 1.148)
+E1 r=25 wall_ms=472 exit=0 Started BlogApplicationKt in 0.279 seconds (process running for 0.417)
+## round 26 uptime: 9.90 7.38 9.09
+F0 r=26 wall_ms=1279 exit=0 Started BlogApplicationKt in 0.907 seconds (process running for 1.225)
+F1 r=26 wall_ms=876 exit=0 Started BlogApplicationKt in 0.592 seconds (process running for 0.808)
+E0 r=26 wall_ms=1131 exit=0 Started BlogApplicationKt in 0.857 seconds (process running for 1.084)
+E1 r=26 wall_ms=485 exit=0 Started BlogApplicationKt in 0.302 seconds (process running for 0.431)
+E2 r=26 wall_ms=1162 exit=0 Started BlogApplicationKt in 0.822 seconds (process running for 1.107)
+## round 27 uptime: 9.51 7.34 9.06
+F1 r=27 wall_ms=935 exit=0 Started BlogApplicationKt in 0.651 seconds (process running for 0.872)
+E0 r=27 wall_ms=1246 exit=0 Started BlogApplicationKt in 0.929 seconds (process running for 1.195)
+E1 r=27 wall_ms=493 exit=0 Started BlogApplicationKt in 0.302 seconds (process running for 0.431)
+E2 r=27 wall_ms=1247 exit=0 Started BlogApplicationKt in 0.884 seconds (process running for 1.187)
+F0 r=27 wall_ms=1387 exit=0 Started BlogApplicationKt in 0.977 seconds (process running for 1.323)
+## round 28 uptime: 8.99 7.26 9.03
+E0 r=28 wall_ms=1130 exit=0 Started BlogApplicationKt in 0.84 seconds (process running for 1.071)
+E1 r=28 wall_ms=466 exit=0 Started BlogApplicationKt in 0.298 seconds (process running for 0.419)
+E2 r=28 wall_ms=1145 exit=0 Started BlogApplicationKt in 0.816 seconds (process running for 1.09)
+F0 r=28 wall_ms=1292 exit=0 Started BlogApplicationKt in 0.927 seconds (process running for 1.236)
+F1 r=28 wall_ms=934 exit=0 Started BlogApplicationKt in 0.639 seconds (process running for 0.873)
+## round 29 uptime: 8.43 7.18 8.99
+E1 r=29 wall_ms=554 exit=0 Started BlogApplicationKt in 0.341 seconds (process running for 0.494)
+E2 r=29 wall_ms=1228 exit=0 Started BlogApplicationKt in 0.854 seconds (process running for 1.171)
+F0 r=29 wall_ms=1395 exit=0 Started BlogApplicationKt in 0.985 seconds (process running for 1.333)
+F1 r=29 wall_ms=950 exit=0 Started BlogApplicationKt in 0.642 seconds (process running for 0.879)
+E0 r=29 wall_ms=1194 exit=0 Started BlogApplicationKt in 0.88 seconds (process running for 1.144)
+## round 30 uptime: 7.83 7.07 8.94
+E2 r=30 wall_ms=1182 exit=0 Started BlogApplicationKt in 0.829 seconds (process running for 1.132)
+F0 r=30 wall_ms=1305 exit=0 Started BlogApplicationKt in 0.948 seconds (process running for 1.256)
+F1 r=30 wall_ms=963 exit=0 Started BlogApplicationKt in 0.671 seconds (process running for 0.904)
+E0 r=30 wall_ms=1182 exit=0 Started BlogApplicationKt in 0.859 seconds (process running for 1.115)
+E1 r=30 wall_ms=492 exit=0 Started BlogApplicationKt in 0.301 seconds (process running for 0.435)
+## 요약(같은 로그 안의 30라운드). ratio = 같은 라운드 F0 대비 비율의 중앙값(부하 변동을 라운드 안에서 상쇄)
+F0 n=30 median_wall_ms=1287 median_started_s=0.923 median_process_s=1.233 min_wall_ms=534 min_started_s=0.371 started/F0(round-ratio median)=1.000 wall/F0(round-ratio median)=1.000
+F1 n=30 median_wall_ms=936 median_started_s=0.637 median_process_s=0.873 min_wall_ms=360 min_started_s=0.234 started/F0(round-ratio median)=0.662 wall/F0(round-ratio median)=0.693
+E0 n=30 median_wall_ms=1142 median_started_s=0.858 median_process_s=1.093 min_wall_ms=442 min_started_s=0.326 started/F0(round-ratio median)=0.902 wall/F0(round-ratio median)=0.868
+E1 n=30 median_wall_ms=464 median_started_s=0.281 median_process_s=0.411 min_wall_ms=197 min_started_s=0.122 started/F0(round-ratio median)=0.312 wall/F0(round-ratio median)=0.364
+E2 n=30 median_wall_ms=1126 median_started_s=0.782 median_process_s=1.049 min_wall_ms=496 min_started_s=0.344 started/F0(round-ratio median)=0.886 wall/F0(round-ratio median)=0.898
+sign: E2 < F0 (Started) in 25/30 rounds
+sign: E0 < F0 (Started) in 25/30 rounds
+sign: E2 < E0 (Started) in 16/30 rounds
+sign: F1 < F0 (Started) in 27/30 rounds
+sign: E1 < F1 (Started) in 29/30 rounds
+sign: E1 < E0 (Started) in 29/30 rounds

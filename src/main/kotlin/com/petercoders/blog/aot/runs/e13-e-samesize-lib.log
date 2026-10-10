@@ -1,0 +1,26 @@
+# experiment: e13-e — 검사를 지나치는 변경 — lib jar 에서 클래스를 지우고 크기·mtime 을 원래대로 맞춘다
+# date: 2026-10-08 03:30:46 +0900
+# uptime:  3:30  up 13 days,  3:20, 6 users, load averages: 30.45 25.28 14.96
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# gate[dirC-before]: AOTMode=on exit=0 
+# spring-core-7.0.9.jar: org/springframework/util/StringUtils.class 삭제 후 크기 2035755 -> 2024945 (차이 10810 B)
+# 맞춘 뒤: size=2035755 (원본 2035755) mtime=1980-02-01 00:00:00 (원본 1980-02-01 00:00:00) sha256 원본=5195f4722699b398… 변경=c2a1c21695a1d102…
+# jar 안에 org/springframework/util/StringUtils.class 가 있는가: 0 (원본: 1)
+## (1) 캐시 있음(auto)
+exit=0 stdout_aot=0 stderr_lines=0
+Started BlogApplicationKt in 0.188 seconds (process running for 0.281)
+StringUtils class+load: org.springframework.util.StringUtils source: shared objects file
+class+load total=5802 shared=5604 nonshared=198
+## (2) 같은 캐시로 AOTMode=on
+on exit=0 stdout_aot=0
+Started BlogApplicationKt in 0.222 seconds
+## (3) 대조: 같은 폴더를 캐시 없이
+nocache exit=1 stderr_lines=15 stdout_lines=0
+Exception in thread "main" java.lang.NoClassDefFoundError: org/springframework/util/StringUtils
+Caused by: java.lang.ClassNotFoundException: org.springframework.util.StringUtils
+## 복원
+# gate[dirC-restored]: AOTMode=on exit=0 

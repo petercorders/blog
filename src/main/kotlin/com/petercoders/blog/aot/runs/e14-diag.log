@@ -1,0 +1,40 @@
+# experiment: e14-diag — 첫 요청 동안 load 되는 클래스와 컴파일 수(조건마다 2회)
+# date: 2026-10-08 03:44:22 +0900
+# uptime:  3:44  up 13 days,  3:33, 6 users, load averages: 8.85 19.72 20.20
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+N try=1 classload_before_first=8059 (nonshared 6628) during_first_req=730 (nonshared 718) during_next_99=117 (nonshared 116) total=8906 (nonshared 7462) compiles_before_first=4056 compiles_after_100req=5082 tier4=595 first_req_ms=107.4 exit=143
+A try=1 classload_before_first=8317 (nonshared 291) during_first_req=676 (nonshared 676) during_next_99=94 (nonshared 94) total=9087 (nonshared 1061) compiles_before_first=3650 compiles_after_100req=4665 tier4=484 first_req_ms=99.5 exit=143
+B try=1 classload_before_first=9082 (nonshared 203) during_first_req=21 (nonshared 21) during_next_99=8 (nonshared 8) total=9111 (nonshared 232) compiles_before_first=3808 compiles_after_100req=5257 tier4=506 first_req_ms=50.5 exit=143
+Bnr try=1 classload_before_first=9077 (nonshared 198) during_first_req=21 (nonshared 21) during_next_99=8 (nonshared 8) total=9106 (nonshared 227) compiles_before_first=3446 compiles_after_100req=4474 tier4=473 first_req_ms=58.4 exit=143
+N try=2 classload_before_first=8056 (nonshared 6625) during_first_req=730 (nonshared 718) during_next_99=117 (nonshared 116) total=8903 (nonshared 7459) compiles_before_first=4024 compiles_after_100req=5061 tier4=604 first_req_ms=156.7 exit=143
+A try=2 classload_before_first=8325 (nonshared 299) during_first_req=676 (nonshared 676) during_next_99=94 (nonshared 94) total=9095 (nonshared 1069) compiles_before_first=3581 compiles_after_100req=4640 tier4=478 first_req_ms=172.7 exit=143
+B try=2 classload_before_first=9077 (nonshared 198) during_first_req=21 (nonshared 21) during_next_99=8 (nonshared 8) total=9106 (nonshared 227) compiles_before_first=3718 compiles_after_100req=5177 tier4=507 first_req_ms=114.8 exit=143
+Bnr try=2 classload_before_first=9077 (nonshared 198) during_first_req=21 (nonshared 21) during_next_99=8 (nonshared 8) total=9106 (nonshared 227) compiles_before_first=3425 compiles_after_100req=4452 tier4=472 first_req_ms=99.0 exit=143
+## 첫 요청 동안 shared 가 아닌 class+load 줄의 출처(조건 B, 마지막 try 기준 패키지 상위 10)
+# (diag 파일은 전체 기동분이라 여기서는 B 와 A 의 nonshared 전체 패키지 분포만 비교한다)
+### A nonshared 패키지 상위
+     135 java.lang.invoke
+      60 jdk.proxy2
+      29 kotlin.reflect.jvm.internal
+      28 tools.jackson.databind.deser.jdk
+      28 java.net
+      28 com.fasterxml.jackson.annotation
+      26 sun.nio.ch
+      26 kotlin.reflect.jvm.internal.impl.types
+      25 tools.jackson.databind.ser.jdk
+      23 tools.jackson.databind.introspect
+### B nonshared 패키지 상위
+     120 java.lang.invoke
+      60 jdk.proxy2
+      23 org.springframework.core.type.classreading
+      13 java.nio.file
+       9 java.net
+       7 jdk.proxy1
+       7 java.util
+       6 com.sun.beans.util
+       5 sun.nio.fs
+       5 jdk.internal.event

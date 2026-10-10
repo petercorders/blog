@@ -1,0 +1,86 @@
+# experiment: e16-jdk25 — agent 구성 × AOT Cache
+# date: 2026-10-08 04:00:09 +0900
+# uptime:  4:00  up 13 days,  3:49, 6 users, load averages: 4.94 5.80 11.25
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# agents: noop.jar, transform.jar, dd-java-agent-1.67.0.jar(sha1 8da71687…, -Ddd.trace.agent.port=1 로 백엔드 없이), libe16native-25.dylib
+## caches(training, 한 줄 방식 + onRefresh, -Xlog:aot=info 로 training 출력 보관)
+[train base] exit=0 cache=43565056 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: -Xlog:aot=info -Dspring.context.exit=onRefresh -XX:AOTCacheOutput=e16-25-base.aot -XX:AOTConfiguration=e16-25-base.aot.config -XX:AOTMode=create
+[train tr-noop] exit=0 cache=43663360 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: -javaagent:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/agents/noop.jar -Xlog:aot=info -Dspring.context.exit=onRefresh
+       1 [e16] noop agent premain
+[train tr-xform] exit=0 cache=43581440 From_ClassFileLoadHook=1 Picked up JAVA_TOOL_OPTIONS: -javaagent:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/agents/transform.jar -Xlog:aot=info -Dspring.context.exit=onRe
+    [warning][aot] Skipping com/petercoders/blog/BlogApplication: From ClassFileLoadHook
+       1 [e16] transform agent premain
+       1 [e16] transformed com/petercoders/blog/BlogApplication 592 -> 612 bytes
+[train tr-dd] exit=0 cache=43827200 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: -javaagent:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/agents/dd-java-agent-1.67.0.jar -Ddd.trace.agent.port=1 -Ddd.i
+[train addmods] exit=0 cache=43597824 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: --add-modules=java.instrument -Xlog:aot=info -Dspring.context.exit=onRefresh -XX:AOTCacheOutput=e16-25-addmods.aot -XX:AOTConfiguration=e16-25-addmods.aot.config -XX:AOTMo
+## (C 보조) 3단계로 --add-modules 를 record·create 양쪽에 명시
+record exit=0
+create exit=0 cache=43597824
+## 기준
+[base-noagent] cache=e16-25-base.aot auto_exit=0 shared=5604/5802 on_exit=0 Started BlogApplicationKt in 0.143 seconds
+## A: training 무agent → 운영 agent
+[A-noop] cache=e16-25-base.aot auto_exit=0 shared=0/5682 on_exit=1 Started BlogApplicationKt in 0.402 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    on  :[error][aot] Disabling optimized module handling
+    agent:    1 [e16] noop agent premain
+[A-xform] cache=e16-25-base.aot auto_exit=0 shared=0/5705 on_exit=1 Started BlogApplicationKt in 0.41 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    on  :[error][aot] Disabling optimized module handling
+    agent:    1 [e16] transform agent premain
+    agent:    1 [e16] transformed com/petercoders/blog/BlogApplication 592 -> 612 bytes
+[A-dd] cache=e16-25-base.aot auto_exit=0 shared=0/9480 on_exit=1 Started BlogApplicationKt in 0.572 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    on  :[error][aot] Disabling optimized module handling
+    err: [dd.trace 2026-10-08 04:00:35:324 +0900] [dd-task-scheduler] INFO datadog.trace.agent.core.StatusLogger - DATADOG TRACER CONFIGURATION {"version":"1.67.0~1380b857db","os_name":"Mac OS X","os_version":
+## B: training agent → 운영 agent(같은 agent)
+[B-noop] cache=e16-25-trnoop.aot auto_exit=0 shared=5615/5818 on_exit=0 Started BlogApplicationKt in 0.225 seconds
+    agent:    1 [e16] noop agent premain
+[B-xform] cache=e16-25-trxform.aot auto_exit=0 shared=5629/5839 on_exit=0 Started BlogApplicationKt in 0.251 seconds
+    agent:    1 [e16] transform agent premain
+    agent:    1 [e16] transformed com/petercoders/blog/BlogApplication 592 -> 612 bytes
+[B-dd] cache=e16-25-trdd.aot auto_exit=0 shared=5626/9633 on_exit=0 Started BlogApplicationKt in 0.376 seconds
+    err: [dd.trace 2026-10-08 04:00:39:548 +0900] [dd-task-scheduler] INFO datadog.trace.agent.core.StatusLogger - DATADOG TRACER CONFIGURATION {"version":"1.67.0~1380b857db","os_name":"Mac OS X","os_version":
+## C: 세 단계 --add-modules=java.instrument(한 줄 방식 캐시), 운영에만 agent
+[C-noagent] cache=e16-25-addmods.aot auto_exit=0 shared=5611/5806 on_exit=0 Started BlogApplicationKt in 0.474 seconds
+[C-noop] cache=e16-25-addmods.aot auto_exit=0 shared=5611/5818 on_exit=0 Started BlogApplicationKt in 0.373 seconds
+    agent:    1 [e16] noop agent premain
+[C-xform] cache=e16-25-addmods.aot auto_exit=0 shared=5611/5817 on_exit=0 Started BlogApplicationKt in 0.314 seconds
+    agent:    1 [e16] transform agent premain
+[C-dd] cache=e16-25-addmods.aot auto_exit=0 shared=5611/9632 on_exit=0 Started BlogApplicationKt in 0.28 seconds
+[C-without-addmods] cache=e16-25-addmods.aot auto_exit=0 shared=0/5667 on_exit=1 Started BlogApplicationKt in 1.46 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during dump time but not during runtime
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during dump time but not during runtime
+    on  :[error][aot] Disabling optimized module handling
+## C3: 3단계 --add-modules 캐시
+[C3-noop] cache=e16-25-am3.aot auto_exit=0 shared=5611/5818 on_exit=0 Started BlogApplicationKt in 0.396 seconds
+    agent:    1 [e16] noop agent premain
+## D: training 무agent → 운영 native agent(can_generate_all_class_hook_events)
+[D-native] cache=e16-25-base.aot auto_exit=0 shared=5604/5802 on_exit=0 Started BlogApplicationKt in 0.349 seconds
+    agent:    1 [e16] native agent loaded: AddCapabilities(can_generate_all_class_hook_events) = 0
+[D-native-addmods] cache=e16-25-addmods.aot auto_exit=0 shared=5611/5806 on_exit=0 Started BlogApplicationKt in 0.386 seconds
+    agent:    1 [e16] native agent loaded: AddCapabilities(can_generate_all_class_hook_events) = 0
+## Started 5회 중앙값
+[base-noagent] Started x5 = 0.417 0.442 0.428 0.42 0.428 median=0.428
+[A-dd] Started x5 = 1.47 1.444 1.226 1.465 0.846 median=1.444
+[B-dd] Started x5 = 0.114 0.101 0.102 0.105 0.103 median=0.103
+[C-dd] Started x5 = 0.1 0.102 0.111 0.125 0.129 median=0.111
+[nocache-dd] Started x5 = 0.648 1.3 1.394 1.386 1.481 median=1.386

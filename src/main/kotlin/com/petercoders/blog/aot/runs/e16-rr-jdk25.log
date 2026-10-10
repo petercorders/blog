@@ -1,0 +1,89 @@
+# experiment: e16-rr-jdk25 — agent 조합별 Started 라운드로빈 10회
+# date: 2026-10-08 04:07:07 +0900
+# uptime:  4:07  up 13 days,  3:56, 6 users, load averages: 6.98 5.96 9.34
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+## round 1 uptime: 6.98 5.96 9.34
+N0 r=1 wall_ms=490 exit=0 Started BlogApplicationKt in 0.362 seconds (process running for 0.465)
+K0 r=1 wall_ms=253 exit=0 Started BlogApplicationKt in 0.136 seconds (process running for 0.233)
+Ndd r=1 wall_ms=1269 exit=0 Started BlogApplicationKt in 0.519 seconds (process running for 1.204)
+Add r=1 wall_ms=1532 exit=0 Started BlogApplicationKt in 0.638 seconds (process running for 1.477)
+Bdd r=1 wall_ms=1454 exit=0 Started BlogApplicationKt in 0.257 seconds (process running for 1.366)
+Cdd r=1 wall_ms=2314 exit=0 Started BlogApplicationKt in 0.393 seconds (process running for 2.226)
+## round 2 uptime: 7.46 6.10 9.35
+K0 r=2 wall_ms=925 exit=0 Started BlogApplicationKt in 0.628 seconds (process running for 0.845)
+Ndd r=2 wall_ms=2974 exit=0 Started BlogApplicationKt in 1.088 seconds (process running for 2.859)
+Add r=2 wall_ms=2136 exit=0 Started BlogApplicationKt in 0.859 seconds (process running for 2.052)
+Bdd r=2 wall_ms=1411 exit=0 Started BlogApplicationKt in 0.232 seconds (process running for 1.335)
+Cdd r=2 wall_ms=1425 exit=0 Started BlogApplicationKt in 0.231 seconds (process running for 1.36)
+N0 r=2 wall_ms=1008 exit=0 Started BlogApplicationKt in 0.743 seconds (process running for 0.957)
+## round 3 uptime: 7.17 6.08 9.30
+Ndd r=3 wall_ms=2099 exit=0 Started BlogApplicationKt in 0.9 seconds (process running for 2.012)
+Add r=3 wall_ms=2310 exit=0 Started BlogApplicationKt in 0.913 seconds (process running for 2.213)
+Bdd r=3 wall_ms=892 exit=0 Started BlogApplicationKt in 0.091 seconds (process running for 0.833)
+Cdd r=3 wall_ms=608 exit=0 Started BlogApplicationKt in 0.093 seconds (process running for 0.565)
+N0 r=3 wall_ms=443 exit=0 Started BlogApplicationKt in 0.329 seconds (process running for 0.424)
+K0 r=3 wall_ms=199 exit=0 Started BlogApplicationKt in 0.124 seconds (process running for 0.179)
+## round 4 uptime: 7.07 6.08 9.29
+Add r=4 wall_ms=7212 exit=0 Started BlogApplicationKt in 6.636 seconds (process running for 1.365)
+Bdd r=4 wall_ms=623 exit=0 Started BlogApplicationKt in 0.093 seconds (process running for 0.576)
+Cdd r=4 wall_ms=607 exit=0 Started BlogApplicationKt in 0.097 seconds (process running for 0.568)
+N0 r=4 wall_ms=471 exit=0 Started BlogApplicationKt in 0.351 seconds (process running for 0.451)
+K0 r=4 wall_ms=199 exit=0 Started BlogApplicationKt in 0.126 seconds (process running for 0.181)
+Ndd r=4 wall_ms=899 exit=0 Started BlogApplicationKt in 0.365 seconds (process running for 0.853)
+## round 5 uptime: 6.91 6.06 9.26
+Bdd r=5 wall_ms=611 exit=0 Started BlogApplicationKt in 0.098 seconds (process running for 0.57)
+Cdd r=5 wall_ms=738 exit=0 Started BlogApplicationKt in 0.124 seconds (process running for 0.681)
+N0 r=5 wall_ms=651 exit=0 Started BlogApplicationKt in 0.477 seconds (process running for 0.618)
+K0 r=5 wall_ms=280 exit=0 Started BlogApplicationKt in 0.177 seconds (process running for 0.253)
+Ndd r=5 wall_ms=1494 exit=0 Started BlogApplicationKt in 0.634 seconds (process running for 1.419)
+Add r=5 wall_ms=2457 exit=0 Started BlogApplicationKt in 1.19 seconds (process running for 2.366)
+## round 6 uptime: 6.51 5.99 9.22
+Cdd r=6 wall_ms=2363 exit=0 Started BlogApplicationKt in 0.368 seconds (process running for 2.267)
+N0 r=6 wall_ms=1425 exit=0 Started BlogApplicationKt in 0.992 seconds (process running for 1.357)
+K0 r=6 wall_ms=495 exit=0 Started BlogApplicationKt in 0.299 seconds (process running for 0.43)
+Ndd r=6 wall_ms=2057 exit=0 Started BlogApplicationKt in 0.844 seconds (process running for 1.955)
+Add r=6 wall_ms=2217 exit=0 Started BlogApplicationKt in 0.956 seconds (process running for 2.141)
+Bdd r=6 wall_ms=1471 exit=0 Started BlogApplicationKt in 0.24 seconds (process running for 1.4)
+## round 7 uptime: 6.04 5.91 9.15
+N0 r=7 wall_ms=1070 exit=0 Started BlogApplicationKt in 0.778 seconds (process running for 1.004)
+K0 r=7 wall_ms=463 exit=0 Started BlogApplicationKt in 0.291 seconds (process running for 0.41)
+Ndd r=7 wall_ms=2227 exit=0 Started BlogApplicationKt in 0.971 seconds (process running for 2.114)
+Add r=7 wall_ms=2527 exit=0 Started BlogApplicationKt in 1.086 seconds (process running for 2.435)
+Bdd r=7 wall_ms=2055 exit=0 Started BlogApplicationKt in 0.409 seconds (process running for 1.928)
+Cdd r=7 wall_ms=1998 exit=0 Started BlogApplicationKt in 0.271 seconds (process running for 1.899)
+## round 8 uptime: 5.79 5.86 9.09
+K0 r=8 wall_ms=557 exit=0 Started BlogApplicationKt in 0.347 seconds (process running for 0.504)
+Ndd r=8 wall_ms=2153 exit=0 Started BlogApplicationKt in 0.883 seconds (process running for 2.073)
+Add r=8 wall_ms=2255 exit=0 Started BlogApplicationKt in 0.998 seconds (process running for 2.168)
+Bdd r=8 wall_ms=1495 exit=0 Started BlogApplicationKt in 0.236 seconds (process running for 1.412)
+Cdd r=8 wall_ms=1542 exit=0 Started BlogApplicationKt in 0.272 seconds (process running for 1.465)
+N0 r=8 wall_ms=1107 exit=0 Started BlogApplicationKt in 0.821 seconds (process running for 1.054)
+## round 9 uptime: 5.82 5.87 9.06
+Ndd r=9 wall_ms=2145 exit=0 Started BlogApplicationKt in 0.909 seconds (process running for 2.067)
+Add r=9 wall_ms=2223 exit=0 Started BlogApplicationKt in 0.908 seconds (process running for 2.136)
+Bdd r=9 wall_ms=1441 exit=0 Started BlogApplicationKt in 0.237 seconds (process running for 1.353)
+Cdd r=9 wall_ms=694 exit=0 Started BlogApplicationKt in 0.107 seconds (process running for 0.646)
+N0 r=9 wall_ms=487 exit=0 Started BlogApplicationKt in 0.361 seconds (process running for 0.463)
+K0 r=9 wall_ms=197 exit=0 Started BlogApplicationKt in 0.124 seconds (process running for 0.179)
+## round 10 uptime: 5.91 5.89 9.05
+Add r=10 wall_ms=939 exit=0 Started BlogApplicationKt in 0.357 seconds (process running for 0.889)
+Bdd r=10 wall_ms=623 exit=0 Started BlogApplicationKt in 0.091 seconds (process running for 0.566)
+Cdd r=10 wall_ms=6336 exit=0 Started BlogApplicationKt in 0.142 seconds (process running for 0.95)
+N0 r=10 wall_ms=450 exit=0 Started BlogApplicationKt in 0.333 seconds (process running for 0.429)
+K0 r=10 wall_ms=197 exit=0 Started BlogApplicationKt in 0.124 seconds (process running for 0.177)
+Ndd r=10 wall_ms=895 exit=0 Started BlogApplicationKt in 0.356 seconds (process running for 0.848)
+## 요약 — ratio = 같은 라운드 N0 대비 비율의 중앙값
+N0 n=10 median_wall_ms=570 median_started_s=0.419 median_process_s=0.541 min_started_s=0.329 started/N0=1.000 wall/N0=1.000 wins_vs_N0(started)=0/10
+K0 n=10 median_wall_ms=266 median_started_s=0.157 median_process_s=0.243 min_started_s=0.124 started/N0=0.373 wall/N0=0.435 wins_vs_N0(started)=10/10
+Ndd n=10 median_wall_ms=2078 median_started_s=0.863 median_process_s=1.984 min_started_s=0.356 started/N0=1.289 wall/N0=2.188 wins_vs_N0(started)=1/10
+Add n=10 median_wall_ms=2239 median_started_s=0.934 median_process_s=2.139 min_started_s=0.357 started/N0=1.579 wall/N0=2.744 wins_vs_N0(started)=1/10
+Bdd n=10 median_wall_ms=1426 median_started_s=0.234 median_process_s=1.344 min_started_s=0.091 started/N0=0.282 wall/N0=1.392 wins_vs_N0(started)=10/10
+Cdd n=10 median_wall_ms=1484 median_started_s=0.186 median_process_s=1.155 min_started_s=0.093 started/N0=0.321 wall/N0=1.419 wins_vs_N0(started)=9/10
+Ndd n=10 median_wall_ms=2078 median_started_s=0.863 median_process_s=1.984 min_started_s=0.356 started/Ndd=1.000 wall/Ndd=1.000 wins_vs_Ndd(started)=0/10
+Add n=10 median_wall_ms=2239 median_started_s=0.934 median_process_s=2.139 min_started_s=0.357 started/Ndd=1.124 wall/Ndd=1.089 wins_vs_Ndd(started)=2/10
+Bdd n=10 median_wall_ms=1426 median_started_s=0.234 median_process_s=1.344 min_started_s=0.091 started/Ndd=0.258 wall/Ndd=0.694 wins_vs_Ndd(started)=10/10
+Cdd n=10 median_wall_ms=1484 median_started_s=0.186 median_process_s=1.155 min_started_s=0.093 started/Ndd=0.272 wall/Ndd=0.696 wins_vs_Ndd(started)=10/10

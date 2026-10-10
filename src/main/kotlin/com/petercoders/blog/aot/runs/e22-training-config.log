@@ -1,0 +1,36 @@
+# experiment: e22 — Kotlin non-null @ConfigurationProperties 와 training run
+# date: 2026-10-08 03:59:45 +0900
+# uptime:  3:59  up 13 days,  3:49, 6 users, load averages: 2.55 5.54 11.33
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+## (a) app.url 없이: java -XX:AOTCacheOutput=a.aot -Dspring.context.exit=onRefresh -jar application/blog-0.0.1-SNAPSHOT.jar
+exit=1 cache=45301760 config=없음
+    28:APPLICATION FAILED TO START
+    31:Description:
+    33:Failed to bind properties under 'app' to com.petercoders.blog.props.AppProps:
+    35:    Reason: java.lang.NullPointerException: Parameter specified as non-null is null: method com.petercoders.blog.props.AppProps.<init>, parameter url
+    37:Action:
+    97:Launching child process /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java to assemble AOT cache a.aot using configuration a.aot.config
+    101:AOTCache creation is complete: a.aot 45301760 bytes
+## (a'') 실패한 training 이 남긴 a.aot 를 운영(app.url 있음)에서 쓰면
+운영(auto) exit=0 class+load total=6167 shared=5880 nonshared=287 Started BlogApplicationKt in 0.215 seconds
+운영(on) exit=0
+## (a') 같은 조건을 3단계 record 로(실패한 training 이 configuration 을 남기는가)
+record exit=1 aotconf=42352640
+## (b) training 에만 -Dapp.url=http://training.invalid
+train exit=0 cache=45481984 [e22] app.url=http://training.invalid
+운영(auto) exit=0 class+load total=6132 shared=5920 nonshared=212 Started BlogApplicationKt in 0.422 seconds
+    운영이 본 값: [e22] app.url=https://prod.example
+운영(on) exit=0
+운영(on, 환경변수 APP_URL) exit=0 [e22] app.url=https://prod.example
+## (b2) training 에만 JAVA_TOOL_OPTIONS=-Dapp.url=http://training.invalid (자식 assembly 도 JAVA_TOOL_OPTIONS 를 쓴다)
+train exit=0 cache=45498368
+    Picked up JAVA_TOOL_OPTIONS: -Dapp.url=http://training.invalid
+    [e22] app.url=http://training.invalid
+    Picked up JAVA_TOOL_OPTIONS: -Djava.class.path=application/blog-0.0.1-SNAPSHOT.jar -Dapp.url=http://training.invalid -Dspring.context.exit=onRefresh -XX:AOTCacheOutput=b2.aot -XX:AOTConfiguration=b2.aot.config -XX:AOTMode=create
+    AOTCache creation is complete: b2.aot 45498368 bytes
+운영(on) exit=0 [e22] app.url=https://prod.example
+## (c) not_run — data-jpa 4.1.1 이 offline Gradle 캐시에 없다(~/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-data-jpa 에 3.0.4 만 있다)

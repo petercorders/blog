@@ -1,0 +1,105 @@
+# experiment: e16-jdk27 — agent 구성 × AOT Cache
+# date: 2026-10-08 04:03:13 +0900
+# uptime:  4:03  up 13 days,  3:52, 6 users, load averages: 5.10 5.58 10.22
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks/jdk-27+35/Contents/Home/bin/java):
+#   openjdk version "27" 2026-09-15
+#   OpenJDK Runtime Environment Temurin-27+35 (build 27+35)
+#   OpenJDK 64-Bit Server VM Temurin-27+35 (build 27+35, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# agents: noop.jar, transform.jar, dd-java-agent-1.67.0.jar(sha1 8da71687…, -Ddd.trace.agent.port=1 로 백엔드 없이), libe16native-27.dylib
+## caches(training, 한 줄 방식 + onRefresh, -Xlog:aot=info 로 training 출력 보관)
+[train base] exit=0 cache=45514752 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: -Xlog:aot=info -Dspring.context.exit=onRefresh -XX:AOTCacheOutput=e16-27-base.aot -XX:AOTConfiguration=e16-27-base.aot.config -XX:AOTMode=create
+[train tr-noop] exit=0 cache=45580288 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: -javaagent:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/agents/noop.jar -Xlog:aot=info -Dspring.context.exit=onRefresh
+       1 [e16] noop agent premain
+[train tr-xform] exit=0 cache=45645824 From_ClassFileLoadHook=1 Picked up JAVA_TOOL_OPTIONS: -javaagent:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/agents/transform.jar -Xlog:aot=info -Dspring.context.exit=onRe
+    [info][aot] Skipping com/petercoders/blog/BlogApplication: From ClassFileLoadHook
+       1 [e16] transform agent premain
+       1 [e16] transformed com/petercoders/blog/BlogApplication 592 -> 612 bytes
+[train tr-dd] exit=0 cache=45793280 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: -javaagent:/Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/agents/dd-java-agent-1.67.0.jar -Ddd.trace.agent.port=1 -Ddd.i
+[train addmods] exit=0 cache=45531136 From_ClassFileLoadHook=0 Picked up JAVA_TOOL_OPTIONS: --add-modules=java.instrument -Xlog:aot=info -Dspring.context.exit=onRefresh -XX:AOTCacheOutput=e16-27-addmods.aot -XX:AOTConfiguration=e16-27-addmods.aot.config -XX:AOTMo
+## (C 보조) 3단계로 --add-modules 를 record·create 양쪽에 명시
+record exit=0
+create exit=0 cache=45531136
+## 기준
+[base-noagent] cache=e16-27-base.aot auto_exit=0 shared=5640/5854 on_exit=0 Started BlogApplicationKt in 0.303 seconds
+## A: training 무agent → 운영 agent
+[A-noop] cache=e16-27-base.aot auto_exit=0 shared=0/5743 on_exit=1 Started BlogApplicationKt in 1.086 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    on  :[error][aot] Disabling optimized module handling
+    agent:    1 [e16] noop agent premain
+[A-xform] cache=e16-27-base.aot auto_exit=0 shared=0/5766 on_exit=1 Started BlogApplicationKt in 1.281 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    on  :[error][aot] Disabling optimized module handling
+    agent:    1 [e16] transform agent premain
+    agent:    1 [e16] transformed com/petercoders/blog/BlogApplication 592 -> 612 bytes
+[A-dd] cache=e16-27-base.aot auto_exit=0 shared=0/9524 on_exit=1 Started BlogApplicationKt in 1.201 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+    on  :[error][aot] Disabling optimized module handling
+    err: [dd.trace 2026-10-08 04:03:40:338 +0900] [dd-task-scheduler] INFO datadog.trace.agent.core.StatusLogger - DATADOG TRACER CONFIGURATION {"version":"1.67.0~1380b857db","os_name":"Mac OS X","os_version":
+## B: training agent → 운영 agent(같은 agent)
+[B-noop] cache=e16-27-trnoop.aot auto_exit=0 shared=5651/5871 on_exit=0 Started BlogApplicationKt in 0.34 seconds
+    agent:    1 [e16] noop agent premain
+[B-xform] cache=e16-27-trxform.aot auto_exit=0 shared=5665/5886 on_exit=0 Started BlogApplicationKt in 0.336 seconds
+    agent:    1 [e16] transform agent premain
+    agent:    1 [e16] transformed com/petercoders/blog/BlogApplication 592 -> 612 bytes
+[B-dd] cache=e16-27-trdd.aot auto_exit=0 shared=5663/9670 on_exit=1 Started BlogApplicationKt in 0.317 seconds
+    on  :[error][aot,codecache,init] AOT Code Cache disabled: incompatible CompressedOops::base(): 0x0 vs current 0xa14000000
+    on  :[error][aot,codecache,init] Consider adding -XX:+AOTCompatibleOopCompression when creating the AOT cache
+    on  : Error occurred during initialization of VM
+    err: [dd.trace 2026-10-08 04:03:46:159 +0900] [dd-task-scheduler] INFO datadog.trace.agent.core.StatusLogger - DATADOG TRACER CONFIGURATION {"version":"1.67.0~1380b857db","os_name":"Mac OS X","os_version":
+## C: 세 단계 --add-modules=java.instrument(한 줄 방식 캐시), 운영에만 agent
+[C-noagent] cache=e16-27-addmods.aot auto_exit=0 shared=5647/5860 on_exit=1 Started BlogApplicationKt in 0.43 seconds
+    on  :[error][aot,codecache,init] AOT Code Cache disabled: incompatible CompressedOops::base(): 0xbc2800000 vs current 0x0
+    on  :[error][aot,codecache,init] Consider adding -XX:+AOTCompatibleOopCompression when creating the AOT cache
+    on  : Error occurred during initialization of VM
+[C-noop] cache=e16-27-addmods.aot auto_exit=0 shared=5647/5868 on_exit=1 Started BlogApplicationKt in 0.377 seconds
+    on  :[error][aot,codecache,init] AOT Code Cache disabled: incompatible CompressedOops::base(): 0xbc2800000 vs current 0x0
+    on  :[error][aot,codecache,init] Consider adding -XX:+AOTCompatibleOopCompression when creating the AOT cache
+    on  : Error occurred during initialization of VM
+    agent:    1 [e16] noop agent premain
+[C-xform] cache=e16-27-addmods.aot auto_exit=0 shared=5647/5870 on_exit=1 Started BlogApplicationKt in 0.382 seconds
+    on  :[error][aot,codecache,init] AOT Code Cache disabled: incompatible CompressedOops::base(): 0xbc2800000 vs current 0x0
+    on  :[error][aot,codecache,init] Consider adding -XX:+AOTCompatibleOopCompression when creating the AOT cache
+    on  : Error occurred during initialization of VM
+    agent:    1 [e16] transform agent premain
+[C-dd] cache=e16-27-addmods.aot auto_exit=0 shared=5647/9672 on_exit=1 Started BlogApplicationKt in 0.289 seconds
+    on  :[error][aot,codecache,init] AOT Code Cache disabled: incompatible CompressedOops::base(): 0xbc2800000 vs current 0x0
+    on  :[error][aot,codecache,init] Consider adding -XX:+AOTCompatibleOopCompression when creating the AOT cache
+    on  : Error occurred during initialization of VM
+    err: [dd.trace 2026-10-08 04:03:50:517 +0900] [dd-task-scheduler] INFO datadog.trace.agent.core.StatusLogger - DATADOG TRACER CONFIGURATION {"version":"1.67.0~1380b857db","os_name":"Mac OS X","os_version":
+[C-without-addmods] cache=e16-27-addmods.aot auto_exit=0 shared=0/5723 on_exit=1 Started BlogApplicationKt in 1.01 seconds
+    auto:[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during dump time but not during runtime
+    auto:[error][aot] Disabling optimized module handling
+    on  :[error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during dump time but not during runtime
+    on  :[error][aot] Disabling optimized module handling
+## C3: 3단계 --add-modules 캐시
+[C3-noop] cache=e16-27-am3.aot auto_exit=0 shared=5647/5867 on_exit=0 Started BlogApplicationKt in 0.299 seconds
+    agent:    1 [e16] noop agent premain
+## D: training 무agent → 운영 native agent(can_generate_all_class_hook_events)
+[D-native] cache=e16-27-base.aot auto_exit=0 shared=5640/5854 on_exit=1 Started BlogApplicationKt in 0.34 seconds
+    on  :[error][aot,codecache,init] AOT Code Cache disabled: incompatible CompressedOops::base(): 0x0 vs current 0xaca000000
+    on  :[error][aot,codecache,init] Consider adding -XX:+AOTCompatibleOopCompression when creating the AOT cache
+    on  : Error occurred during initialization of VM
+    agent:    1 [e16] native agent loaded: AddCapabilities(can_generate_all_class_hook_events) = 0
+[D-native-addmods] cache=e16-27-addmods.aot auto_exit=0 shared=5647/5860 on_exit=0 Started BlogApplicationKt in 0.389 seconds
+    agent:    1 [e16] native agent loaded: AddCapabilities(can_generate_all_class_hook_events) = 0
+## Started 5회 중앙값
+[base-noagent] Started x5 = 0.437 0.303 0.126 0.127 0.156 median=0.156
+[A-dd] Started x5 = 5.604 0.362 0.348 0.347 0.401 median=0.362
+[B-dd] Started x5 = 0.127 0.136 0.177 0.397 0.386 median=0.177
+[C-dd] Started x5 = 0.335 0.252 0.241 0.247 0.284 median=0.252
+[nocache-dd] Started x5 = 1.117 1.056 1.212 1.508 1.122 median=1.122

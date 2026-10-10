@@ -1,0 +1,100 @@
+# experiment: e15-jdk26-extra — ZGC·streamable 캐시와 거부 이유
+# date: 2026-10-08 03:38:19 +0900
+# uptime:  3:38  up 13 days,  3:27, 6 users, load averages: 19.39 32.48 23.17
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+## 거부 이유(-Xlog:aot, AOTMode=on) — G1 으로 만든 app26.aot
+### 운영 -XX:+UseZGC
+    why:[info][aot] The AOT cache was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+    why:[warning][aot] Unable to use AOT cache.
+[                    ] The saved state of UseCompressedOops and UseCompressedClassPointers is different from runtime, CDS will be disabled.
+    why:[error  ][aot] Unable to map shared spaces
+Unable to use AOT cache.
+### 운영 -XX:-UseCompressedOops
+    why:[info][aot] The AOT cache was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+    why:[warning][aot] Unable to use AOT cache.
+[                    ] The saved state of UseCompressedOops and UseCompressedClassPointers is different from runtime, CDS will be disabled.
+    why:[error  ][aot] Unable to map shared spaces
+Unable to use AOT cache.
+### 운영 -Xmx40g
+    why:[info][aot] The AOT cache was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+    why:[warning][aot] Unable to use AOT cache.
+[                    ] The saved state of UseCompressedOops and UseCompressedClassPointers is different from runtime, CDS will be disabled.
+    why:[error  ][aot] Unable to map shared spaces
+Unable to use AOT cache.
+### 운영 -XX:+UseCompactObjectHeaders
+    why:[info][aot] The AOT cache was created with UseCompressedOops = 1, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+    why:[warning][aot] Unable to use AOT cache.
+[                    ] The AOT cache's UseCompactObjectHeaders setting (disabled) does not equal the current UseCompactObjectHeaders setting (enabled).
+    why:[error  ][aot] Unable to map shared spaces
+Unable to use AOT cache.
+## ZGC 로 training 한 캐시
+# cache app26-zgc.aot: training 옵션 [-XX:+UseZGC] size=46481408
+    train: [1.190s][warning][aot] class org/springframework/core/type/classreading/ClassFileMetadataReaderFactory cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/lib/spring-core-7.0.9.jar as claimed
+    train: [1.416s][warning][aot] class org/springframework/core/type/classreading/ClassFileMetadataReader cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/lib/spring-core-7.0.9.jar as claimed
+    train: [1.417s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationMetadata cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/lib/spring-core-7.0.9.jar as claimed
+    train: [1.418s][warning][aot] class org/springframework/core/type/classreading/ClassFileAnnotationMetadata$Builder cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/lib/spring-core-7.0.9.jar as claimed
+    train: [1.424s][warning][aot] class org/springframework/core/type/classreading/ClassFileMethodMetadata cannot be archived because it was not defined from /Users/kibong_home/Desktop/development/blog/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/lib/spring-core-7.0.9.jar as claimed
+cache=app26-zgc.aot run=[-XX:+UseZGC] gc=UseZGC  auto_exit=0 shared=5640/5850 on_exit=0 stderr_lines=0
+    zgc-run info:[info][aot] The AOT cache was created with UseCompressedOops = 0, UseCompressedClassPointers = 1, UseCompactObjectHeaders = 0
+    zgc-run info:[info][aot] full module graph: enabled
+    zgc-run info:[info][aot] CDS archive was created with max heap size = 4096M, and the following configuration:
+    zgc-run info:[info][aot] The current max heap size = 6144M, G1HeapRegion::GrainBytes = 0
+    zgc-run info:[info][aot] Using AOT-linked classes: true (static archive: has aot-linked classes)
+    (대조) G1 캐시를 G1 로: [info][aot] Using AOT-linked classes: true (static archive: has aot-linked classes)
+cache=app26-zgc.aot run=[기본] gc=UseG1GC  auto_exit=0 shared=0/5712 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.003s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+cache=app26-zgc.aot run=[-XX:+UseSerialGC] gc=UseSerialGC  auto_exit=0 shared=0/5712 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.002s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+## G1 + -XX:+AOTStreamableObjects 로 training 한 캐시(JEP 516: 압축 포인터를 써도 streamable 형식으로)
+# cache app26-stream.aot: training 옵션 [-XX:+UnlockDiagnosticVMOptions -XX:+AOTStreamableObjects] size=45383680
+cache=app26-stream.aot run=[-XX:+UseZGC] gc=UseZGC  auto_exit=0 shared=0/5712 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.003s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+cache=app26-stream.aot run=[기본] gc=UseG1GC  auto_exit=0 shared=5640/5854 on_exit=0 stderr_lines=0
+## -Xmx40g(압축 포인터 꺼짐)로 training 한 캐시
+# cache app26-x40g.aot: training 옵션 [-Xmx40g] size=46383104
+cache=app26-x40g.aot run=[-XX:+UseZGC] gc=UseZGC  auto_exit=0 shared=5640/5847 on_exit=0 stderr_lines=0
+cache=app26-x40g.aot run=[-Xmx40g] gc=UseG1GC  auto_exit=0 shared=5640/5847 on_exit=0 stderr_lines=0
+cache=app26-x40g.aot run=[기본] gc=UseG1GC  auto_exit=0 shared=0/5712 on_exit=1 stderr_lines=0
+    auto:[warning][aot] Unable to use AOT cache.
+    auto:[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    auto:[error  ][aot] Loading static archive failed.
+    auto:[error  ][aot] Unable to map shared spaces
+    on  :[warning][aot] Unable to use AOT cache.
+    on  :[error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+    on  :[error  ][aot] Loading static archive failed.
+    on  :[error  ][aot] Unable to map shared spaces
+    on  : [0.003s][warning][aot] Unable to use AOT cache.
+    on  : Error occurred during initialization of VM
+## 운영 옵션 ZGC 로 G1 캐시를 썼을 때 stderr 1줄 여부 확인(컨테이너 흉내 행의 stderr 1줄 내용)
+    stderr: OpenJDK 64-Bit Server VM warning: Option MaxRAM was deprecated in version 26.0 and will likely be removed in a future release.
