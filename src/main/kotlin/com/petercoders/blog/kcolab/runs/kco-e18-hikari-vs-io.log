@@ -1,0 +1,28 @@
+# experiment: kco-e18-hikari-vs-io — HikariCP 7.0.2(maximumPoolSize=10, minimumIdle=10, connectionTimeout=2000ms) + H2 SLEEP_MS(200) 64건을 Dispatchers.IO 와 IO.limitedParallelism(10, "db") 위에서 동시에 돌릴 때 HikariPoolMXBean.threadsAwaitingConnection·activeConnections 피크(1ms 샘플링)와 총 소요 3회, 요청 하나가 커넥션을 쥔 채 async(IO)로 두 번째 커넥션을 요구할 때(Cm=2) 동시 요청 수별 성공·실패
+# java -version (Gradle toolchain JDK 25, JavaExec 가 쓰는 JVM):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21, Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, Micrometer 1.17.1), sourceSet kcolab (build.gradle.kts)
+# run dir: /tmp/gradle-kco (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:42:05 KST
+# load: 23.83 25.10 21.80  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: ./gradlew --offline -q kcoLab --args='E18'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+HikariDataSource maximumPoolSize=10 connectionTimeout=2000 ms
+=== run 1 ===
+Dispatchers.IO (64)                64 x select SLEEP_MS(200): total= 1541 ms  peak threadsAwaitingConnection=61  peak activeConnections=10  distinct threads=64
+IO.limitedParallelism(10, "db")    64 x select SLEEP_MS(200): total= 1448 ms  peak threadsAwaitingConnection= 0  peak activeConnections=10  distinct threads=10
+=== run 2 ===
+Dispatchers.IO (64)                64 x select SLEEP_MS(200): total= 1450 ms  peak threadsAwaitingConnection=54  peak activeConnections=10  distinct threads=64
+IO.limitedParallelism(10, "db")    64 x select SLEEP_MS(200): total= 1446 ms  peak threadsAwaitingConnection= 0  peak activeConnections=10  distinct threads=10
+=== run 3 ===
+Dispatchers.IO (64)                64 x select SLEEP_MS(200): total= 1441 ms  peak threadsAwaitingConnection=54  peak activeConnections=10  distinct threads=64
+IO.limitedParallelism(10, "db")    64 x select SLEEP_MS(200): total= 1447 ms  peak threadsAwaitingConnection= 0  peak activeConnections=10  distinct threads=10
+=== Cm = 2 (요청당 커넥션 2개) ===
+nested(c1 held, async c2) concurrent requests= 5 pool=10: ok= 5 failed= 0 total=  122 ms  peak awaiting= 0  []
+nested(c1 held, async c2) concurrent requests= 9 pool=10: ok= 9 failed= 0 total=  281 ms  peak awaiting= 8  []
+nested(c1 held, async c2) concurrent requests=10 pool=10: ok= 3 failed= 7 total= 2124 ms  peak awaiting=10  [SQLTransientConnectionException: e18 - Connection is not available, request timed out after 2002ms (total=10, active=10, id]
+nested(c1 held, async c2) concurrent requests=12 pool=10: ok= 4 failed= 8 total= 2121 ms  peak awaiting=12  [SQLTransientConnectionException: e18 - Connection is not available, request timed out after 2005ms (total=10, active=10, id]
+nested(c1 held, async c2) concurrent requests=20 pool=10: ok= 5 failed=15 total= 2125 ms  peak awaiting=20  [SQLTransientConnectionException: e18 - Connection is not available, request timed out after 2007ms (total=10, active=10, id]

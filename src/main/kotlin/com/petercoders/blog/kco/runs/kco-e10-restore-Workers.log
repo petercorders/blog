@@ -1,0 +1,18 @@
+# experiment: kco-e10-restore-Workers — 로그 형식(cores=, sample:)에 맞게 고친 jkc/Workers.kt 재실행(재현 확인). 원 기록값은 jkc/runs/e3-kotlin.log
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:23:42 KST
+# load: 8.54 7.89 6.66  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO Workers.kt -include-runtime -d Workers.jar; java -cp Workers.jar:$CO WorkersKt; java -Dkotlinx.coroutines.scheduler.core.pool.size=4 -cp Workers.jar:$CO WorkersKt
+=== run1: default scheduler ===
+cores=15  Default workers=15  IO workers=64  shared=15  total=64
+sample: DefaultDispatcher-worker-1
+
+=== run2: core.pool.size=4 ===
+cores=15  Default workers=4  IO workers=64  shared=4  total=64
+sample: DefaultDispatcher-worker-1

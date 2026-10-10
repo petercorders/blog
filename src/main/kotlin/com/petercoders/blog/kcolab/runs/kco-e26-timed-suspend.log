@@ -1,0 +1,29 @@
+# experiment: kco-e26-timed-suspend — Micrometer 1.17.1 TimedAspect + @Timed suspend fun { Thread.sleep(100); delay(400) } 의 timer 기록값 vs suspend 함수 안 try/finally 타이머. kotlinx-coroutines-reactor 있는 구성/없는 구성
+# java -version (Gradle toolchain JDK 25, JavaExec 가 쓰는 JVM):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21, Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, Micrometer 1.17.1), sourceSet kcolab (build.gradle.kts)
+# run dir: /tmp/gradle-kco (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:47:42 KST
+# load: 6.52 13.59 17.52  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: ./gradlew --offline -q kcoLab --args='E26' ; ./gradlew --offline -q kcoLabNoReactor --args='E26'
+
+$ ./gradlew --offline -q kcoLab --args='E26'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+TimedSvc bean = com.petercoders.blog.kcolab.e26.TimedSvc$$SpringCGLIB$$0
+call 1: wall slow()=546 ms  wall manual()=526 ms
+call 2: wall slow()=518 ms  wall manual()=513 ms
+call 3: wall slow()=516 ms  wall manual()=515 ms
+timer kco.timed: count=3  mean=7.1 ms  max=18.8 ms
+timer kco.manual: count=3  mean=515.3 ms  max=520.7 ms
+
+$ ./gradlew --offline -q kcoLabNoReactor --args='E26'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: (없음) | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+TimedSvc bean = com.petercoders.blog.kcolab.e26.TimedSvc$$SpringCGLIB$$0
+call 1: wall slow()=514 ms  wall manual()=518 ms
+call 2: wall slow()=515 ms  wall manual()=518 ms
+call 3: wall slow()=510 ms  wall manual()=509 ms
+timer kco.timed: count=3  mean=108.0 ms  max=108.2 ms
+timer kco.manual: count=3  mean=515.0 ms  max=518.0 ms

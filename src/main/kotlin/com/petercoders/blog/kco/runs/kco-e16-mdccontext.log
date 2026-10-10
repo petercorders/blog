@@ -1,0 +1,31 @@
+# experiment: kco-e16-mdccontext — MDCContext 생성 시점(MDC.put 앞/뒤), Coroutine 안 MDC.put 의 유실, MDCContext 없이 64개
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2, kotlinx-coroutines-slf4j 1.10.2, slf4j-api 2.0.18 (Maven Central), logback-classic/core 1.5.38 (Gradle 캐시)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:31:00 KST
+# load: 25.76 24.52 14.87  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO:kotlinx-coroutines-slf4j-1.10.2.jar:slf4j-api-2.0.18.jar MdcContext.kt -include-runtime -d MdcContext.jar && java -cp MdcContext.jar:$CO:kotlinx-coroutines-slf4j-1.10.2.jar:slf4j-api-2.0.18.jar:logback-classic-1.5.38.jar:logback-core-1.5.38.jar MdcContextKt
+# 메모: 첫 시도는 slf4j-simple 2.0.18 로 돌렸는데 MDC adapter 가 org.slf4j.helpers.NOPMDCAdapter 라 MDC.put 이 아무것도 저장하지 않았다(전 케이스 null). 그 결과는 무효로 버리고, Spring Boot 기본 로거인 logback(LogbackMDCAdapter)으로 다시 돌린 것이 아래다.
+MDC adapter = ch.qos.logback.classic.util.LogbackMDCAdapter
+=== run 1 ===
+(a) MDC.put inside coroutine (MDCContext captured empty MDC): before delay=put-inside  after delay=null
+(b) MDCContext() created AFTER  MDC.put(req-1): in coroutine after delay=req-1
+(c) MDCContext() created BEFORE MDC.put(req-2): in coroutine after delay=null
+(d) no MDCContext, MDC.put -> delay(10) -> MDC.get x64: mismatches=63/64  sample=[t1->t57, t2->t63, t3->t59]
+(e) MDC.put then MDCContext() per coroutine x64: mismatches=0/64
+=== run 2 ===
+(a) MDC.put inside coroutine (MDCContext captured empty MDC): before delay=put-inside  after delay=null
+(b) MDCContext() created AFTER  MDC.put(req-1): in coroutine after delay=req-1
+(c) MDCContext() created BEFORE MDC.put(req-2): in coroutine after delay=null
+(d) no MDCContext, MDC.put -> delay(10) -> MDC.get x64: mismatches=61/64  sample=[t1->t43, t2->t55, t3->t60]
+(e) MDC.put then MDCContext() per coroutine x64: mismatches=0/64
+=== run 3 ===
+(a) MDC.put inside coroutine (MDCContext captured empty MDC): before delay=put-inside  after delay=null
+(b) MDCContext() created AFTER  MDC.put(req-1): in coroutine after delay=req-1
+(c) MDCContext() created BEFORE MDC.put(req-2): in coroutine after delay=null
+(d) no MDCContext, MDC.put -> delay(10) -> MDC.get x64: mismatches=64/64  sample=[t1->t64, t2->t58, t3->t59]
+(e) MDC.put then MDCContext() per coroutine x64: mismatches=0/64

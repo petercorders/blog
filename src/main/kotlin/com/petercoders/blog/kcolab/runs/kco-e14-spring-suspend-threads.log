@@ -1,0 +1,32 @@
+# experiment: kco-e14-spring-suspend-threads — Spring MVC suspend 핸들러의 Dispatcher 와 진입·delay 뒤·WebClient awaitBody() 뒤·withContext(IO) 안 스레드, delay(1)+Thread.sleep(200) 20건 동시 요청(대조 withContext(IO)), kotlinx-coroutines-reactor 없이 suspend 핸들러 호출
+# java -version (Gradle toolchain JDK 25, JavaExec 가 쓰는 JVM):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21, Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, Micrometer 1.17.1), sourceSet kcolab (build.gradle.kts)
+# run dir: /tmp/gradle-kco (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:41:21 KST
+# load: 6.93 22.47 20.74  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: ./gradlew --offline -q kcoLab --args='E14' ; ./gradlew --offline -q kcoLabNoReactor --args='E14NR'   (server.port=0, 요청은 java.net.http.HttpClient HTTP/1.1 로 20건 동시)
+$ ./gradlew --offline -q kcoLab --args='E14'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+server.port=0 -> local.server.port=52857
+GET /probe #1: dispatcher=Dispatchers.Unconfined | entry=http-nio-auto-1-exec-1 | after delay(10)=kotlinx.coroutines.DefaultExecutor | after WebClient awaitBody()=reactor-http-nio-2 | inside withContext(IO)=DefaultDispatcher-worker-1 | after withContext(IO) returns=DefaultDispatcher-worker-1
+GET /probe #2: dispatcher=Dispatchers.Unconfined | entry=http-nio-auto-1-exec-4 | after delay(10)=kotlinx.coroutines.DefaultExecutor | after WebClient awaitBody()=reactor-http-nio-2 | inside withContext(IO)=DefaultDispatcher-worker-1 | after withContext(IO) returns=DefaultDispatcher-worker-1
+GET /probe #3: dispatcher=Dispatchers.Unconfined | entry=http-nio-auto-1-exec-7 | after delay(10)=kotlinx.coroutines.DefaultExecutor | after WebClient awaitBody()=reactor-http-nio-2 | inside withContext(IO)=DefaultDispatcher-worker-1 | after withContext(IO) returns=DefaultDispatcher-worker-1
+20 concurrent GET /block (run 1): total=4151 ms  status=[200]  sleptOn={kotlinx.coroutines.DefaultExecutor=20}
+20 concurrent GET /block (run 2): total=4186 ms  status=[200]  sleptOn={kotlinx.coroutines.DefaultExecutor=20}
+20 concurrent GET /block (run 3): total=4277 ms  status=[200]  sleptOn={kotlinx.coroutines.DefaultExecutor=20}
+20 concurrent GET /block-io (run 1): total=214 ms  status=[200]  sleptOn={DefaultDispatcher-worker-1=1, DefaultDispatcher-worker-3=1, DefaultDispatcher-worker-5=1, DefaultDispatcher-worker-6=1, DefaultDispatcher-worker-8=1, DefaultDispatcher-worker-4=1, DefaultDispatcher-worker-24=1, DefaultDispatcher-worker-2=1, DefaultDispatcher-worker-10=1, DefaultDispatcher-worker-12=1, DefaultDispatcher-worker-15=1, DefaultDispatcher-worker-9=1, DefaultDispatcher-worker-7=1, DefaultDispatcher-worker-17=1, DefaultDispatcher-worker-18=1, DefaultDispatcher-worker-11=1, DefaultDispatcher-worker-20=1, DefaultDispatcher-worker-14=1, DefaultDispatcher-worker-19=1, DefaultDispatcher-worker-13=1}
+20 concurrent GET /block-io (run 2): total=213 ms  status=[200]  sleptOn={DefaultDispatcher-worker-10=1, DefaultDispatcher-worker-25=1, DefaultDispatcher-worker-20=1, DefaultDispatcher-worker-4=1, DefaultDispatcher-worker-13=1, DefaultDispatcher-worker-6=1, DefaultDispatcher-worker-24=1, DefaultDispatcher-worker-9=1, DefaultDispatcher-worker-8=1, DefaultDispatcher-worker-19=1, DefaultDispatcher-worker-17=1, DefaultDispatcher-worker-3=1, DefaultDispatcher-worker-18=1, DefaultDispatcher-worker-21=1, DefaultDispatcher-worker-22=1, DefaultDispatcher-worker-14=1, DefaultDispatcher-worker-7=1, DefaultDispatcher-worker-16=1, DefaultDispatcher-worker-2=1, DefaultDispatcher-worker-12=1}
+20 concurrent GET /block-io (run 3): total=213 ms  status=[200]  sleptOn={DefaultDispatcher-worker-24=1, DefaultDispatcher-worker-12=1, DefaultDispatcher-worker-7=1, DefaultDispatcher-worker-13=1, DefaultDispatcher-worker-10=1, DefaultDispatcher-worker-25=1, DefaultDispatcher-worker-19=1, DefaultDispatcher-worker-21=1, DefaultDispatcher-worker-17=1, DefaultDispatcher-worker-2=1, DefaultDispatcher-worker-16=1, DefaultDispatcher-worker-20=1, DefaultDispatcher-worker-9=1, DefaultDispatcher-worker-8=1, DefaultDispatcher-worker-14=1, DefaultDispatcher-worker-3=1, DefaultDispatcher-worker-32=1, DefaultDispatcher-worker-6=1, DefaultDispatcher-worker-30=1, DefaultDispatcher-worker-31=1}
+# (생략: Netty native access WARNING 4줄, macOS DNS resolver native lib 로드 실패 ERROR 1줄 — 실험과 무관)
+
+$ ./gradlew --offline -q kcoLabNoReactor --args='E14NR'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: (없음) | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+2026-10-08T03:41:08.835+09:00 ERROR 3867 --- [o-auto-1-exec-1] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler dispatch failed: java.lang.NoClassDefFoundError: kotlinx/coroutines/reactor/MonoKt] with root cause
+
+java.lang.ClassNotFoundException: kotlinx.coroutines.reactor.MonoKt
+
+GET /plain without kotlinx-coroutines-reactor: status=500 body={"timestamp":"2026-10-07T18:41:08.841Z","status":500,"error":"Internal Server Error","path":"/plain"}

@@ -1,0 +1,63 @@
+# experiment: kco-e15-transactional-suspend — JDBC DataSourceTransactionManager(시작·커밋·롤백 시점 로깅 서브클래스) 위 @Transactional suspend fun: 본문 첫 줄·delay 뒤·withContext(IO) 안의 isActualTransactionActive, 예외 시 롤백 범위, 커밋 시점. kotlinx-coroutines-reactor 있는 구성/없는 구성. 대조: withContext(IO) 안에서 부르는 non-suspend @Transactional
+# java -version (Gradle toolchain JDK 25, JavaExec 가 쓰는 JVM):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21, Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, Micrometer 1.17.1), sourceSet kcolab (build.gradle.kts)
+# run dir: /tmp/gradle-kco (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:41:30 KST
+# load: 6.09 21.78 20.52  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: ./gradlew --offline -q kcoLab --args='E15' ; ./gradlew --offline -q kcoLabNoReactor --args='E15'
+
+$ ./gradlew --offline -q kcoLab --args='E15'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+TxSvc bean class = com.petercoders.blog.kcolab.e15.TxSvc$$SpringCGLIB$$0  transactionManager = LoggingTxManager
+(a)(b)(d) @Transactional suspend fun probe(): delay(10) -> withContext(IO)
+  t=   0 ms  caller calls probe() on main
+  t=   1 ms  TM begin    on main
+  t=  15 ms  TM COMMIT   on main
+  t= 264 ms  body first line (before any suspension): thread=main isActualTransactionActive=false txName=null
+  t= 294 ms  after delay(10): thread=main isActualTransactionActive=false txName=null
+  t= 306 ms  inside withContext(IO): thread=DefaultDispatcher-worker-1 isActualTransactionActive=false txName=null
+  t= 306 ms  body last line: thread=main isActualTransactionActive=false txName=null
+  t= 314 ms  caller resumed after probe()
+(c) @Transactional suspend fun: insert 1 -> delay -> insert 2 -> throw
+  t=   0 ms  TM begin    on main
+  t=   1 ms  TM COMMIT   on main
+  t= 187 ms  inserted 1 (before suspension): thread=main isActualTransactionActive=false txName=null
+  t= 201 ms  inserted 2 (after delay): thread=main isActualTransactionActive=false txName=null
+  t= 202 ms  caller caught boom after two inserts
+  rows left in t = [1, 2]
+(e) control: non-suspend @Transactional called inside withContext(IO): insert 11, 12 -> throw
+  t=   0 ms  TM begin    on DefaultDispatcher-worker-1
+  t=   0 ms  non-suspend @Transactional body: thread=DefaultDispatcher-worker-1 isActualTransactionActive=true txName=com.petercoders.blog.kcolab.e15.TxSvc.nonSuspendInsertThenFail
+  t=   1 ms  TM ROLLBACK on DefaultDispatcher-worker-1
+  t=   1 ms  caller caught boom in non-suspend
+  rows left in t = []
+
+$ ./gradlew --offline -q kcoLabNoReactor --args='E15'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: (없음) | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+TxSvc bean class = com.petercoders.blog.kcolab.e15.TxSvc$$SpringCGLIB$$0  transactionManager = LoggingTxManager
+(a)(b)(d) @Transactional suspend fun probe(): delay(10) -> withContext(IO)
+  t=   0 ms  caller calls probe() on main
+  t=   1 ms  TM begin    on main
+  t=   2 ms  body first line (before any suspension): thread=main isActualTransactionActive=true txName=com.petercoders.blog.kcolab.e15.TxSvc.probe
+  t=   4 ms  TM COMMIT   on main
+  t=  18 ms  after delay(10): thread=main isActualTransactionActive=false txName=null
+  t=  20 ms  inside withContext(IO): thread=DefaultDispatcher-worker-1 isActualTransactionActive=false txName=null
+  t=  20 ms  body last line: thread=main isActualTransactionActive=false txName=null
+  t=  20 ms  caller resumed after probe()
+(c) @Transactional suspend fun: insert 1 -> delay -> insert 2 -> throw
+  t=   0 ms  TM begin    on main
+  t=   0 ms  inserted 1 (before suspension): thread=main isActualTransactionActive=true txName=com.petercoders.blog.kcolab.e15.TxSvc.insertThenFail
+  t=   0 ms  TM COMMIT   on main
+  t=  12 ms  inserted 2 (after delay): thread=main isActualTransactionActive=false txName=null
+  t=  12 ms  caller caught boom after two inserts
+  rows left in t = [1, 2]
+(e) control: non-suspend @Transactional called inside withContext(IO): insert 11, 12 -> throw
+  t=   0 ms  TM begin    on DefaultDispatcher-worker-1
+  t=   0 ms  non-suspend @Transactional body: thread=DefaultDispatcher-worker-1 isActualTransactionActive=true txName=com.petercoders.blog.kcolab.e15.TxSvc.nonSuspendInsertThenFail
+  t=   1 ms  TM ROLLBACK on DefaultDispatcher-worker-1
+  t=   1 ms  caller caught boom in non-suspend
+  rows left in t = []

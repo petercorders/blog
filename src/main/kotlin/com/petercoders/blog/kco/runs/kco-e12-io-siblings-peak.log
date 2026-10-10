@@ -1,0 +1,34 @@
+# experiment: kco-e12-io-siblings-peak — IoSiblings.kt 를 케이스 인자로 바꿔, 한 JVM 안에서 케이스마다 resetPeakThreadCount() 후 live/peak 를 재고(ALL), 케이스별 별도 JVM 실행(IO/LP256/LP16)도 병행
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:29:59 KST
+# load: 39.71 25.67 14.58  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO IoSiblings.kt -include-runtime -d IoSiblings.jar ; java -cp IoSiblings.jar:$CO IoSiblingsKt ALL ; java -cp IoSiblings.jar:$CO IoSiblingsKt {IO|LP256|LP16}
+=== one JVM, ALL (rep 1) ===
+Dispatchers.IO                 444 ms  distinctWorkers= 64  liveStart=  6  liveEnd= 76  peakAfterReset= 76  (peakBeforeReset=  6)
+IO.limitedParallelism(256)     124 ms  distinctWorkers=256  liveStart= 76  liveEnd=264  peakAfterReset=264  (peakBeforeReset= 76)
+IO.limitedParallelism(16)     1731 ms  distinctWorkers= 16  liveStart=264  liveEnd=264  peakAfterReset=264  (peakBeforeReset=264)
+Default.limitedParallelism(64) === Default ? true
+=== one JVM, ALL (rep 2) ===
+Dispatchers.IO                 454 ms  distinctWorkers= 64  liveStart=  6  liveEnd= 76  peakAfterReset= 76  (peakBeforeReset=  6)
+IO.limitedParallelism(256)     138 ms  distinctWorkers=256  liveStart= 76  liveEnd=265  peakAfterReset=265  (peakBeforeReset= 76)
+IO.limitedParallelism(16)     1732 ms  distinctWorkers= 16  liveStart=265  liveEnd=265  peakAfterReset=265  (peakBeforeReset=265)
+Default.limitedParallelism(64) === Default ? true
+=== one JVM, ALL (rep 3) ===
+Dispatchers.IO                 477 ms  distinctWorkers= 64  liveStart=  6  liveEnd= 74  peakAfterReset= 74  (peakBeforeReset=  6)
+IO.limitedParallelism(256)     162 ms  distinctWorkers=256  liveStart= 74  liveEnd=266  peakAfterReset=266  (peakBeforeReset= 74)
+IO.limitedParallelism(16)     1735 ms  distinctWorkers= 16  liveStart=266  liveEnd=266  peakAfterReset=266  (peakBeforeReset=266)
+Default.limitedParallelism(64) === Default ? true
+=== separate JVM: IO ===
+Dispatchers.IO                 465 ms  distinctWorkers= 64  liveStart=  6  liveEnd= 74  peakAfterReset= 74  (peakBeforeReset=  6)
+=== separate JVM: LP256 ===
+IO.limitedParallelism(256)     178 ms  distinctWorkers=256  liveStart=  6  liveEnd=267  peakAfterReset=267  (peakBeforeReset=  6)
+=== separate JVM: LP16 ===
+IO.limitedParallelism(16)     1748 ms  distinctWorkers= 16  liveStart=  6  liveEnd= 25  peakAfterReset= 25  (peakBeforeReset=  6)
+=== separate JVM: LP16 (rep 2) ===
+IO.limitedParallelism(16)     1726 ms  distinctWorkers= 16  liveStart=  6  liveEnd= 27  peakAfterReset= 27  (peakBeforeReset=  6)

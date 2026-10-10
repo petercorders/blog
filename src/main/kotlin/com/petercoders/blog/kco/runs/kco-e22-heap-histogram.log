@@ -1,0 +1,23 @@
+# experiment: kco-e22-heap-histogram — delay(Long.MAX_VALUE) 로 멈춘 Coroutine 10만 개가 Heap histogram 과 스레드 덤프에 어떻게 보이나(프로그램이 자기 pid 에 jcmd 를 건다)
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:32:40 KST
+# load: 19.93 22.44 14.96  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO HeapCoroutines.kt -include-runtime -d HeapCoroutines.jar && java -cp HeapCoroutines.jar:$CO HeapCoroutinesKt 100000
+launched 100000 coroutines, all suspended in delay(Long.MAX_VALUE); pid=96673
+$ jcmd <pid> GC.class_histogram | grep -E 'HeapCoroutinesKt|StandaloneCoroutine|CancellableContinuationImpl|DispatchedContinuation'
+   1:        100001        4800048  kotlinx.coroutines.CancellableContinuationImpl
+   2:        100001        4800048  kotlinx.coroutines.internal.DispatchedContinuation
+   3:        100000        3200000  HeapCoroutinesKt$main$1$1$1
+   7:        100000        2400000  kotlinx.coroutines.StandaloneCoroutine
+ 200:             2             96  HeapCoroutinesKt$main$1
+$ jcmd <pid> Thread.dump_to_file kco-e22-18010549729870440981.txt
+threads in dump=23  DefaultDispatcher-worker threads=15  lines mentioning HeapCoroutinesKt=3
+  | at HeapCoroutinesKt.jcmd(HeapCoroutines.kt:7)
+  | at HeapCoroutinesKt$main$1.invokeSuspend(HeapCoroutines.kt:18)
+  | at HeapCoroutinesKt.main(HeapCoroutines.kt:10)

@@ -1,0 +1,18 @@
+# experiment: kco-e10-restore-SleepVsDelay — 복원한 kco/SleepVsDelay.kt 재실행(재현 확인). 원 기록값은 jkc/runs/e5.log
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:22:35 KST
+# load: 9.91 8.13 6.73 (실행 직후 uptime, 다른 실험 동시 진행)
+# command: kotlinc -cp $CO SleepVsDelay.kt -include-runtime -d SleepVsDelay.jar && java -cp SleepVsDelay.jar:$CO SleepVsDelayKt  (1회차 아래 첫 줄, 2·3회차는 뒤에 덧붙임)
+limitedParallelism(1): Thread.sleep x100 = 10709 ms, delay x100 = 117 ms
+
+# (추가) 같은 jar 로 2·3회차
+=== run 2 ===
+limitedParallelism(1): Thread.sleep x100 = 16899 ms, delay x100 = 107 ms
+=== run 3 ===
+limitedParallelism(1): Thread.sleep x100 = 10648 ms, delay x100 = 114 ms

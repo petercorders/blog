@@ -1,0 +1,101 @@
+# experiment: kco-e11-nested-runblocking-v2 — limitedParallelism(1) 위에서 중첩 runBlocking 뒤의 형제(A)와 순수 delay 뒤의 형제(B)의 시작 시각을 3회 비교 + bol.com 2스레드 풀 변형(V1/V2) + 같은 context 를 지정한 중첩 runBlocking 교착(V3, 3초 뒤 jcmd Thread.print)
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:29:14 KST
+# load: 75.48 29.03 15.18  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO NestedRunBlocking.kt -include-runtime -d NestedRunBlocking.jar && java -cp NestedRunBlocking.jar:$CO NestedRunBlockingKt ; java -cp NestedRunBlocking.jar:$CO NestedRunBlockingKt deadlock
+$ java -cp NestedRunBlocking.jar:$CO NestedRunBlockingKt
+  inner runBlocking on DefaultDispatcher-worker-1
+A run1 nested runBlocking{delay(300)}: sibling started at 313 ms on DefaultDispatcher-worker-1
+B run1 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+A run2 nested runBlocking{delay(300)}: sibling started at 310 ms on DefaultDispatcher-worker-1
+B run2 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+A run3 nested runBlocking{delay(300)}: sibling started at 305 ms on DefaultDispatcher-worker-1
+B run3 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+bol V1 runBlocking(context){ 3 x launch{ asyncTask(1000) } }
+  Started slow call on pool-1-thread-2
+  Started another slow call on pool-1-thread-1
+  Started yet another slow call on pool-1-thread-2
+  Ended slow call on pool-1-thread-2
+  Ended another slow call on pool-1-thread-1
+  Ended yet another slow call on pool-1-thread-2
+bol V1 Took: 1012ms
+bol V2 runBlocking(context){ 3 x launch{ notSoAsyncTask(1000) = runBlocking{…} } }
+  Started slow call on pool-1-thread-1
+  Started another slow call on pool-1-thread-2
+  Ended slow call on pool-1-thread-1
+  Ended another slow call on pool-1-thread-2
+  Started yet another slow call on pool-1-thread-1
+  Ended yet another slow call on pool-1-thread-1
+bol V2 Took: 8516ms
+
+$ java -cp NestedRunBlocking.jar:$CO NestedRunBlockingKt deadlock
+bol V3 runBlocking(context){ 3 x launch{ blockingAsyncTask(1000) = runBlocking(context){…} } }
+  Started slow call on pool-1-thread-1
+bol V3: no progress after 3000 ms — jcmd 94627 Thread.print (pool-/main 스레드만 발췌)
+  | "main" #3 [10243] prio=5 os_prio=31 cpu=49.30ms elapsed=3.28s tid=0x0000000100d4bf80 nid=10243 waiting on condition  [0x000000016fa66000]
+  |    java.lang.Thread.State: TIMED_WAITING (parking)
+  | 	at jdk.internal.misc.Unsafe.park(java.base@26.0.2.1/Native Method)
+  | 	- parking to wait for  <0x0000000380000d98> (a kotlinx.coroutines.BlockingCoroutine)
+  | 	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@26.0.2.1/LockSupport.java:271)
+  | 	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:97)
+  | 	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+  | 	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+  | 	at NestedRunBlockingKt.deadlock(NestedRunBlocking.kt:59)
+  | 	at NestedRunBlockingKt.main(NestedRunBlocking.kt:28)
+  | …
+  | "pool-1-thread-1" #28 [41731] prio=5 os_prio=31 cpu=5.90ms elapsed=3.23s tid=0x0000000963228000 nid=41731 waiting on condition  [0x000000017267a000]
+  |    java.lang.Thread.State: TIMED_WAITING (parking)
+  | 	at jdk.internal.misc.Unsafe.park(java.base@26.0.2.1/Native Method)
+  | 	- parking to wait for  <0x0000000380575040> (a kotlinx.coroutines.BlockingCoroutine)
+  | 	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@26.0.2.1/LockSupport.java:271)
+  | 	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:97)
+  | 	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+  | 	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+  | 	at NestedRunBlockingKt.blockingAsyncTask(NestedRunBlocking.kt:25)
+  | 	at NestedRunBlockingKt$deadlock$3$1$2.invokeSuspend(NestedRunBlocking.kt:60)
+  | 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+  | 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+  | 	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@26.0.2.1/ThreadPoolExecutor.java:1090)
+  | 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@26.0.2.1/ThreadPoolExecutor.java:614)
+  | …
+  | "pool-1-thread-2" #29 [41219] prio=5 os_prio=31 cpu=0.37ms elapsed=3.22s tid=0x0000000963228800 nid=41219 waiting on condition  [0x0000000172886000]
+  |    java.lang.Thread.State: TIMED_WAITING (parking)
+  | 	at jdk.internal.misc.Unsafe.park(java.base@26.0.2.1/Native Method)
+  | 	- parking to wait for  <0x00000003804f4bc8> (a kotlinx.coroutines.BlockingCoroutine)
+  | 	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@26.0.2.1/LockSupport.java:271)
+  | 	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:97)
+  | 	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+  | 	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+  | 	at NestedRunBlockingKt.blockingAsyncTask(NestedRunBlocking.kt:25)
+  | 	at NestedRunBlockingKt$deadlock$3$1$1.invokeSuspend(NestedRunBlocking.kt:60)
+  | 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+  | 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+  | 	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@26.0.2.1/ThreadPoolExecutor.java:1090)
+  | 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@26.0.2.1/ThreadPoolExecutor.java:614)
+  | …
+(exit=0)
+=== 재실행 2 (같은 jar) — load: 54.87 27.34 14.89
+A run1 nested runBlocking{delay(300)}: sibling started at 310 ms on DefaultDispatcher-worker-1
+B run1 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+A run2 nested runBlocking{delay(300)}: sibling started at 309 ms on DefaultDispatcher-worker-1
+B run2 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+A run3 nested runBlocking{delay(300)}: sibling started at 301 ms on DefaultDispatcher-worker-1
+B run3 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+bol V1 Took: 1014ms
+bol V2 Took: 2012ms
+=== 재실행 3 (같은 jar) — load: 50.72 26.94 14.82
+A run1 nested runBlocking{delay(300)}: sibling started at 313 ms on DefaultDispatcher-worker-1
+B run1 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+A run2 nested runBlocking{delay(300)}: sibling started at 301 ms on DefaultDispatcher-worker-1
+B run2 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+A run3 nested runBlocking{delay(300)}: sibling started at 305 ms on DefaultDispatcher-worker-1
+B run3 plain delay(300)            : sibling started at 0 ms on DefaultDispatcher-worker-1
+bol V1 Took: 1010ms
+bol V2 Took: 2011ms
+# 메모: 첫 실행의 'bol V2 Took: 8516ms' 는 재실행 2·3회(2012·2011ms)와 크게 다르다. 같은 시각 기기 load average 가 50 을 넘을 만큼 다른 실험이 동시에 돌았다(재실행 머리 줄 참고). V2 의 기대 구조(앞 두 개가 병렬, 셋째가 뒤에 시작)는 세 번 모두 같다.

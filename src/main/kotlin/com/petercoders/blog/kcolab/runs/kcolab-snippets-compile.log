@@ -1,0 +1,23 @@
+# experiment: kcolab-snippets-compile — 2편 본문 요지 코드(OrderDao·DispatcherConfig·ItemClient(Semaphore+WebClient)·ExcelJobs(Bean scope)) 컴파일 확인(실행하지 않음)
+# java -version (Gradle toolchain JDK 25, JavaExec 가 쓰는 JVM):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21, Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, Micrometer 1.17.1), sourceSet kcolab (build.gradle.kts)
+# run dir: /tmp/gradle-kco (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:48:08 KST
+# load: 5.37 12.75 17.10  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: ./gradlew --offline compileKcolabKotlin --rerun-tasks -q ; ls build/classes/kotlin/kcolab/com/petercoders/blog/kcolab/snippets/
+(compileKcolabKotlin exit=0)
+DispatcherConfig.class
+ExcelJobs.class
+ExcelJobs$special$$inlined$CoroutineExceptionHandler$1.class
+ExcelJobs$submit$1.class
+Item.class
+ItemClient.class
+ItemClient$call$1.class
+ItemClient$call$lambda$0$$inlined$awaitBody$1.class
+ItemClient$call$lambda$0$$inlined$awaitBody$1$1.class
+OrderDao.class
+OrderDao$count$2.class

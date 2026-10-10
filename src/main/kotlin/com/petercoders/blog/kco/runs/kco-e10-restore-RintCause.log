@@ -1,0 +1,12 @@
+# experiment: kco-e10-restore-RintCause — 복원한 kco/RintCause.kt 재실행(재현 확인). 원 기록값은 kco/runs/kco-e5-rint-cause.log
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:23:25 KST
+# command: kotlinc -cp $CO RintCause.kt -include-runtime -d RintCause.jar && java -cp RintCause.jar:$CO RintCauseKt
+A cancel():    JobCancellationException msg='StandaloneCoroutine was cancelled' cause=null suppressed=0
+B interrupt(): CancellationException msg='Blocking call was interrupted due to parent cancellation' cause=java.lang.InterruptedException: sleep interrupted

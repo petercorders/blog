@@ -1,0 +1,30 @@
+# experiment: kco-e19-scope-link — (a) CoroutineExceptionHandler 가 불리는 위치 (b) launch(SupervisorJob()) 이 scope.cancel() 뒤에도 사는가 (c) 같은 파일을 1.11.0 jar 로 컴파일할 때의 경고
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (실행), 1.11.0 (컴파일 경고 비교용, Maven Central)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:31:35 KST
+# load: 18.28 22.80 14.58  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO ScopeLink.kt -include-runtime -d ScopeLink.jar && java -cp ScopeLink.jar:$CO ScopeLinkKt ; kotlinc -cp kotlinx-coroutines-core-jvm-1.11.0.jar ScopeLink.kt -d l11/
+$ java -cp ScopeLink.jar:$CO ScopeLinkKt
+(a1) root launch(CEH[root]) { launch { throw } }
+  CEH[root] called: child of root
+(a2) root launch { launch(CEH[child]) { throw } }
+  uncaught on DefaultDispatcher-worker-2: IllegalStateException child with its own CEH
+(a3) supervisorScope { launch(CEH[sv-child]) { throw } }
+  CEH[sv-child] called: direct child of supervisorScope
+(a4) root async(CEH[async]) { throw }  then await()
+  await() threw: root async
+(b) scope.launch(SupervisorJob()) survives scope.cancel()
+  after scope.cancel() + 100 ms: tied.isActive=false  detached(SupervisorJob).isActive=true
+
+(c) $ kotlinc -cp kotlinx-coroutines-core-jvm-1.10.2.jar ScopeLink.kt -d l10/   # 경고 출력
+(경고 없음)
+
+(c) $ kotlinc -cp kotlinx-coroutines-core-jvm-1.11.0.jar ScopeLink.kt -d l11/   # 경고 출력
+ScopeLink.kt:25:26: warning: 'fun CoroutineScope.launch(context: Job, start: CoroutineStart = ..., block: suspend CoroutineScope.() -> Unit): Job' is deprecated. Passing a Job to coroutine builders breaks structured concurrency, leading to hard-to-diagnose errors. This pattern should be avoided. This overload will be deprecated with an error in the future.
+    val detached = scope.launch(SupervisorJob()) { delay(Long.MAX_VALUE) }
+                         ^^^^^^

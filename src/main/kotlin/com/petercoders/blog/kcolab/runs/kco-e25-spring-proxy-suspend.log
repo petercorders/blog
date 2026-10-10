@@ -1,0 +1,29 @@
+# experiment: kco-e25-spring-proxy-suspend — @Cacheable(ConcurrentMapCacheManager)·@Async 를 suspend fun 에 붙였을 때(Spring Framework 7.0.9). kotlinx-coroutines-reactor 있는 구성/없는 구성. 각 호출은 3초 join 타임아웃으로 감싼다
+# java -version (Gradle toolchain JDK 25, JavaExec 가 쓰는 JVM):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21, Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, Micrometer 1.17.1), sourceSet kcolab (build.gradle.kts)
+# run dir: /tmp/gradle-kco (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 03:47:27 KST
+# load: 7.05 13.93 17.68  (다른 실험이 같은 기기에서 동시에 돌고 있어 절대 ms 는 부하를 탄다)
+# command: ./gradlew --offline -q kcoLab --args='E25' ; ./gradlew --offline -q kcoLabNoReactor --args='E25'
+
+$ ./gradlew --offline -q kcoLab --args='E25'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+CacheSvc bean = com.petercoders.blog.kcolab.e25.CacheSvc$$SpringCGLIB$$0 | AsyncSvc bean = com.petercoders.blog.kcolab.e25.AsyncSvc$$SpringCGLIB$$0
+@Cacheable suspend fun item(1) call 1: item-1
+  bodyCalls=1  cache 'items' after call 1 = {1=item-1 (java.lang.String)}
+@Cacheable suspend fun item(1) call 2: item-1
+  bodyCalls=1  cache 'items' after call 2 = {1=item-1 (java.lang.String)}
+@Async suspend fun work(): threw java.lang.IllegalArgumentException: Invalid return type for async method (only Future and void supported): class java.lang.Object
+
+$ ./gradlew --offline -q kcoLabNoReactor --args='E25'
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: (없음) | HikariCP-7.0.2.jar | micrometer-core-1.17.1.jar | kotlin-stdlib-2.3.21.jar
+CacheSvc bean = com.petercoders.blog.kcolab.e25.CacheSvc$$SpringCGLIB$$0 | AsyncSvc bean = com.petercoders.blog.kcolab.e25.AsyncSvc$$SpringCGLIB$$0
+@Cacheable suspend fun item(1) call 1: item-1
+  bodyCalls=1  cache 'items' after call 1 = {1=COROUTINE_SUSPENDED (kotlin.coroutines.intrinsics.CoroutineSingletons)}
+@Cacheable suspend fun item(1) call 2: 3초 안에 재개되지 않음(호출한 Coroutine 이 멈춘 채 남음)
+  bodyCalls=1  cache 'items' after call 2 = {1=COROUTINE_SUSPENDED (kotlin.coroutines.intrinsics.CoroutineSingletons)}
+@Async suspend fun work(): threw java.lang.IllegalArgumentException: Invalid return type for async method (only Future and void supported): class java.lang.Object
