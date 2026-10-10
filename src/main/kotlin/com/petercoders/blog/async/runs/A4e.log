@@ -1,0 +1,30 @@
+# experiment: A4e — spring.threads.virtual.enabled=true 에서 4초 @Async, 1초 뒤 close(): (1) 기본 (2) await-termination=true + period=10s (3) await-termination=true 만 (4) simple.cancel-remaining-tasks-on-close=true
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A4e'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:50:34 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 24235
+## [A4e-1] VT on · 기본값
+applicationTaskExecutor class=org.springframework.core.task.SimpleAsyncTaskExecutor
+close() 호출 t=1007ms
+close() 반환 t=1010ms
+close 직후: started=1 finished=0 interrupted=0 h2Rows=0
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
+## [A4e-2] VT on · await-termination=true · period=10s
+applicationTaskExecutor class=org.springframework.core.task.SimpleAsyncTaskExecutor
+close() 호출 t=1007ms
+close() 반환 t=4011ms
+close 직후: started=1 finished=1 interrupted=0 h2Rows=1
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
+## [A4e-3] VT on · await-termination=true 만
+applicationTaskExecutor class=org.springframework.core.task.SimpleAsyncTaskExecutor
+close() 호출 t=1003ms
+close() 반환 t=1004ms
+close 직후: started=1 finished=0 interrupted=0 h2Rows=0
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
+## [A4e-4] VT on · spring.task.execution.simple.cancel-remaining-tasks-on-close=true
+applicationTaskExecutor class=org.springframework.core.task.SimpleAsyncTaskExecutor
+close() 호출 t=1006ms
+close() 반환 t=1007ms
+close 직후: started=1 finished=0 interrupted=1 h2Rows=0
+5초 뒤: started=1 finished=0 interrupted=1 h2Rows=0

@@ -1,0 +1,29 @@
+# experiment: A4c — 종료 phase timeout: (a) timeout-per-shutdown-phase=2s 에서 4초 @Async, 1초 뒤 close() / (b) @Scheduled(fixedRate=10000) 4초 잡이 1초째 돌 때 close(), phase 기본(Boot 30s)과 2s. DefaultLifecycleProcessor INFO
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A4c'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:49:37 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 22567
+## [A4c-a] timeout-per-shutdown-phase=2s · 4초 @Async, 1초 뒤 close()
+close() 호출 t=1003ms
+2026-10-08T10:49:42.364+09:00  INFO 22567 --- [blog] [           main] o.s.c.support.DefaultLifecycleProcessor  : Shutdown phase 1073741823 ends with 1 bean still running after timeout of 2000ms: [applicationTaskExecutor]
+close() 반환 t=3015ms
+close 직후: started=1 finished=0 interrupted=1 h2Rows=0
+5초 뒤: started=1 finished=0 interrupted=1 h2Rows=0
+## [A4c-b30] @Scheduled(fixedRate=10000) 4초 잡이 도는 중 close() · phase timeout=기본(Boot 30s)
+close 직후: started=1 finished=1 interrupted=0 h2Rows=1
+t=  168ms -- refresh 끝 (t=168ms)
+t=  170ms four   start thread=scheduling-1
+t= 1171ms -- close() 호출 (t=1171ms)
+t= 4175ms four   end   thread=scheduling-1
+t= 4177ms -- close() 반환 (t=4177ms)
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
+## [A4c-b2] @Scheduled(fixedRate=10000) 4초 잡이 도는 중 close() · phase timeout=2s
+2026-10-08T10:49:59.699+09:00  INFO 22567 --- [blog] [           main] o.s.c.support.DefaultLifecycleProcessor  : Shutdown phase 1073741823 ends with 1 bean still running after timeout of 2000ms: [taskScheduler]
+close 직후: started=1 finished=0 interrupted=1 h2Rows=0
+t=  105ms four   start thread=scheduling-1
+t=  105ms -- refresh 끝 (t=105ms)
+t= 1106ms -- close() 호출 (t=1106ms)
+t= 3112ms four   intr  thread=scheduling-1
+t= 3112ms -- close() 반환 (t=3112ms)
+5초 뒤: started=1 finished=0 interrupted=1 h2Rows=0

@@ -1,0 +1,20 @@
+# experiment: A2g — Transaction 안에서 부른 @Async 는 커밋 전에 돈다 / @TransactionalEventListener(AFTER_COMMIT) + @Async / 롤백 / Transaction 밖 publish (H2 orders 테이블, 세는 쪽은 별도 커넥션)
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A2g'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:46:33 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 19716
+## [A2g] Transaction 안에서 부른 @Async 와 @TransactionalEventListener(AFTER_COMMIT)
+-- (1) insert → @Async countRowsLater() → publish → 1초 sleep → commit
+  commit 직전 호출 스레드가 보는 행 수(같은 Transaction) = 1
+  @Async countRowsLater() 결과 = rows=0 thread=task-1
+  fallbackExecution=true 리스너 tag=commit thread=main
+  AFTER_COMMIT @Async 리스너 tag=commit rows=1 thread=task-2
+  커밋 뒤 행 수 = 1
+-- (2) 같은 흐름을 setRollbackOnly 로 롤백
+  @Async 부수효과 실행 횟수 = 1
+  @Async sideEffect(rollback) 실행 thread=task-3
+  리스너 실행 줄 수 = 0
+  롤백 뒤 행 수 = 1 (1 이면 o2 는 남지 않았다)
+-- (3) Transaction 밖에서 publish
+  fallbackExecution=true 리스너 tag=no-tx thread=main

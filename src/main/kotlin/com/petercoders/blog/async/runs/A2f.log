@@ -1,0 +1,14 @@
+# experiment: A2f — 같은 풀 안에서 결과를 기다리기: core-size=2, outer @Async 2건이 같은 실행자의 inner @Async 를 get(3s) 로 기다린다 / inner 를 다른 실행자로 나눈 비교
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A2f'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:46:00 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 18194
+## [A2f] core-size=2 · outer @Async 2건이 같은 실행자의 inner @Async 를 get(3s) 로 기다린다
+  같은 실행자: outer@task-1 java.util.concurrent.TimeoutException (3004ms)
+  같은 실행자: outer@task-2 java.util.concurrent.TimeoutException (3003ms)
+  두 outer 가 끝난 시각 t=3006ms
+## [A2f-b] inner 를 @Async("innerExecutor") 로 나눈 같은 구조
+  나눈 실행자: outer@task-2 inner 결과=inner-1 (2ms)
+  나눈 실행자: outer@task-1 inner 결과=inner-2 (2ms)
+  두 outer 가 끝난 시각 t=2ms

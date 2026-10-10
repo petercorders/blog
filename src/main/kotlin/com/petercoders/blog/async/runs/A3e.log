@@ -1,0 +1,286 @@
+# experiment: A3e — 겹침과 제한 수단: VT on(SimpleAsyncTaskScheduler)에서 delta(fixedRate 2s, 본문 3s)·epsil(cron */2, 본문 3s)·zeta(fixedRate 2s, 본문 0.1s) / (a) scheduling.simple.concurrency-limit=1 / (b) @ConcurrencyLimit(1) / (c) policy=REJECT / (d) VT off + @Async @Scheduled. 조건마다 JVM 을 따로 띄우고 close() 반환 뒤 4초 더 관측한다
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3e 0'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:47:55 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 21156
+## [A3e-0] VT on · 제한 없음 · delta(fixedRate 2s, 3s) epsil(cron */2, 3s) zeta(fixedRate 2s, 0.1s)
+t=  725ms delta  start thread=scheduling-3
+t=  725ms zeta   start thread=scheduling-2
+t=  830ms zeta   end   thread=scheduling-2
+t= 1353ms epsil  start thread=scheduling-4
+t= 2724ms zeta   start thread=scheduling-5
+t= 2724ms delta  start thread=scheduling-6
+t= 2829ms zeta   end   thread=scheduling-5
+t= 3353ms epsil  start thread=scheduling-7
+t= 3727ms delta  end   thread=scheduling-3
+t= 4358ms epsil  end   thread=scheduling-4
+t= 4725ms zeta   start thread=scheduling-8
+t= 4725ms delta  start thread=scheduling-9
+t= 4828ms zeta   end   thread=scheduling-8
+t= 5354ms epsil  start thread=scheduling-10
+t= 5728ms delta  end   thread=scheduling-6
+t= 6354ms epsil  end   thread=scheduling-7
+t= 6724ms delta  start thread=scheduling-12
+t= 6724ms zeta   start thread=scheduling-11
+t= 6828ms zeta   end   thread=scheduling-11
+t= 7354ms epsil  start thread=scheduling-13
+t= 7730ms delta  end   thread=scheduling-9
+t= 8358ms epsil  end   thread=scheduling-10
+t= 8722ms delta  start thread=scheduling-15
+t= 8722ms zeta   start thread=scheduling-14
+t= 8827ms zeta   end   thread=scheduling-14
+t= 9353ms epsil  start thread=scheduling-16
+t= 9729ms delta  end   thread=scheduling-12
+t=10359ms epsil  end   thread=scheduling-13
+t=10725ms delta  start thread=scheduling-18
+t=10725ms zeta   start thread=scheduling-17
+t=10826ms zeta   end   thread=scheduling-17
+t=11357ms epsil  start thread=scheduling-19
+t=11728ms delta  end   thread=scheduling-15
+t=11728ms -- close() 호출 (t=11728ms)
+t=11736ms -- close() 반환 (t=11736ms)
+t=12359ms epsil  end   thread=scheduling-16
+t=13730ms delta  end   thread=scheduling-18
+t=14360ms epsil  end   thread=scheduling-19
+t=15748ms -- 관측 끝(close 반환 4000ms 뒤) (t=15748ms)
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3e a'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:48:12 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 21319
+## [A3e-a] VT on · spring.task.scheduling.simple.concurrency-limit=1
+2026-10-08T10:48:24.740+09:00 ERROR 21319 --- [blog] [   scheduling-1] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+org.springframework.core.task.TaskRejectedException: Thread was interrupted while waiting for access but concurrency limit still does not allow for entering
+	at org.springframework.core.task.SimpleAsyncTaskExecutor$ConcurrencyThrottleAdapter.onAccessRejected(SimpleAsyncTaskExecutor.java:454) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.onLimitReached(ConcurrencyThrottleSupport.java:149) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.core.task.SimpleAsyncTaskExecutor$ConcurrencyThrottleAdapter.onLimitReached(SimpleAsyncTaskExecutor.java:449) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.beforeAccess(ConcurrencyThrottleSupport.java:127) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.core.task.SimpleAsyncTaskExecutor$ConcurrencyThrottleAdapter.beforeAccess(SimpleAsyncTaskExecutor.java:441) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.core.task.SimpleAsyncTaskExecutor.execute(SimpleAsyncTaskExecutor.java:320) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.core.task.SimpleAsyncTaskExecutor.execute(SimpleAsyncTaskExecutor.java:297) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler.execute(SimpleAsyncTaskScheduler.java:256) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler.lambda$scheduledTask$0(SimpleAsyncTaskScheduler.java:238) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.concurrent.ReschedulingRunnable.run(ReschedulingRunnable.java:94) ~[spring-context-7.0.9.jar:7.0.9]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328) ~[na:na]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614) ~[na:na]
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:460) ~[na:na]
+
+t=  688ms zeta   start thread=scheduling-2
+t=  791ms zeta   end   thread=scheduling-2
+t=  793ms delta  start thread=scheduling-3
+t= 3798ms delta  end   thread=scheduling-3
+t= 3799ms epsil  start thread=scheduling-4
+t= 6800ms epsil  end   thread=scheduling-4
+t= 6801ms zeta   start thread=scheduling-5
+t= 6906ms zeta   end   thread=scheduling-5
+t= 6907ms delta  start thread=scheduling-6
+t= 9909ms delta  end   thread=scheduling-6
+t= 9910ms zeta   start thread=scheduling-7
+t=10013ms zeta   end   thread=scheduling-7
+t=10014ms delta  start thread=scheduling-8
+t=11690ms -- close() 호출 (t=11689ms)
+t=11705ms -- close() 반환 (t=11705ms)
+t=13018ms delta  end   thread=scheduling-8
+t=15710ms -- 관측 끝(close 반환 4000ms 뒤) (t=15710ms)
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3e b'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:48:28 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 21485
+## [A3e-b] VT on · @EnableResilientMethods + delta·epsil 에 @ConcurrencyLimit(1) (policy BLOCK)
+t=  677ms zeta   start thread=scheduling-2
+t=  678ms delta  start thread=scheduling-3
+t=  783ms zeta   end   thread=scheduling-2
+t= 2524ms epsil  start thread=scheduling-4
+t= 2676ms zeta   start thread=scheduling-5
+t= 2778ms zeta   end   thread=scheduling-5
+t= 3683ms delta  end   thread=scheduling-3
+t= 3684ms delta  start thread=scheduling-6
+t= 4676ms zeta   start thread=scheduling-8
+t= 4781ms zeta   end   thread=scheduling-8
+t= 5529ms epsil  end   thread=scheduling-4
+t= 5530ms epsil  start thread=scheduling-7
+t= 6678ms zeta   start thread=scheduling-11
+t= 6685ms delta  end   thread=scheduling-6
+t= 6685ms delta  start thread=scheduling-9
+t= 6779ms zeta   end   thread=scheduling-11
+t= 8530ms epsil  end   thread=scheduling-7
+t= 8530ms epsil  start thread=scheduling-10
+t= 8677ms zeta   start thread=scheduling-14
+t= 8778ms zeta   end   thread=scheduling-14
+t= 9688ms delta  end   thread=scheduling-9
+t= 9688ms delta  start thread=scheduling-12
+t=10680ms zeta   start thread=scheduling-17
+t=10783ms zeta   end   thread=scheduling-17
+t=11535ms epsil  end   thread=scheduling-10
+t=11536ms epsil  start thread=scheduling-13
+t=11681ms -- close() 호출 (t=11681ms)
+t=11701ms -- close() 반환 (t=11701ms)
+t=12693ms delta  end   thread=scheduling-12
+t=12694ms delta  start thread=scheduling-15
+t=14541ms epsil  end   thread=scheduling-13
+t=14541ms epsil  start thread=scheduling-16
+t=15695ms delta  end   thread=scheduling-15
+t=15695ms delta  start thread=scheduling-18
+t=15715ms -- 관측 끝(close 반환 4000ms 뒤) (t=15715ms)
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3e c'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:48:55 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 21958
+## [A3e-c] VT on · @ConcurrencyLimit(limit=1, policy=REJECT)
+2026-10-08T10:48:58.505+09:00 ERROR 21958 --- [blog] [   scheduling-6] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+org.springframework.resilience.InvocationRejectedException: Concurrency limit reached: 1 - not allowed to enter com.petercoders.blog.async.OverlapReject.delta
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ResilienceConcurrencyThrottleInterceptor.onAccessRejected(ConcurrencyLimitBeanPostProcessor.java:171) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$RejectingConcurrencyThrottleInterceptor.onLimitReached(ConcurrencyLimitBeanPostProcessor.java:184) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.beforeAccess(ConcurrencyThrottleSupport.java:127) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.ConcurrencyThrottleInterceptor.invoke(ConcurrencyThrottleInterceptor.java:67) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ConcurrencyLimitInterceptor.invoke(ConcurrencyLimitBeanPostProcessor.java:132) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.async.OverlapReject$$SpringCGLIB$$0.delta(<generated>) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at io.micrometer.observation.Observation.observe(Observation.java:569) ~[micrometer-observation-1.17.1.jar:1.17.1]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-7.0.9.jar:7.0.9]
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:460) ~[na:na]
+
+2026-10-08T10:49:00.001+09:00 ERROR 21958 --- [blog] [   scheduling-7] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+org.springframework.resilience.InvocationRejectedException: Concurrency limit reached: 1 - not allowed to enter com.petercoders.blog.async.OverlapReject.epsilon
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ResilienceConcurrencyThrottleInterceptor.onAccessRejected(ConcurrencyLimitBeanPostProcessor.java:171) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$RejectingConcurrencyThrottleInterceptor.onLimitReached(ConcurrencyLimitBeanPostProcessor.java:184) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.beforeAccess(ConcurrencyThrottleSupport.java:127) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.ConcurrencyThrottleInterceptor.invoke(ConcurrencyThrottleInterceptor.java:67) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ConcurrencyLimitInterceptor.invoke(ConcurrencyLimitBeanPostProcessor.java:132) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.async.OverlapReject$$SpringCGLIB$$0.epsilon(<generated>) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at io.micrometer.observation.Observation.observe(Observation.java:569) ~[micrometer-observation-1.17.1.jar:1.17.1]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-7.0.9.jar:7.0.9]
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:460) ~[na:na]
+
+2026-10-08T10:49:02.504+09:00 ERROR 21958 --- [blog] [  scheduling-12] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+org.springframework.resilience.InvocationRejectedException: Concurrency limit reached: 1 - not allowed to enter com.petercoders.blog.async.OverlapReject.delta
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ResilienceConcurrencyThrottleInterceptor.onAccessRejected(ConcurrencyLimitBeanPostProcessor.java:171) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$RejectingConcurrencyThrottleInterceptor.onLimitReached(ConcurrencyLimitBeanPostProcessor.java:184) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.beforeAccess(ConcurrencyThrottleSupport.java:127) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.ConcurrencyThrottleInterceptor.invoke(ConcurrencyThrottleInterceptor.java:67) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ConcurrencyLimitInterceptor.invoke(ConcurrencyLimitBeanPostProcessor.java:132) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.async.OverlapReject$$SpringCGLIB$$0.delta(<generated>) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at io.micrometer.observation.Observation.observe(Observation.java:569) ~[micrometer-observation-1.17.1.jar:1.17.1]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-7.0.9.jar:7.0.9]
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:460) ~[na:na]
+
+2026-10-08T10:49:04.002+09:00 ERROR 21958 --- [blog] [  scheduling-13] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+org.springframework.resilience.InvocationRejectedException: Concurrency limit reached: 1 - not allowed to enter com.petercoders.blog.async.OverlapReject.epsilon
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ResilienceConcurrencyThrottleInterceptor.onAccessRejected(ConcurrencyLimitBeanPostProcessor.java:171) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$RejectingConcurrencyThrottleInterceptor.onLimitReached(ConcurrencyLimitBeanPostProcessor.java:184) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.beforeAccess(ConcurrencyThrottleSupport.java:127) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.ConcurrencyThrottleInterceptor.invoke(ConcurrencyThrottleInterceptor.java:67) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ConcurrencyLimitInterceptor.invoke(ConcurrencyLimitBeanPostProcessor.java:132) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.async.OverlapReject$$SpringCGLIB$$0.epsilon(<generated>) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at io.micrometer.observation.Observation.observe(Observation.java:569) ~[micrometer-observation-1.17.1.jar:1.17.1]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-7.0.9.jar:7.0.9]
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:460) ~[na:na]
+
+2026-10-08T10:49:06.507+09:00 ERROR 21958 --- [blog] [  scheduling-18] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+org.springframework.resilience.InvocationRejectedException: Concurrency limit reached: 1 - not allowed to enter com.petercoders.blog.async.OverlapReject.delta
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ResilienceConcurrencyThrottleInterceptor.onAccessRejected(ConcurrencyLimitBeanPostProcessor.java:171) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$RejectingConcurrencyThrottleInterceptor.onLimitReached(ConcurrencyLimitBeanPostProcessor.java:184) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.util.ConcurrencyThrottleSupport.beforeAccess(ConcurrencyThrottleSupport.java:127) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.ConcurrencyThrottleInterceptor.invoke(ConcurrencyThrottleInterceptor.java:67) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.resilience.annotation.ConcurrencyLimitBeanPostProcessor$ConcurrencyLimitInterceptor.invoke(ConcurrencyLimitBeanPostProcessor.java:132) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.async.OverlapReject$$SpringCGLIB$$0.delta(<generated>) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.runInternal(ScheduledMethodRunnable.java:128) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.lambda$run$1(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at io.micrometer.observation.Observation.observe(Observation.java:569) ~[micrometer-observation-1.17.1.jar:1.17.1]
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:122) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.config.Task$OutcomeTrackingRunnable.run(Task.java:88) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-7.0.9.jar:7.0.9]
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:460) ~[na:na]
+
+t=  873ms zeta   start thread=scheduling-2
+t=  874ms delta  start thread=scheduling-3
+t=  977ms zeta   end   thread=scheduling-2
+t= 2368ms epsil  start thread=scheduling-4
+t= 2865ms zeta   start thread=scheduling-5
+t= 2966ms zeta   end   thread=scheduling-5
+t= 3878ms delta  end   thread=scheduling-3
+t= 4869ms delta  start thread=scheduling-9
+t= 4869ms zeta   start thread=scheduling-8
+t= 4972ms zeta   end   thread=scheduling-8
+t= 5372ms epsil  end   thread=scheduling-4
+t= 6363ms epsil  start thread=scheduling-10
+t= 6866ms zeta   start thread=scheduling-11
+t= 6966ms zeta   end   thread=scheduling-11
+t= 7874ms delta  end   thread=scheduling-9
+t= 8867ms delta  start thread=scheduling-15
+t= 8867ms zeta   start thread=scheduling-14
+t= 8973ms zeta   end   thread=scheduling-14
+t= 9367ms epsil  end   thread=scheduling-10
+t=10366ms epsil  start thread=scheduling-16
+t=10869ms zeta   start thread=scheduling-17
+t=10974ms zeta   end   thread=scheduling-17
+t=11870ms delta  end   thread=scheduling-15
+t=11873ms -- close() 호출 (t=11873ms)
+t=11875ms -- close() 반환 (t=11875ms)
+t=13368ms epsil  end   thread=scheduling-16
+t=15882ms -- 관측 끝(close 반환 4000ms 뒤) (t=15882ms)
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3e d'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:49:11 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 22166
+## [A3e-d] VT off(ThreadPoolTaskScheduler 기본) · @Async + @Scheduled(fixedRate 2s), 본문 3s
+t=  678ms delta  start thread=task-1
+t= 2677ms delta  start thread=task-2
+t= 3680ms delta  end   thread=task-1
+t= 4679ms delta  start thread=task-3
+t= 5678ms delta  end   thread=task-2
+t= 6679ms delta  start thread=task-4
+t= 7680ms delta  end   thread=task-3
+t= 8678ms delta  start thread=task-5
+t= 9680ms delta  end   thread=task-4
+t=10681ms delta  start thread=task-6
+t=11681ms -- close() 호출 (t=11681ms)
+t=11683ms delta  end   thread=task-5
+t=13683ms delta  end   thread=task-6
+t=13684ms -- close() 반환 (t=13684ms)
+t=17692ms -- 관측 끝(close 반환 4000ms 뒤) (t=17692ms)

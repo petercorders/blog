@@ -1,0 +1,61 @@
+# experiment: A4f — 실제 SIGTERM 경로: web(server.port=0, server.shutdown=graceful, timeout-per-shutdown-phase=3s). /slow 는 8초 @Async 를 넘기고 자신은 5초 걸린다. 요청 1초 뒤 kill -TERM. platform 기본과 spring.threads.virtual.enabled=true
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인 JDK 25 를 직접 실행(아래 '# runtime:' 줄이 실제 JVM)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && CP=$(./gradlew --offline -q asyncLabClasspath) && python3 src/main/kotlin/com/petercoders/blog/async/a4f_sigterm.py /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java "$CP" platform · 2026-10-08 10:55:21 KST
+[   107ms] jvm| # runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+[   116ms] jvm| # runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 28944
+[  1424ms] jvm| 2026-10-08T10:55:22.575+09:00  WARN 28944 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+[  1424ms] jvm| 
+[  1424ms] jvm| Using generated security password: 16aab362-9be6-4988-bc36-2e55eeba0c2c
+[  1424ms] jvm| 
+[  1424ms] jvm| This generated password is for development use only. Your security configuration must be updated before running your application in production.
+[  1424ms] jvm| 
+[  1645ms] jvm| applicationTaskExecutor class=org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+[  1646ms] jvm| SmartLifecycle bean=applicationTaskExecutor class=ThreadPoolTaskExecutor phase=1073741823
+[  1646ms] jvm| SmartLifecycle bean=taskScheduler class=ThreadPoolTaskScheduler phase=1073741823
+[  1646ms] jvm| SmartLifecycle bean=springBootLoggingLifecycle class=Lifecycle phase=-2147483647
+[  1646ms] jvm| SmartLifecycle bean=webServerGracefulShutdown class=WebServerGracefulShutdownLifecycle phase=2147482623
+[  1646ms] jvm| SmartLifecycle bean=webServerStartStop class=WebServerStartStopLifecycle phase=2147481599
+[  1646ms] jvm| A4F_PORT=54148
+[  1646ms] script| GET /slow 시작 (port=54148)
+[  1646ms] jvm| A4F_PID=28944
+[  1700ms] jvm| [job] start thread=task-1 virtual=false
+[  2650ms] script| kill -TERM 28944
+[  2654ms] jvm| 2026-10-08T10:55:23.806+09:00  INFO 28944 --- [blog] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+[  5675ms] jvm| 2026-10-08T10:55:26.827+09:00  INFO 28944 --- [blog] [ionShutdownHook] o.s.c.support.DefaultLifecycleProcessor  : Shutdown phase 2147482623 ends with 1 bean still running after timeout of 3000ms: [webServerGracefulShutdown]
+[  5676ms] script| /slow 응답: RemoteDisconnected: Remote end closed connection without response
+[  5677ms] jvm| [slow] interrupted
+[  5679ms] jvm| 2026-10-08T10:55:26.830+09:00  INFO 28944 --- [blog] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown aborted with one or more requests still active
+[  8702ms] jvm| 2026-10-08T10:55:29.849+09:00  INFO 28944 --- [blog] [ionShutdownHook] o.s.c.support.DefaultLifecycleProcessor  : Shutdown phase 1073741823 ends with 1 bean still running after timeout of 3000ms: [applicationTaskExecutor]
+[  8710ms] jvm| [job] interrupted
+[  8792ms] script| 프로세스 종료 exit=143
+[  8792ms] script| SIGTERM → 프로세스 종료 = 6142ms
+[  8792ms] script| 마커 파일(/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/a4f-marker-platform-28942.txt) = 없음
+
+# command: cd /tmp/gradle-async && CP=$(./gradlew --offline -q asyncLabClasspath) && python3 src/main/kotlin/com/petercoders/blog/async/a4f_sigterm.py /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java "$CP" vt · 2026-10-08 10:55:36 KST
+[    98ms] jvm| # runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+[   106ms] jvm| # runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 29084
+[  1395ms] jvm| 2026-10-08T10:55:38.271+09:00  WARN 29084 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+[  1395ms] jvm| 
+[  1395ms] jvm| Using generated security password: 7249fbe1-d170-424e-b7b1-ba06215292ef
+[  1395ms] jvm| 
+[  1395ms] jvm| This generated password is for development use only. Your security configuration must be updated before running your application in production.
+[  1395ms] jvm| 
+[  1612ms] jvm| applicationTaskExecutor class=org.springframework.core.task.SimpleAsyncTaskExecutor
+[  1612ms] jvm| SmartLifecycle bean=taskScheduler class=SimpleAsyncTaskScheduler phase=1073741823
+[  1612ms] jvm| SmartLifecycle bean=springBootLoggingLifecycle class=Lifecycle phase=-2147483647
+[  1612ms] jvm| SmartLifecycle bean=webServerGracefulShutdown class=WebServerGracefulShutdownLifecycle phase=2147482623
+[  1612ms] jvm| SmartLifecycle bean=webServerStartStop class=WebServerStartStopLifecycle phase=2147481599
+[  1613ms] jvm| A4F_PORT=54209
+[  1613ms] jvm| A4F_PID=29084
+[  1613ms] script| GET /slow 시작 (port=54209)
+[  1663ms] jvm| [job] start thread=task-1 virtual=true
+[  2618ms] script| kill -TERM 29084
+[  2621ms] jvm| 2026-10-08T10:55:39.498+09:00  INFO 29084 --- [blog] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+[  5642ms] jvm| 2026-10-08T10:55:42.516+09:00  INFO 29084 --- [blog] [ionShutdownHook] o.s.c.support.DefaultLifecycleProcessor  : Shutdown phase 2147482623 ends with 1 bean still running after timeout of 3000ms: [webServerGracefulShutdown]
+[  5645ms] script| /slow 응답: RemoteDisconnected: Remote end closed connection without response
+[  5679ms] jvm| 2026-10-08T10:55:42.556+09:00  INFO 29084 --- [blog] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown aborted with one or more requests still active
+[  6666ms] jvm| [slow] done
+[  6815ms] script| 프로세스 종료 exit=143
+[  6816ms] script| SIGTERM → 프로세스 종료 = 4198ms
+[  6816ms] script| 마커 파일(/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/a4f-marker-vt-29083.txt) = 없음

@@ -1,0 +1,39 @@
+# experiment: A2e — MDC·SecurityContext·Transaction 이 @Async 로 넘어가는가 / TaskDecorator Bean 이 어느 실행자에 붙는가 / propagate-context
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A2e'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:45:49 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 17953
+## [A2e-a] 기본값 — MDC·SecurityContext·Transaction 이 @Async 로 넘어가는가
+  호출 스레드      : thread=main MDC.traceId=t-42 auth=kim txActive=true
+  applicationTaskExecutor: thread=task-1 MDC.traceId=null auth=null txActive=false
+## [A2e-b] MDC 복사 TaskDecorator Bean 등록 — 어느 실행자에 붙는가
+  plainPool core=8 / builderPool core=8
+  applicationTaskExecutor 빈 존재 = true
+  호출 스레드      : thread=main MDC.traceId=t-42 auth=kim txActive=true
+  applicationTaskExecutor: thread=task-1 MDC.traceId=t-42 auth=null txActive=false
+  plainPool(new)         : thread=plain-1 MDC.traceId=null auth=null txActive=false
+  builderPool(builder)   : thread=builder-1 MDC.traceId=t-42 auth=null txActive=false
+## [A2e-c] spring.task.execution.propagate-context=true, io.micrometer:context-propagation 없음
+  클래스패스에 io.micrometer.context.ContextSnapshot = false
+  containsBean("contextPropagatingTaskDecorator") = false
+  호출 스레드      : thread=main MDC.traceId=t-42 auth=kim txActive=true
+  applicationTaskExecutor: thread=task-1 MDC.traceId=null auth=null txActive=false
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLabCtx --args='A2eCtx'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:45:58 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 18155
+## [A2e-d] io.micrometer:context-propagation 있음 · propagate-context 미설정
+  클래스패스에 io.micrometer.context.ContextSnapshot = true
+  containsBean("contextPropagatingTaskDecorator") = false
+  호출 스레드      : thread=main MDC.traceId=t-42 auth=kim txActive=true
+  applicationTaskExecutor: thread=task-1 MDC.traceId=null auth=null txActive=false
+## [A2e-e] io.micrometer:context-propagation 있음 · spring.task.execution.propagate-context=true
+  ContextRegistry 에 등록된 ThreadLocalAccessor key = [interface org.springframework.web.server.ServerWebExchange, interface org.springframework.security.core.context.SecurityContext, org.springframework.security.core.context.SecurityContext, micrometer.observation]
+  containsBean("contextPropagatingTaskDecorator") = true class=org.springframework.core.task.support.ContextPropagatingTaskDecorator
+  호출 스레드      : thread=main MDC.traceId=t-42 auth=kim txActive=true
+  applicationTaskExecutor: thread=task-1 MDC.traceId=null auth=kim txActive=false
+## [A2e-f] 같은 컨텍스트에서 MDC 'traceId' accessor 를 ContextRegistry 에 등록한 뒤
+  ContextRegistry 에 등록된 ThreadLocalAccessor key = [interface org.springframework.web.server.ServerWebExchange, interface org.springframework.security.core.context.SecurityContext, org.springframework.security.core.context.SecurityContext, micrometer.observation, traceId]
+  호출 스레드      : thread=main MDC.traceId=t-42 auth=kim txActive=true
+  applicationTaskExecutor: thread=task-2 MDC.traceId=t-42 auth=kim txActive=false

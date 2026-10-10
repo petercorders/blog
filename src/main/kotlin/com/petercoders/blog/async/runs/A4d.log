@@ -1,0 +1,22 @@
+# experiment: A4d — 4초 @Async, 1초 뒤 close(): (1) await-termination=true + period=1s (2) await-termination=true 만 (3) pool.shutdown.accept-tasks-after-context-close=true. close() 호출·반환 ms, 직후·5초 뒤 카운터
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A4d'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:50:12 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 23396
+## [A4d-1] await-termination=true · await-termination-period=1s
+close() 호출 t=1003ms
+2026-10-08T10:50:16.624+09:00  WARN 23396 --- [blog] [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Timed out while waiting for executor 'applicationTaskExecutor' to terminate
+close() 반환 t=2014ms
+close 직후: started=1 finished=0 interrupted=0 h2Rows=0
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
+## [A4d-2] await-termination=true 만 (period 없음)
+close() 호출 t=1004ms
+close() 반환 t=1006ms
+close 직후: started=1 finished=0 interrupted=0 h2Rows=0
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
+## [A4d-3] spring.task.execution.pool.shutdown.accept-tasks-after-context-close=true
+close() 호출 t=1004ms
+close() 반환 t=1006ms
+close 직후: started=1 finished=0 interrupted=1 h2Rows=0
+5초 뒤: started=1 finished=0 interrupted=1 h2Rows=0

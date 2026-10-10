@@ -1,0 +1,39 @@
+# experiment: A1d — 풀과 큐: hold() 를 CountDownLatch 로 붙잡고 300ms 뒤 applicationTaskExecutor 의 poolSize·activeCount·queueSize 를 읽는다
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A1d'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:44:56 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 16659
+## [A1d-1] 기본값 · 20건
+  설정: core=8 max=2147483647 queueCapacity=2147483647
+  제출 20건 → 300ms 뒤 poolSize=8 activeCount=8 queueSize=12
+  호출자가 받은 것: future 20건, 예외 없음
+  latch 해제 후 완료 20건, 쓰인 스레드 8개: [task-1, task-2, task-3, task-4, task-5, task-6, task-7, task-8]
+## [A1d-2] queue-capacity=4 · max-size=16 · 20건
+  설정: core=8 max=16 queueCapacity=4
+  제출 20건 → 300ms 뒤 poolSize=16 activeCount=16 queueSize=4
+  호출자가 받은 것: future 20건, 예외 없음
+  latch 해제 후 완료 20건, 쓰인 스레드 16개: [task-1, task-10, task-11, task-12, task-13, task-14, task-15, task-16, task-2, task-3, task-4, task-5, task-6, task-7, task-8, task-9]
+## [A1d-3] queue-capacity=4 · max-size=16 · 30건
+  설정: core=8 max=16 queueCapacity=4
+  제출 30건 → 300ms 뒤 poolSize=16 activeCount=16 queueSize=4
+  호출자가 받은 것: future 20건, 예외 {org.springframework.core.task.TaskRejectedException=10}
+  첫 예외 메시지: ExecutorService in active state did not accept task: java.util.concurrent.CompletableFuture$AsyncSupply@5f08fe00
+  latch 해제 후 완료 20건, 쓰인 스레드 16개: [task-1, task-10, task-11, task-12, task-13, task-14, task-15, task-16, task-2, task-3, task-4, task-5, task-6, task-7, task-8, task-9]
+## [A1d-4] queue-capacity=0 · max-size=16 · 20건 (SynchronousQueue)
+  설정: core=8 max=16 queueCapacity=0
+  제출 20건 → 300ms 뒤 poolSize=16 activeCount=16 queueSize=0
+  호출자가 받은 것: future 16건, 예외 {org.springframework.core.task.TaskRejectedException=4}
+  첫 예외 메시지: ExecutorService in active state did not accept task: java.util.concurrent.CompletableFuture$AsyncSupply@2e6d76ba
+  latch 해제 후 완료 16건, 쓰인 스레드 16개: [task-1, task-10, task-11, task-12, task-13, task-14, task-15, task-16, task-2, task-3, task-4, task-5, task-6, task-7, task-8, task-9]
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A1d 5'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 11:04:34 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 37174
+## [A1d-5] queue-capacity=4 · max-size=16 · 20건으로 포화시킨 뒤 whereAmI() — CallerRunsPolicy(Customizer)
+  설정: core=8 max=16 queueCapacity=4
+  제출 20건 → 300ms 뒤 poolSize=16 activeCount=16 queueSize=4
+  호출자가 받은 것: future 20건, 예외 없음
+  rejectedExecutionHandler = java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy
+  포화 상태에서 whereAmI() → name=main virtual=false
+  latch 해제 후 완료 20건, 쓰인 스레드 16개: [task-1, task-10, task-11, task-12, task-13, task-14, task-15, task-16, task-2, task-3, task-4, task-5, task-6, task-7, task-8, task-9]

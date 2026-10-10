@@ -4,6 +4,8 @@ package com.petercoders.blog.async
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -18,21 +20,66 @@ import org.springframework.stereotype.Component
 
 /** 종료 실험의 증거. JVM 이 사는 동안 컨텍스트 close 후에도 남는다. */
 object Counters {
+    val started = AtomicInteger()
     val finished = AtomicInteger()
     val interrupted = AtomicInteger()
-    fun reset() { finished.set(0); interrupted.set(0) }
+    fun reset() { started.set(0); finished.set(0); interrupted.set(0) }
+    override fun toString() = "started=${started.get()} finished=${finished.get()} interrupted=${interrupted.get()}"
 }
 
 /** 스케줄러 실험의 증거. "겹쳤나"만 본다 — 초 단위 굵기. */
 object SchedLog {
     @Volatile var t0 = 0L
+    /** true 면 ms 로 찍는다(A3d·A3e·A4c). 기존 A3 계열은 초 단위 그대로 둔다. */
+    @Volatile var msMode = false
     val lines = ConcurrentLinkedQueue<String>()
-    fun start() { t0 = System.currentTimeMillis(); lines.clear() }
+    fun start(ms: Boolean = false) { t0 = System.currentTimeMillis(); msMode = ms; lines.clear() }
+    private fun stamp(): String {
+        val ms = System.currentTimeMillis() - t0
+        return if (msMode) "t=%5dms".format(ms) else "t=%2ds".format(ms / 1000)
+    }
     fun mark(tag: String, phase: String) {
-        val sec = (System.currentTimeMillis() - t0) / 1000
-        lines += "t=%2ds %-6s %-5s thread=%s".format(sec, tag, phase, Thread.currentThread().name)
+        lines += "%s %-6s %-5s thread=%s".format(stamp(), tag, phase, Thread.currentThread().name)
+    }
+    /** close() 호출·반환 같은 러너 쪽 사건. 시각은 ms 로 같이 남긴다(초 단위 로그에서도 순서를 가르기 위해). */
+    fun note(text: String) {
+        val ms = System.currentTimeMillis() - t0
+        lines += "%s -- %s (t=%dms)".format(stamp(), text, ms)
     }
     fun dump() = lines.forEach(::println)
+}
+
+/** A1d — CountDownLatch 로 @Async 작업을 붙잡아 두고 풀·큐 상태를 읽는다. */
+object Hold {
+    @Volatile var latch = CountDownLatch(1)
+    fun reset() { latch = CountDownLatch(1) }
+    fun release() = latch.countDown()
+}
+
+/** A2d — 반환 타입별로 따로 센다. */
+class Tally {
+    val started = AtomicInteger()
+    val finished = AtomicInteger()
+    val interrupted = AtomicInteger()
+    override fun toString() = "started=${started.get()} finished=${finished.get()} interrupted=${interrupted.get()}"
+}
+object A2dTally {
+    val cf = Tally()
+    val future = Tally()
+    val orTimeout = Tally()
+}
+
+private fun sleepCounted(t: Tally, seconds: Long): String {
+    t.started.incrementAndGet()
+    return try {
+        Thread.sleep(seconds * 1000)
+        t.finished.incrementAndGet()
+        "slept ${seconds}s"
+    } catch (e: InterruptedException) {
+        t.interrupted.incrementAndGet()
+        Thread.currentThread().interrupt()
+        "interrupted"
+    }
 }
 
 class Boom(msg: String) : IllegalStateException(msg)
@@ -43,17 +90,31 @@ class Boom(msg: String) : IllegalStateException(msg)
  */
 object Db {
     const val URL = "jdbc:h2:mem:asynclab;DB_CLOSE_DELAY=-1"
-    fun reset() = DriverManager.getConnection(URL).use {
+    // Boot DataSource 는 내장 DB 에 사용자 'sa' 로 붙는다. DriverManager 쪽도 같은 사용자로 붙어야
+    // 먼저 만든 쪽 사용자와 어긋나지 않는다(A2g 는 DataSource 와 DriverManager 를 같이 쓴다).
+    private fun conn() = DriverManager.getConnection(URL, "sa", "")
+    fun reset() = conn().use {
         it.createStatement().execute("drop table if exists async_done")
         it.createStatement().execute("create table async_done(id identity primary key, tag varchar(40))")
     }
-    fun insert(tag: String) = DriverManager.getConnection(URL).use {
+    fun insert(tag: String) = conn().use {
         it.prepareStatement("insert into async_done(tag) values (?)").use { ps ->
             ps.setString(1, tag); ps.executeUpdate()
         }
     }
-    fun count(): Int = DriverManager.getConnection(URL).use {
+    fun count(): Int = conn().use {
         it.createStatement().executeQuery("select count(*) from async_done").use { rs ->
+            rs.next(); rs.getInt(1)
+        }
+    }
+
+    /** A2g — Transaction 안에서 쓰는 테이블. 세는 쪽은 별도 커넥션(DriverManager)이라 커밋된 행만 본다. */
+    fun resetOrders() = conn().use {
+        it.createStatement().execute("drop table if exists orders")
+        it.createStatement().execute("create table orders(id identity primary key, tag varchar(40))")
+    }
+    fun countOrders(): Int = conn().use {
+        it.createStatement().executeQuery("select count(*) from orders").use { rs ->
             rs.next(); rs.getInt(1)
         }
     }
@@ -89,16 +150,62 @@ class AsyncProbe {
 
     /** 종료 실험용. 끝까지 돌면 카운터와 H2 행을 남긴다. */
     @Async
-    fun longWork(seconds: Long) {
-        try {
-            Thread.sleep(seconds * 1000)
+    fun longWork(seconds: Long) { work(seconds * 1000) }
+
+    /** A4g — ms 단위로 길이를 엇갈리게 줄 때. */
+    @Async
+    fun longWorkMs(ms: Long) { work(ms) }
+
+    /** A4g (5) — 같은 작업의 CompletableFuture 갈래. 큐에서 버려진 작업의 호출자 future 를 본다. */
+    @Async
+    fun longWorkCf(ms: Long): CompletableFuture<String> =
+        CompletableFuture.completedFuture(if (work(ms)) "finished" else "interrupted")
+
+    private fun work(ms: Long): Boolean {
+        Counters.started.incrementAndGet()
+        return try {
+            Thread.sleep(ms)
             Counters.finished.incrementAndGet()
             Db.insert("longWork")
+            true
         } catch (e: InterruptedException) {
             Counters.interrupted.incrementAndGet()
             Thread.currentThread().interrupt()
+            false
         }
     }
+
+    /** A1d — latch 가 풀릴 때까지 스레드를 붙잡는다. */
+    @Async
+    fun hold(): CompletableFuture<String> {
+        Hold.latch.await(20, TimeUnit.SECONDS)
+        return CompletableFuture.completedFuture(Thread.currentThread().name)
+    }
+
+    /** A1e (vi) — 이름으로 고른 전용 실행자. */
+    @Async("reportExecutor")
+    fun whereAmIReport(): CompletableFuture<String> {
+        val t = Thread.currentThread()
+        return CompletableFuture.completedFuture("name=${t.name} virtual=${t.isVirtual}")
+    }
+
+    /** A2d — CompletableFuture 반환: submitCompletable 경로. */
+    @Async
+    fun sleepCountingCf(seconds: Long): CompletableFuture<String> =
+        CompletableFuture.completedFuture(sleepCounted(A2dTally.cf, seconds))
+
+    /** A2d — Future 반환: submit 경로(FutureTask). */
+    @Async
+    fun sleepCountingFuture(seconds: Long): Future<String> =
+        CompletableFuture.completedFuture(sleepCounted(A2dTally.future, seconds))
+
+    /** A2d — orTimeout 갈래용(같은 CompletableFuture 경로, 카운터만 따로). */
+    @Async
+    fun sleepCountingOrTimeout(seconds: Long): CompletableFuture<String> =
+        CompletableFuture.completedFuture(sleepCounted(A2dTally.orTimeout, seconds))
+
+    /** A5 — @Async 가 아닌 메서드에서 같은 객체의 @Async 메서드를 this 로 부른다. */
+    fun callSelf(): String = whereAmI().get(10, TimeUnit.SECONDS)
 }
 
 /** A3/A3b — fixedRate: 주기 2초, 실행 3초. 겹치는지 본다. */

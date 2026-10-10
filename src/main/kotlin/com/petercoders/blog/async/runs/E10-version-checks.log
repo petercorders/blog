@@ -1,0 +1,344 @@
+# experiment: E10 — 버전 사실을 태그 소스로 대조(실행 없음). 파일은 아래 URL 을 curl -sSfL 로 받아 grep 했다. 2026-10-08
+# 기준: Framework https://raw.githubusercontent.com/spring-projects/spring-framework/<tag>/<path>, Boot https://raw.githubusercontent.com/spring-projects/spring-boot/<tag>/<path>, JDK 25 는 로컬 $JAVA_HOME/lib/src.zip(25.0.4.1)
+# command: curl -sSfL <URL> -o <tag>__<file> && grep -n <pattern> <file>  (출력은 grep 원문)
+
+## [F1] ExecutorConfigurationSupport — SmartLifecycle·DEFAULT_PHASE·markShutdown (spring-context/src/main/java/org/springframework/scheduling/concurrent/ExecutorConfigurationSupport.java)
+-- v6.0.11: grep -c SmartLifecycle=0 | DEFAULT_PHASE 정의:  | phase 필드:  | grep -c markShutdown=0
+-- v6.0.12: grep -c SmartLifecycle=0 | DEFAULT_PHASE 정의:  | phase 필드:  | grep -c markShutdown=0
+-- v6.1.0: grep -c SmartLifecycle=3 | DEFAULT_PHASE 정의:  | phase 필드: 75: private int phase = DEFAULT_PHASE; | grep -c markShutdown=0
+-- v6.1.3: grep -c SmartLifecycle=3 | DEFAULT_PHASE 정의:  | phase 필드: 75: private int phase = DEFAULT_PHASE; | grep -c markShutdown=0
+-- v6.1.4: grep -c SmartLifecycle=3 | DEFAULT_PHASE 정의:  | phase 필드: 75: private int phase = DEFAULT_PHASE; | grep -c markShutdown=1
+-- v6.2.0: grep -c SmartLifecycle=7 | DEFAULT_PHASE 정의: 75: public static final int DEFAULT_PHASE = Integer.MAX_VALUE / 2; | phase 필드: 94: private int phase = DEFAULT_PHASE; | grep -c markShutdown=1
+-- v7.0.9: grep -c SmartLifecycle=7 | DEFAULT_PHASE 정의: 75: public static final int DEFAULT_PHASE = Integer.MAX_VALUE / 2; | phase 필드: 94: private int phase = DEFAULT_PHASE; | grep -c markShutdown=1
+-- v6.1.0 ExecutorLifecycleDelegate.java: 31: * @since 6.1 (v6.0.11·v6.0.12 에는 파일 없음: 404)
+
+## [F2] ThreadPoolTaskExecutor.strictEarlyShutdown (v6.1.3 / v6.1.4 / v7.0.9)
+-- v6.1.3: grep -c strictEarlyShutdown=0
+-- v6.1.4: grep -c strictEarlyShutdown=3
+-- v7.0.9: grep -c strictEarlyShutdown=4
+100:	private boolean strictEarlyShutdown = false;
+101-
+102-	private @Nullable TaskDecorator taskDecorator;
+103-
+--
+239:	 * @since 6.1.4
+240-	 * @see #initiateShutdown()
+241-	 */
+242-	public void setStrictEarlyShutdown(boolean strictEarlyShutdown) {
+--
+425:	protected void initiateEarlyShutdown() {
+426-		if (this.strictEarlyShutdown) {
+427-			super.initiateEarlyShutdown();
+428-		}
+
+## [F3] ThreadPoolTaskScheduler.setTaskDecorator
+-- v6.1.0: grep -c 'public void setTaskDecorator'=0
+-- v6.1.5: grep -c 'public void setTaskDecorator'=0
+-- v6.2.0: grep -c 'public void setTaskDecorator'=1
+-- v7.0.9: grep -c 'public void setTaskDecorator'=1
+
+## [F4] DefaultLifecycleProcessor — timeoutPerShutdownPhase 기본값과 timeout 로그 문구
+-- v6.0.11: 58: private volatile long timeoutPerShutdownPhase = 30000; | 'Failed to shut down'=1 | 'ends with'=0
+-- v6.1.0: 105: private volatile long timeoutPerShutdownPhase = 30000; | 'Failed to shut down'=1 | 'ends with'=0
+-- v6.1.3: 105: private volatile long timeoutPerShutdownPhase = 30000; | 'Failed to shut down'=1 | 'ends with'=0
+-- v6.1.4: 109: private volatile long timeoutPerShutdownPhase = 30000; | 'Failed to shut down'=0 | 'ends with'=1
+-- v6.1.5: 109: private volatile long timeoutPerShutdownPhase = 30000; | 'Failed to shut down'=0 | 'ends with'=1
+-- v6.2.0: 107: private volatile long timeoutPerShutdownPhase = 10000; | 'Failed to shut down'=0 | 'ends with'=1
+-- v7.0.9: 124: private volatile long timeoutPerShutdownPhase = 10000; | 'Failed to shut down'=0 | 'ends with'=1
+493:					logger.info("Failed to shut down " + countDownBeanNames.size() + " bean" +
+494-							(countDownBeanNames.size() > 1 ? "s" : "") + " with phase value " +
+495-							this.phase + " within timeout of " + this.timeout + "ms: " + countDownBeanNames);
+656-					if (!countDownBeanNames.isEmpty() && logger.isInfoEnabled()) {
+657:						logger.info("Shutdown phase " + this.phase + " ends with " + countDownBeanNames.size() +
+658-								" bean" + (countDownBeanNames.size() > 1 ? "s" : "") +
+659-								" still running after timeout of " + shutdownTimeout + "ms: " + countDownBeanNames);
+
+## [F5] ScheduledAnnotationBeanPostProcessor — destroy/close 의 task.cancel
+-- v6.0.11: 580: task.cancel(); 598: task.cancel(); 
+-- v6.0.12: 584: task.cancel(false); 602: task.cancel(false); 
+-- v7.0.9: 597: task.cancel(false); 613: task.cancel(false); 
+
+## [F6] @Bean defaultCandidate
+-- v6.1.5: grep -c defaultCandidate=0
+-- v6.2.0: grep -c defaultCandidate=2
+-- v7.0.9: grep -c defaultCandidate=2
+290-	 * @since 6.2
+
+## [F7] v7.0.9 ExecutorConfigurationSupport — Javadoc 원문과 close 경로
+	/**
+	 * Set whether to wait for scheduled tasks to complete on shutdown,
+	 * not interrupting running tasks and executing all tasks in the queue.
+	 * <p>The default is {@code false}, with a coordinated lifecycle stop first
+	 * (unless {@link #setAcceptTasksAfterContextClose "acceptTasksAfterContextClose"}
+	 * has been set) and then an immediate shutdown through interrupting ongoing
+	 * tasks and clearing the queue. Switch this flag to {@code true} if you
+	 * prefer fully completed tasks at the expense of a longer shutdown phase.
+	 * The executor will not go through a coordinated lifecycle stop phase then
+	 * but rather only stop and wait for task completion on its own shutdown.
+	 * <p>Note that Spring's container shutdown continues while ongoing tasks
+	 * are being completed. If you want this executor to block and wait for the
+	 * termination of tasks before the rest of the container continues to shut
+	 * down - for example, in order to keep up other resources that your tasks may need -,
+	 * set the {@link #setAwaitTerminationSeconds "awaitTerminationSeconds"}
+168:	 * The executor will not go through a coordinated lifecycle stop phase then
+169-	 * but rather only stop tasks on its own shutdown.
+504:	public void onApplicationEvent(ContextClosedEvent event) {
+505-		if (event.getApplicationContext() == this.applicationContext) {
+506-			if (this.acceptTasksAfterContextClose || this.waitForTasksToCompleteOnShutdown) {
+507-				// Late shutdown without early stop lifecycle.
+508-				this.lateShutdown = true;
+509-			}
+510-			else {
+511-				if (this.lifecycleDelegate != null) {
+512-					this.lifecycleDelegate.markShutdown();
+513-				}
+514-				initiateEarlyShutdown();
+515-			}
+516-		}
+517-	}
+369:			if (this.waitForTasksToCompleteOnShutdown) {
+370-				this.executor.shutdown();
+371-			}
+372-			else {
+373-				for (Runnable remainingTask : this.executor.shutdownNow()) {
+374-					cancelRemainingTask(remainingTask);
+375-				}
+376-			}
+377-			awaitTerminationIfNecessary(this.executor);
+389:	protected void cancelRemainingTask(Runnable task) {
+390-		if (task instanceof Future<?> future) {
+391-			future.cancel(true);
+392-		}
+393-	}
+88:			if (this.executingTaskCount == 0) {
+110:	void beforeExecute(Thread thread) {
+113:			while (this.paused && !this.shutdown && !this.executor.isShutdown()) {
+126:	void afterExecute() {
+130:			if (this.executingTaskCount == 0) {
+-- AbstractApplicationContext v7.0.9 doClose 순서:
+1190:				publishEvent(new ContextClosedEvent(this));
+1199:					this.lifecycleProcessor.onClose();
+1207:			destroyBeans();
+
+## [F8] v7.0.9 ThreadPoolTaskExecutor 기본값·createQueue·getQueueSize
+
+	private int corePoolSize = 1;
+
+	private int maxPoolSize = Integer.MAX_VALUE;
+
+	private int keepAliveSeconds = 60;
+
+	private int queueCapacity = Integer.MAX_VALUE;
+
+324:	protected BlockingQueue<Runnable> createQueue(int queueCapacity) {
+325-		if (queueCapacity > 0) {
+326-			return new LinkedBlockingQueue<>(queueCapacity);
+327-		}
+328-		else {
+329-			return new SynchronousQueue<>();
+330-		}
+331-	}
+357-	 * @since 5.3.21
+-- AsyncTaskExecutor.submitCompletable(Callable) 기본 구현:
+132:	default <T extends @Nullable Object> CompletableFuture<T> submitCompletable(Callable<T> task) {
+133-		return FutureUtils.callAsync(task, this);
+134-	}
+-- FutureUtils.callAsync(callable, executor):
+63:	public static <T> CompletableFuture<T> callAsync(Callable<T> callable, Executor executor) {
+64-		Assert.notNull(callable, "Callable must not be null");
+65-		Assert.notNull(executor, "Executor must not be null");
+66-
+67-		CompletableFuture<T> result = new CompletableFuture<>();
+68-		return result.completeAsync(toSupplier(callable, result), executor);
+69-	}
+-- AsyncExecutionAspectSupport.doSubmit:
+278:	protected @Nullable Object doSubmit(Callable<Object> task, AsyncTaskExecutor executor, Class<?> returnType) {
+279-		if (CompletableFuture.class.isAssignableFrom(returnType)) {
+280-			return executor.submitCompletable(task);
+281-		}
+282-		else if (Future.class.isAssignableFrom(returnType)) {
+283-			return executor.submit(task);
+284-		}
+285-		else if (void.class == returnType || "kotlin.Unit".equals(returnType.getName())) {
+286-			executor.submit(task);
+287-			return null;
+288-		}
+289-		else {
+290-			throw new IllegalArgumentException(
+291-					"Invalid return type for async method (only Future and void supported): " + returnType);
+292-		}
+293-	}
+294-
+295-	/**
+
+## [F9] v7.0.9 SimpleAsyncTaskExecutor / SimpleAsyncTaskScheduler
+51: * <p><b>NOTE: This executor does not participate in context-level lifecycle
+52- * management.</b> Tasks on handed-off execution threads cannot be centrally
+53- * stopped and restarted; if such tight lifecycle management is necessary,
+--
+184:	 * <p>Note that {@code SimpleAsyncTaskExecutor} does not participate in
+185-	 * a coordinated lifecycle stop but rather just awaits task termination
+186-	 * on {@link #close()}.
+-- setTaskTerminationTimeout: 188- * @since 6.1
+-- setRejectTasksWhenLimitReached: 226- * @since 6.2.6
+-- setCancelRemainingTasksOnClose: 209- * @since 6.2.11
+356:	public void stop(Runnable callback) {
+357-		this.triggerLifecycle.stop();  // no callback necessary since it's just triggers with hand-offs
+358-		this.fixedDelayLifecycle.stop(callback);  // callback for currently executing fixed-delay tasks
+359-	}
+
+## [F10] v7.0.9 스케줄링·리스너·resilience
+152:	protected TaskScheduler determineQualifiedScheduler(String qualifier) {
+153-		Assert.state(this.beanFactory != null, "BeanFactory must be set to find qualified scheduler");
+154-		try {
+155-			return BeanFactoryAnnotationUtils.qualifiedBeanOfType(this.beanFactory, TaskScheduler.class, qualifier);
+156-		}
+157-		catch (NoSuchBeanDefinitionException | BeanNotOfRequiredTypeException ex) {
+158-			return new ConcurrentTaskScheduler(BeanFactoryAnnotationUtils.qualifiedBeanOfType(
+159-					this.beanFactory, ScheduledExecutorService.class, qualifier));
+160-		}
+161-	}
+92:	public void run() {
+93-		Instant actualExecutionTime = this.triggerContext.getClock().instant();
+94-		super.run();
+95-		Instant completionTime = this.triggerContext.getClock().instant();
+96-		synchronized (this.triggerContextMonitor) {
+97-			Assert.state(this.scheduledExecutionTime != null, "No scheduled execution");
+98-			this.triggerContext.update(this.scheduledExecutionTime, actualExecutionTime, completionTime);
+99-			if (!obtainCurrentFuture().isCancelled()) {
+100-				schedule();
+101-			}
+102-		}
+62: * @since 4.2
+78:	TransactionPhase phase() default TransactionPhase.AFTER_COMMIT;
+110:	boolean fallbackExecution() default false;
+115:	 * @since 5.3
+53: * @since 7.0
+108:	 * @since 7.0.3
+110:	ThrottlePolicy policy() default ThrottlePolicy.BLOCK;
+115:	 * @since 7.0.3
+37: * @since 7.0
+64-	 * @since 6.2
+29: * @since 6.2
+-- AsyncExecutionAspectSupport.getDefaultExecutor 의 INFO 문구:
+248:						logger.info("More than one TaskExecutor bean found within the context, and none is named " +
+261:					logger.info("No task executor bean found for async processing: " +
+-- CglibAopProxy 반환값 보정(자기 자신을 돌려주면 Proxy 로 바꾼다):
+427:		if (returnValue != null && returnValue == target &&
+428-				!RawTargetAccess.class.isAssignableFrom(method.getDeclaringClass())) {
+429-			// Special case: it returned "this". Note that we can't help
+430-			// if the target sets a reference to itself in another returned object.
+431-			returnValue = proxy;
+432-		}
+
+## [B1] Boot TaskExecutionProperties 필드 도입(태그별 grep -c, 필드 선언 줄 기준. 2 = 필드+javadoc/getter 등)
+-- v3.1.12: Integer concurrencyLimit=0 acceptTasksAfterContextClose=0 rejectTasksWhenLimitReached=0 cancelRemainingTasksOnClose=0 enum Mode=0 propagateContext=0
+-- v3.2.0: Integer concurrencyLimit=2 acceptTasksAfterContextClose=0 rejectTasksWhenLimitReached=0 cancelRemainingTasksOnClose=0 enum Mode=0 propagateContext=0
+-- v3.3.0: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=0 cancelRemainingTasksOnClose=0 enum Mode=0 propagateContext=0
+-- v3.4.0: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=0 cancelRemainingTasksOnClose=0 enum Mode=0 propagateContext=0
+-- v3.5.0: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=2 cancelRemainingTasksOnClose=0 enum Mode=1 propagateContext=0
+-- v4.0.0: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=2 cancelRemainingTasksOnClose=2 enum Mode=1 propagateContext=0
+-- v4.0.8: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=2 cancelRemainingTasksOnClose=2 enum Mode=1 propagateContext=0
+-- v4.1.0: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=2 cancelRemainingTasksOnClose=2 enum Mode=1 propagateContext=2
+-- v4.1.1: Integer concurrencyLimit=2 acceptTasksAfterContextClose=2 rejectTasksWhenLimitReached=2 cancelRemainingTasksOnClose=2 enum Mode=1 propagateContext=2
+241-	 * @since 3.5.0
+## [B2] TaskSchedulingProperties Simple.concurrencyLimit
+-- v3.1.12: 0
+-- v3.2.0: 2
+-- v4.1.1: 2
+## [B3] TaskSchedulingConfigurations TaskDecorator 등장 횟수
+-- v3.4.0: 0
+-- v3.5.0: 4
+-- v4.1.1: 10
+## [B4] ServerProperties shutdown 기본값
+-- v3.3.0: 112: private Shutdown shutdown = Shutdown.IMMEDIATE;
+-- v3.4.0: 116: private Shutdown shutdown = Shutdown.GRACEFUL;
+-- v4.1.1: 107: private Shutdown shutdown = Shutdown.GRACEFUL;
+## [B5] ScheduledTasksEndpoint LastExecution
+-- v3.3.0: 0
+-- v3.4.0: 5
+## [B6] TaskExecutorMetricsAutoConfiguration @since
+-- v3.4.0 (spring-boot-actuator-autoconfigure): 48: * @since 2.6.0
+-- v4.1.1 (module/spring-boot-micrometer-metrics): 51: * @since 4.0.0
+61:		SimpleAutowireCandidateResolver.resolveAutowireCandidates(beanFactory, TaskExecutor.class)
+63:				if (executor instanceof ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+66:				else if (executor instanceof ThreadPoolTaskScheduler threadPoolTaskScheduler) {
+## [B7] v4.1.1 LifecycleProperties / WebServerGracefulShutdownLifecycle / ThreadPoolTaskExecutorBuilder / TaskExecutorConfigurations
+36:	private Duration timeoutPerShutdownPhase = Duration.ofSeconds(30);
+42:	public void setTimeoutPerShutdownPhase(Duration timeoutPerShutdownPhase) {
+34:	 * {@link WebServerApplicationContext#GRACEFUL_SHUTDOWN_PHASE}
+37:	public static final int SMART_LIFECYCLE_PHASE = SmartLifecycle.DEFAULT_PHASE - 1024;
+75:		return WebServerApplicationContext.GRACEFUL_SHUTDOWN_PHASE;
+-- ThreadPoolTaskExecutorBuilder public 설정 메서드: acceptTasksAfterContextClose additionalCustomizers allowCoreThreadTimeOut awaitTermination awaitTerminationPeriod corePoolSize customizers keepAlive maxPoolSize queueCapacity taskDecorator threadNamePrefix  / 'Rejected' 등장 0회
+334:		map.from(this.awaitTermination).to(taskExecutor::setWaitForTasksToCompleteOnShutdown);
+335:		map.from(this.awaitTerminationPeriod).as(Duration::toMillis).to(taskExecutor::setAwaitTerminationMillis);
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(ContextSnapshot.class)
+	static class TaskExecutorContextPropagationConfiguration {
+
+		@Bean
+		@ConditionalOnProperty(name = "spring.task.execution.propagate-context", havingValue = "true")
+		ContextPropagatingTaskDecorator contextPropagatingTaskDecorator() {
+			return new ContextPropagatingTaskDecorator();
+		}
+
+	}
+			TaskExecutionProperties.Shutdown shutdown = this.properties.getShutdown();
+			if (shutdown.isAwaitTermination()) {
+				builder = builder.taskTerminationTimeout(shutdown.getAwaitTerminationPeriod());
+			}
+	static class OnExecutorCondition extends AnyNestedCondition {
+
+		OnExecutorCondition() {
+			super(ConfigurationPhase.REGISTER_BEAN);
+		}
+
+		@ConditionalOnMissingBean(Executor.class)
+		private static final class ExecutorBeanCondition {
+
+		}
+
+		@ConditionalOnProperty(value = "spring.task.execution.mode", havingValue = "force")
+		private static final class ModelCondition {
+
+		}
+
+## [J1] JDK 25 src.zip
+jdk25/java.base/java/util/concurrent/CompletableFuture.java:1981:            throw new TimeoutException();
+jdk25/java.base/java/util/concurrent/CompletableFuture.java:2828:                    f.completeExceptionally(new TimeoutException());
+jdk25/java.base/java/util/concurrent/FutureTask.java:206:            throw new TimeoutException();
+     *
+     * <p>If any execution of this task takes longer than its period, then
+     * subsequent executions may start late, but will not concurrently
+     * execute.
+     *
+
+## [I1] GitHub 이슈(gh api repos/spring-projects/spring-framework/issues/N)
+#27090 state=closed milestone=6.1.0-M2 title=Parallel graceful shutdown for `ThreadPoolTaskExecutor` and `ThreadPoolTaskScheduler`
+#28583 state=closed milestone=5.3.21 title=Expose ThreadPoolTaskExecutor queue size and capacity for metrics
+#31019 state=closed milestone=6.0.12 title=ScheduledAnnotationBeanPostProcessor: graceful shutdown should not interrupt currently running jobs
+#32109 state=closed milestone=6.1.4 title=Graceful shutdown does not cancel @Scheduled tasks
+#32226 state=closed milestone=6.1.4 title=ThreadPoolTaskExecutor rejecting tasks as soon as the context has been closed can lead to exceptions during web app shutdown
+
+## [H1] Netflix Hystrix master HystrixThreadPoolProperties.java / HystrixConcurrencyStrategy.java
+49:    static int default_coreSize = 10;            // core size of thread pool
+52:    static int default_maxQueueSize = -1;        // size of queue (this can't be dynamically changed so we use 'queueSizeRejectionThreshold' to artificially limit and reject)
+144:     * Implementation returns {@link SynchronousQueue} when maxQueueSize <= 0 or {@link LinkedBlockingQueue} when maxQueueSize > 0.
+
+## [B8] Boot 태그별 Spring Framework 버전 (gradle.properties springFrameworkVersion) — ⑦ 버전 표의 Boot 열, defaultCandidate 'Boot 3.4+' 근거
+# command: curl -sSfL https://raw.githubusercontent.com/spring-projects/spring-boot/<tag>/gradle.properties | grep springFrameworkVersion · 2026-10-08 (검증 단계에서 추가)
+-- v3.1.12: springFrameworkVersion=6.0.21
+-- v3.2.0: springFrameworkVersion=6.1.1
+-- v3.2.2: springFrameworkVersion=6.1.3
+-- v3.2.3: springFrameworkVersion=6.1.4
+-- v3.3.0: springFrameworkVersion=6.1.8
+-- v3.4.0: springFrameworkVersion=6.2.0
+-- v3.5.0: springFrameworkVersion=6.2.7
+-- v4.0.0: springFrameworkVersion=7.0.1
+-- v4.1.1: springFrameworkVersion=7.0.9
+
+## [J2] JDK 25 src.zip — CompletableFuture 반환 @Async 가 큐에 넣는 작업의 정체(A4g-5 해석, A1d 거절 메시지의 CompletableFuture$AsyncSupply)
+# command: unzip -p $JAVA_HOME/lib/src.zip java.base/java/util/concurrent/CompletableFuture.java | grep -n ... · 2026-10-08 (검증 단계에서 추가)
+CompletableFuture.java:1772:    static final class AsyncSupply<T> extends ForkJoinTask<Void>
+CompletableFuture.java:2761:        executor.execute(new AsyncSupply<T>(
+ForkJoinTask.java:206:public abstract class ForkJoinTask<V> implements Future<V>, Serializable {

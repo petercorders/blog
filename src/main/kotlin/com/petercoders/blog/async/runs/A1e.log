@@ -1,0 +1,75 @@
+# experiment: A1e — Executor Bean 매트릭스: 등록한 Bean 종류 × @EnableScheduling 유무. org.springframework.scheduling.annotation·aop.interceptor 를 INFO 로 열어 getDefaultExecutor 의 INFO 로그 원문을 함께 남긴다
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A1e'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:45:21 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 17258
+## [A1e-i] ExecutorService Bean(myOwnExecutor) + @EnableScheduling (= A1c)  (profiles=[custom] props=[])
+applicationTaskExecutor 빈 존재 = false
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [myOwnExecutor, taskScheduler]
+TaskExecutor 타입 빈 = [taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = []
+@Async 가 실제로 올라탄 스레드: name=scheduling-1 virtual=false
+## [A1e-ii] ExecutorService Bean, @EnableScheduling 없음  (profiles=[custom, nosched] props=[])
+applicationTaskExecutor 빈 존재 = false
+taskScheduler 빈 없음
+Executor 타입 빈 = [myOwnExecutor]
+TaskExecutor 타입 빈 = []
+TaskScheduler 타입 빈 = []
+AsyncConfigurer 빈 = []
+2026-10-08T10:45:22.762+09:00  INFO 17258 --- [blog] [           main] .s.a.AnnotationAsyncExecutionInterceptor : No task executor bean found for async processing: no bean of type TaskExecutor and no bean named 'taskExecutor' either
+@Async 가 실제로 올라탄 스레드: name=SimpleAsyncTaskExecutor-1 virtual=false
+## [A1e-iii] ThreadPoolTaskExecutor Bean 'myPool'(my-) + @EnableScheduling  (profiles=[e-pool] props=[])
+applicationTaskExecutor 빈 존재 = false
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [myPool, taskScheduler]
+TaskExecutor 타입 빈 = [myPool, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = []
+2026-10-08T10:45:22.850+09:00  INFO 17258 --- [blog] [           main] .s.a.AnnotationAsyncExecutionInterceptor : More than one TaskExecutor bean found within the context, and none is named 'taskExecutor'. Mark one of them as primary or name it 'taskExecutor' (possibly as an alias) in order to use it for async processing: [myPool, taskScheduler]
+@Async 가 실제로 올라탄 스레드: name=SimpleAsyncTaskExecutor-1 virtual=false
+## [A1e-iv] ThreadPoolTaskExecutor Bean 'myPool'(my-), @EnableScheduling 없음  (profiles=[e-pool, nosched] props=[])
+applicationTaskExecutor 빈 존재 = false
+taskScheduler 빈 없음
+Executor 타입 빈 = [myPool]
+TaskExecutor 타입 빈 = [myPool]
+TaskScheduler 타입 빈 = []
+AsyncConfigurer 빈 = []
+@Async 가 실제로 올라탄 스레드: name=my-1 virtual=false
+## [A1e-v] ThreadPoolTaskExecutor Bean 이름 'taskExecutor'(te-) + @EnableScheduling  (profiles=[e-te] props=[])
+applicationTaskExecutor 빈 존재 = false
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [taskExecutor, taskScheduler]
+TaskExecutor 타입 빈 = [taskExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = []
+@Async 가 실제로 올라탄 스레드: name=te-1 virtual=false
+## [A1e-vi] @Bean(defaultCandidate=false) reportExecutor(Boot builder, report-) + @EnableScheduling  (profiles=[e-report] props=[])
+applicationTaskExecutor 빈 존재 = true
+  class=org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor core=8 max=2147483647 queueCapacity=2147483647 keepAliveSec=60
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [applicationTaskExecutor, reportExecutor, taskScheduler]
+TaskExecutor 타입 빈 = [applicationTaskExecutor, reportExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = [applicationTaskExecutorAsyncConfigurer]
+@Async 가 실제로 올라탄 스레드: name=task-1 virtual=false
+@Async("reportExecutor") 가 올라탄 스레드: name=report-1 virtual=false
+## [A1e-vii] ExecutorService Bean + spring.task.execution.mode=force (= A1c-force)  (profiles=[custom] props=[spring.task.execution.mode=force])
+applicationTaskExecutor 빈 존재 = true
+  class=org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor core=8 max=2147483647 queueCapacity=2147483647 keepAliveSec=60
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [applicationTaskExecutor, myOwnExecutor, taskScheduler]
+TaskExecutor 타입 빈 = [applicationTaskExecutor, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = [applicationTaskExecutorAsyncConfigurer]
+@Async 가 실제로 올라탄 스레드: name=task-1 virtual=false
+## [A1e-viii] ThreadPoolTaskExecutor @Primary 'myPool'(my-) + @EnableScheduling  (profiles=[e-primary] props=[])
+applicationTaskExecutor 빈 존재 = false
+taskScheduler class=org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler poolSize=0
+Executor 타입 빈 = [myPool, taskScheduler]
+TaskExecutor 타입 빈 = [myPool, taskScheduler]
+TaskScheduler 타입 빈 = [taskScheduler]
+AsyncConfigurer 빈 = []
+@Async 가 실제로 올라탄 스레드: name=my-1 virtual=false

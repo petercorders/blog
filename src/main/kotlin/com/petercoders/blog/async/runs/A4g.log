@@ -1,0 +1,38 @@
+# experiment: A4g — 큐에 남은 작업: 제출 0.5초 뒤 close(). (1) core-size=1·2초×3 (2) core-size=2·2초/2.5초 엇갈림×6 (3) 기본 core 8·2초×20 (4) (1)+await-termination=true·period=10s (5) (1)의 CompletableFuture 갈래. close() 호출·반환 ms, 직후·6초 뒤 started·finished·interrupted·h2Rows
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A4g 1 2 3'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:51:14 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 25090
+## [A4g-1] core-size=1 · 2초 작업 3건 · 0.5초 뒤 close()
+close() 호출 t=506ms
+close() 반환 t=2009ms
+close 직후: started=2 finished=1 interrupted=1 h2Rows=1
+6초 뒤: started=2 finished=1 interrupted=1 h2Rows=1
+## [A4g-2] core-size=2 · 2초·2.5초 엇갈린 작업 6건 · 0.5초 뒤 close()
+close() 호출 t=505ms
+close() 반환 t=7513ms
+close 직후: started=6 finished=6 interrupted=0 h2Rows=6
+6초 뒤: started=6 finished=6 interrupted=0 h2Rows=6
+## [A4g-3] 기본 core 8 · 2초 작업 20건 · 0.5초 뒤 close()
+close() 호출 t=506ms
+close() 반환 t=6009ms
+close 직후: started=20 finished=20 interrupted=0 h2Rows=20
+6초 뒤: started=20 finished=20 interrupted=0 h2Rows=20
+
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A4g 4 5'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:51:55 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 25712
+## [A4g-4] core-size=1 · 2초 작업 3건 · await-termination=true · period=10s
+close() 호출 t=507ms
+close() 반환 t=6014ms
+close 직후: started=3 finished=3 interrupted=0 h2Rows=3
+6초 뒤: started=3 finished=3 interrupted=0 h2Rows=3
+## [A4g-5] core-size=1 · 2초 CompletableFuture 작업 3건 · 0.5초 뒤 close() — 호출자 future
+close() 호출 t=507ms
+close() 반환 t=2009ms
+close 직후: started=2 finished=1 interrupted=1 h2Rows=1
+6초 뒤: started=2 finished=1 interrupted=1 h2Rows=1
+  호출자 future #1: isDone=true isCancelled=false isCompletedExceptionally=false get(1s)=finished
+  호출자 future #2: isDone=true isCancelled=false isCompletedExceptionally=false get(1s)=interrupted
+  호출자 future #3: isDone=false isCancelled=false isCompletedExceptionally=false get(1s) caught=java.util.concurrent.TimeoutException

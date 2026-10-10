@@ -1,16 +1,18 @@
-# 실험: A2 (반환 타입이 예외의 행선지를 정한다)
-# java -version: openjdk version "26.0.2.1" 2026-08-18; OpenJDK Runtime Environment (build 26.0.2.1+1-7); OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
-# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize: 128
-# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q asyncLab --args='A2'
+# experiment: A2 — 반환 타입과 기다리는 방법이 만드는 예외 객체
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A2'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 10:43:25 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 15172
 ## [A2] 반환 타입과 기다리는 방법이 만드는 예외 객체
 CompletableFuture.get()  caught=java.util.concurrent.ExecutionException cause=com.petercoders.blog.async.Boom
 CompletableFuture.join() caught=java.util.concurrent.CompletionException cause=com.petercoders.blog.async.Boom
 Future.get()             caught=java.util.concurrent.ExecutionException cause=com.petercoders.blog.async.Boom
 기다리지 않은 future: isCompletedExceptionally=true isDone=true
-2026-09-28T20:12:49.764+09:00 ERROR 10911 --- [blog] [         task-5] .a.i.SimpleAsyncUncaughtExceptionHandler : Unexpected exception occurred invoking async method: public void com.petercoders.blog.async.AsyncProbe.failUnit()
+2026-10-08T10:43:27.198+09:00 ERROR 15172 --- [blog] [         task-5] .a.i.SimpleAsyncUncaughtExceptionHandler : Unexpected exception occurred invoking async method: public void com.petercoders.blog.async.AsyncProbe.failUnit()
 
 com.petercoders.blog.async.Boom: boom-unit
-	at com.petercoders.blog.async.AsyncProbe.failUnit(AsyncProbes.kt:82) ~[main/:na]
+	at com.petercoders.blog.async.AsyncProbe.failUnit(AsyncProbes.kt:140) ~[main/:na]
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
 	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
 	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]

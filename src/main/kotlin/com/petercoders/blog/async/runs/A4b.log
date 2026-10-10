@@ -1,7 +1,11 @@
-# 실험: A4b — 애플리케이션 종료 시점, 실행 중이던 @Async 작업(4초)이 남긴 결과 (close() 는 시작 1초 뒤 호출)
-# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
-# 기기: Apple M5 Pro / cores=15 / hw.cachelinesize: 128
-# 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew --offline -q asyncLab --args='A4b' 2>&1 | tee src/main/kotlin/com/petercoders/blog/async/runs/a4b.log
+# experiment: A4b — A4 비교군: spring.task.execution.shutdown.await-termination=true · await-termination-period=10s
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A4b'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-08 11:00:37 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 33363
 ## [A4b] await-termination=true · period=10s
-close() 가 반환할 때까지 = 3초
-finished=1 interrupted=0 h2Rows=1
+close() 호출 t=1006ms
+close() 반환 t=4031ms
+close 직후: started=1 finished=1 interrupted=0 h2Rows=1
+5초 뒤: started=1 finished=1 interrupted=0 h2Rows=1
