@@ -1,0 +1,188 @@
+# experiment: x12 — errorCode·traceId 를 ProblemDetail properties 로: BusinessException advice, handleExceptionInternal override 위치 두 가지(super 전 body 인자 / super 결과 body), @ResponseStatus 예외 대 ResponseStatusException·ErrorResponseException 하위 클래스, advice 없음 대조
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X12'   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-08 03:50 KST)
+#
+## [X12]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+03:50:14.233 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+2026-10-08T03:50:17.697+09:00  WARN 9701 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: ff3fa537-1397-45ff-a8a0-b510f50915b0
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### profile=custom,recorder
+advice beans = CustomProblemAdvice(order=2147483647)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| BusinessException GET /x12/biz (X-Trace-Id: t-123) | 400 | application/problem+json | - | {"detail":"limit exceeded","instance":"/x12/biz","status":400,"title":"Bad Request","errorCode":"PAY_LIMIT_EXCEEDED","traceId":"t-123"} |
+  dispatch: [REQUEST /x12/biz]
+  resolver saw: [com.petercoders.blog.exc.BusinessException]
+| 표준 예외 400 GET /x4/param | 400 | application/problem+json | - | {"detail":"Required parameter 'q' is not present.","instance":"/x4/param","status":400,"title":"Bad Request"} |
+  dispatch: [REQUEST /x4/param]
+  resolver saw: [org.springframework.web.bind.MissingServletRequestParameterException]
+| @ResponseStatus 예외 GET /x12/rs-annotated | 400 | application/json | - | {"timestamp":"2026-10-07T18:50:19.654Z","status":400,"error":"Bad Request","path":"/x12/rs-annotated"} |
+  dispatch: [REQUEST /x12/rs-annotated, ERROR /error]
+  resolver saw: [com.petercoders.blog.exc.AnnotatedBadRequestException]
+| ResponseStatusException GET /x12/rse | 400 | application/problem+json | - | {"detail":"rse bad request","instance":"/x12/rse","status":400,"title":"Bad Request"} |
+  dispatch: [REQUEST /x12/rse]
+  resolver saw: [org.springframework.web.server.ResponseStatusException]
+| ErrorResponseException 하위 GET /x12/ere | 404 | application/problem+json | - | {"detail":"order 42 not found","instance":"/x12/ere","status":404,"title":"Not Found","errorCode":"ORDER_NOT_FOUND"} |
+  dispatch: [REQUEST /x12/ere]
+  resolver saw: [com.petercoders.blog.exc.OrderNotFoundException]
+2026-10-08T03:50:20.363+09:00  WARN 9701 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 2dec2863-b679-4aa8-8b9b-99ab0e8208c0
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### profile=custom-after,recorder
+advice beans = CustomProblemAfterAdvice(order=2147483647)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| BusinessException GET /x12/biz (X-Trace-Id: t-123) | 400 | application/problem+json | - | {"detail":"limit exceeded","instance":"/x12/biz","status":400,"title":"Bad Request","errorCode":"PAY_LIMIT_EXCEEDED","traceId":"t-123"} |
+  dispatch: [REQUEST /x12/biz]
+  resolver saw: [com.petercoders.blog.exc.BusinessException]
+| 표준 예외 400 GET /x4/param | 400 | application/problem+json | - | {"detail":"Required parameter 'q' is not present.","instance":"/x4/param","status":400,"title":"Bad Request","errorCode":"STD_400"} |
+  dispatch: [REQUEST /x4/param]
+  resolver saw: [org.springframework.web.bind.MissingServletRequestParameterException]
+| @ResponseStatus 예외 GET /x12/rs-annotated | 400 | application/json | - | {"timestamp":"2026-10-07T18:50:20.608Z","status":400,"error":"Bad Request","path":"/x12/rs-annotated"} |
+  dispatch: [REQUEST /x12/rs-annotated, ERROR /error]
+  resolver saw: [com.petercoders.blog.exc.AnnotatedBadRequestException]
+| ResponseStatusException GET /x12/rse | 400 | application/problem+json | - | {"detail":"rse bad request","instance":"/x12/rse","status":400,"title":"Bad Request","errorCode":"STD_400"} |
+  dispatch: [REQUEST /x12/rse]
+  resolver saw: [org.springframework.web.server.ResponseStatusException]
+| ErrorResponseException 하위 GET /x12/ere | 404 | application/problem+json | - | {"detail":"order 42 not found","instance":"/x12/ere","status":404,"title":"Not Found","errorCode":"ORDER_NOT_FOUND"} |
+  dispatch: [REQUEST /x12/ere]
+  resolver saw: [com.petercoders.blog.exc.OrderNotFoundException]
+2026-10-08T03:50:21.090+09:00  WARN 9701 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: ded70fa5-9e93-4f0b-a65b-9e86d9769e65
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### profile=recorder
+advice beans = 
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+2026-10-08T03:50:21.244+09:00 ERROR 9701 --- [blog] [o-auto-3-exec-1] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: com.petercoders.blog.exc.BusinessException: limit exceeded] with root cause
+
+com.petercoders.blog.exc.BusinessException: limit exceeded
+	at com.petercoders.blog.exc.X12Controller.biz(ExcProbesPlus.kt:478) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at kotlin.reflect.jvm.internal.calls.CallerImpl$Method.callMethod(CallerImpl.kt:97) ~[kotlin-reflect-2.3.21.jar:2.3.21-release-298]
+	at kotlin.reflect.jvm.internal.calls.CallerImpl$Method$Instance.call(CallerImpl.kt:113) ~[kotlin-reflect-2.3.21.jar:2.3.21-release-298]
+	at kotlin.reflect.jvm.internal.ReflectKCallableKt.callDefaultMethod(ReflectKCallable.kt:153) ~[kotlin-reflect-2.3.21.jar:2.3.21-release-298]
+	at kotlin.reflect.jvm.internal.ReflectKCallableImpl.default$callBy(ReflectKCallableImpl.kt:58) ~[kotlin-reflect-2.3.21.jar:2.3.21-release-298]
+	at kotlin.reflect.jvm.internal.ReflectKCallableImpl.callBy(ReflectKCallableImpl.kt:8) ~[kotlin-reflect-2.3.21.jar:2.3.21-release-298]
+	at org.springframework.web.method.support.InvocableHandlerMethod$KotlinDelegate.invokeFunction(InvocableHandlerMethod.java:331) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:250) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:184) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:934) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:853) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:86) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:866) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1000) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:892) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:622) ~[tomcat-embed-core-11.0.24.jar:6.1]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:874) ~[spring-webmvc-7.0.9.jar:7.0.9]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710) ~[tomcat-embed-core-11.0.24.jar:6.1]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:132) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:59) ~[tomcat-embed-websocket-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$2(FilterChainProxy.java:235) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:376) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:181) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:110) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:96) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:385) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:237) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:195) ~[spring-security-web-7.1.1.jar:7.1.1]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:317) ~[spring-security-config-7.1.1.jar:7.1.1]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:355) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:272) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at com.petercoders.blog.exc.BoomFilter.doFilter(ExcProbes.kt:63) ~[main/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at com.petercoders.blog.exc.TraceFilter.doFilter(ExcProbes.kt:52) ~[main/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:535) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:86) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:71) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:347) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:406) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:71) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:1307) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:2036) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:74) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:949) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:483) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:74) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[na:na]
+
+| BusinessException GET /x12/biz (X-Trace-Id: t-123) | 500 | application/json | - | {"timestamp":"2026-10-07T18:50:21.255Z","status":500,"error":"Internal Server Error","path":"/x12/biz"} |
+  dispatch: [REQUEST /x12/biz, ERROR /error]
+  resolver saw: [com.petercoders.blog.exc.BusinessException]
+2026-10-08T03:50:21.288+09:00  WARN 9701 --- [blog] [o-auto-3-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MissingServletRequestParameterException: Required request parameter 'q' for method parameter type String is not present]
+| 표준 예외 400 GET /x4/param | 400 | application/json | - | {"timestamp":"2026-10-07T18:50:21.290Z","status":400,"error":"Bad Request","path":"/x4/param"} |
+  dispatch: [REQUEST /x4/param, ERROR /error]
+  resolver saw: [org.springframework.web.bind.MissingServletRequestParameterException]
+| @ResponseStatus 예외 GET /x12/rs-annotated | 400 | application/json | - | {"timestamp":"2026-10-07T18:50:21.378Z","status":400,"error":"Bad Request","path":"/x12/rs-annotated"} |
+  dispatch: [REQUEST /x12/rs-annotated, ERROR /error]
+  resolver saw: [com.petercoders.blog.exc.AnnotatedBadRequestException]
+| ResponseStatusException GET /x12/rse | 400 | application/json | - | {"timestamp":"2026-10-07T18:50:21.404Z","status":400,"error":"Bad Request","path":"/x12/rse"} |
+  dispatch: [REQUEST /x12/rse, ERROR /error]
+  resolver saw: [org.springframework.web.server.ResponseStatusException]
+2026-10-08T03:50:21.423+09:00  WARN 9701 --- [blog] [o-auto-3-exec-5] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [com.petercoders.blog.exc.OrderNotFoundException: 404 NOT_FOUND, ProblemDetail[type='null', title='Not Found', status=404, detail='order 42 not found', instance='null', properties='{errorCode=ORDER_NOT_FOUND}']]
+| ErrorResponseException 하위 GET /x12/ere | 404 | application/json | - | {"timestamp":"2026-10-07T18:50:21.425Z","status":404,"error":"Not Found","path":"/x12/ere"} |
+  dispatch: [REQUEST /x12/ere, ERROR /error]
+  resolver saw: [com.petercoders.blog.exc.OrderNotFoundException]
+

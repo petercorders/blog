@@ -1,0 +1,40 @@
+# experiment: x7plus — 기다리지 않은 @Async CompletableFuture 가 실제로 예외로 끝났는지(isCompletedExceptionally)와 그 사이 로그 이벤트 수, void 대조군
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X7PLUS'   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-08 03:49 KST)
+#
+## [X7+]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+03:49:43.990 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+2026-10-08T03:49:51.075+09:00  WARN 8934 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: be66851d-5d0e-4f70-ab32-b1a4cfc402b1
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+### 대조군: @Async void
+2026-10-08T03:49:51.392+09:00 ERROR 8934 --- [blog] [         task-1] .a.i.SimpleAsyncUncaughtExceptionHandler : Unexpected exception occurred invoking async method: public void com.petercoders.blog.exc.AsyncProbe.boomVoid()
+
+java.lang.IllegalStateException: async-void failure
+	at com.petercoders.blog.exc.AsyncProbe.boomVoid(ExcProbes.kt:186) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.lambda$invoke$0(AsyncExecutionInterceptor.java:112) ~[spring-aop-7.0.9.jar:7.0.9]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[na:na]
+
+  status=200 body={"ok":"void"}
+  log events captured: 1
+    - ERROR SimpleAsyncUncaughtExceptionHandler : Unexpected exception occurred invoking async method: public void com.petercoders.blog.exc.AsyncProbe.boomVoid() [+stacktrace java.lang.IllegalStateException]
+### 기다리지 않은 CompletableFuture
+  status=200 body={"ok":"future-not-joined"}
+  future.isDone=true isCompletedExceptionally=true
+  log events captured: 0
+  (응답 뒤 러너가 직접) join() -> java.util.concurrent.CompletionException, cause=java.lang.IllegalStateException: async-future failure
+

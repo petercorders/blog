@@ -1,5 +1,5 @@
 # 실험: x1 — 겹 안에서 누가 이기는가 (handlerExceptionResolver composite / @RestControllerAdvice order / FilterRegistrationBean order 실물 확인)
-# java -version(/usr/bin/java): openjdk version "26.0.2.1" 2026-09-27 build 26.0.2.1+1-7, mixed mode, sharing (실제 실행 JVM은 gradle 툴체인의 25.0.4.1+1-LTS, Microsoft build)
+# java -version(/usr/bin/java): openjdk version "26.0.2.1" 2026-08-18 build 26.0.2.1+1-7, mixed mode, sharing (실제 실행 JVM은 gradle 툴체인의 25.0.4.1+1-LTS, Microsoft build) [2026-10-08 정정: 처음 이 주석에 적은 날짜 2026-09-27은 오기였다. 주석 줄만 고쳤고 실행 출력은 그대로다]
 # 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
 # 명령: cd /Users/kibong_home/Desktop/development/blog && ./gradlew -q excLab --args='X1' 2>&1 | tee src/main/kotlin/com/petercoders/blog/exc/runs/x1.log
 

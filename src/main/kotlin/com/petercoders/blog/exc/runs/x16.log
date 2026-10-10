@@ -1,0 +1,56 @@
+# experiment: x16 — @PreAuthorize 거부(AuthorizationDeniedException)를 advice 가 먼저 잡는가: advice 없음 / AdviceA(RuntimeException) / catch-all / AccessDeniedException 을 되던지는 catch-all, 익명·인증 사용자
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X16'   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-08 03:51 KST)
+#
+## [X16]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+03:51:03.498 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+/x16/admin 은 @PreAuthorize("hasRole('ADMIN')"). URL 인가는 permitAll, httpBasic user/pw(ROLE_USER).
+541 = AdviceA(RuntimeException), 599 = catch-all advice
+
+### advice 없음  profile=methodsec,recorder
+X16Controller is AOP proxy = true
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| anonymous GET /x16/admin | 401 | application/json | Basic realm="Realm", charset="UTF-8" | {"timestamp":"2026-10-07T18:51:07.409Z","status":401,"error":"Unauthorized","path":"/x16/admin"} |
+  dispatch: [REQUEST /x16/admin, ERROR /error]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+| user GET /x16/admin | 403 | application/json | - | {"timestamp":"2026-10-07T18:51:07.933Z","status":403,"error":"Forbidden","path":"/x16/admin"} |
+  dispatch: [REQUEST /x16/admin, ERROR /error]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+
+### handlers(AdviceA @Order(1) RuntimeException)  profile=methodsec,handlers,recorder
+X16Controller is AOP proxy = true
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| anonymous GET /x16/admin | 541 | application/json | - | {"who":"AdviceA#RuntimeException","ex":"org.springframework.security.authorization.AuthorizationDeniedException"} |
+  dispatch: [REQUEST /x16/admin]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+| user GET /x16/admin | 541 | application/json | - | {"who":"AdviceA#RuntimeException","ex":"org.springframework.security.authorization.AuthorizationDeniedException"} |
+  dispatch: [REQUEST /x16/admin]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+
+### catchall(Exception, @Order 없음)  profile=methodsec,catchall,recorder
+X16Controller is AOP proxy = true
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| anonymous GET /x16/admin | 599 | application/json | - | {"who":"CatchAll#Exception","ex":"org.springframework.security.authorization.AuthorizationDeniedException"} |
+  dispatch: [REQUEST /x16/admin]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+| user GET /x16/admin | 599 | application/json | - | {"who":"CatchAll#Exception","ex":"org.springframework.security.authorization.AuthorizationDeniedException"} |
+  dispatch: [REQUEST /x16/admin]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+
+### catchall-rethrow(AccessDeniedException 은 되던짐)  profile=methodsec,catchall-rethrow,recorder
+X16Controller is AOP proxy = true
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| anonymous GET /x16/admin | 401 | application/json | Basic realm="Realm", charset="UTF-8" | {"timestamp":"2026-10-07T18:51:10.829Z","status":401,"error":"Unauthorized","path":"/x16/admin"} |
+  dispatch: [REQUEST /x16/admin, ERROR /error]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+| user GET /x16/admin | 403 | application/json | - | {"timestamp":"2026-10-07T18:51:11.229Z","status":403,"error":"Forbidden","path":"/x16/admin"} |
+  dispatch: [REQUEST /x16/admin, ERROR /error]
+  resolver saw: [org.springframework.security.authorization.AuthorizationDeniedException]
+

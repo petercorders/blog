@@ -1,0 +1,60 @@
+# experiment: x14obs(선택) — actuator·micrometer-tracing(brave) 가 있을 때 http.server.requests 태그(advice 541 / DHER 400 / Filter 500)와 Controller·@ExceptionHandler 안 MDC traceId
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLabObs --args='X14OBS'   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-08 09:25 KST. 같은 날 03:50 실행을 micrometer-tracing·brave jar 버전을 찍는 env 줄을 더해 다시 찍었다)
+#
+## [X14OBS]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+09:25:43.338 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+env: micrometer-tracing=micrometer-tracing-1.7.1.jar(Implementation-Version=1.7.1) micrometer-tracing-bridge-brave=micrometer-tracing-bridge-brave-1.7.1.jar(Implementation-Version=1.7.1) brave=brave-6.3.1.jar(Implementation-Version=-)
+2026-10-08T09:25:44.443+09:00  WARN 63648 --- [blog] [           main] [                                                 ] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: a7f25502-2d2f-4889-94e3-6963f22a33b7
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+MeterRegistry = io.micrometer.core.instrument.simple.SimpleMeterRegistry
+
+### (1) http.server.requests 태그
+- advice 처리 541 GET /x2/ise -> 541
+2026-10-08T09:25:44.951+09:00  WARN 63648 --- [blog] [o-auto-1-exec-2] [6ac6e3080a230fdb94c4b701d0a96b2c-e7d30f2a47c81012] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MissingServletRequestParameterException: Required request parameter 'q' for method parameter type String is not present]
+- DHER 처리 400 GET /x4/param -> 400
+2026-10-08T09:25:44.959+09:00 ERROR 63648 --- [blog] [o-auto-1-exec-4] [                                                 ] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception
+
+java.lang.IllegalStateException: filter failure
+	at com.petercoders.blog.exc.BoomFilter.doFilter(ExcProbes.kt:61) ~[main/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at com.petercoders.blog.exc.TraceFilter.doFilter(ExcProbes.kt:52) ~[main/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:110) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-7.0.9.jar:7.0.9]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:111) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:535) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:86) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:71) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:347) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:406) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:71) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:1307) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:2036) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:74) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:949) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:483) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:74) ~[tomcat-embed-core-11.0.24.jar:11.0.24]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[na:na]
+
+- Filter 500 GET /x5/filter-boom -> 500
+  timer count=1 tags=error=none, exception=none, method=GET, outcome=UNKNOWN, status=541, uri=/x2/ise
+  timer count=1 tags=error=none, exception=none, method=GET, outcome=CLIENT_ERROR, status=400, uri=/x4/param
+  timer count=1 tags=error=IllegalStateException, exception=IllegalStateException, method=GET, outcome=SERVER_ERROR, status=500, uri=UNKNOWN
+
+### (2) traceId 가 Controller 와 @ExceptionHandler 안에서 같은가(MDC)
+  GET /x14/ise -> 543 {"who":"ObsAdvice#X14ObsException","controller":"controller-mdc-traceId=6ac6e3092a148e8c0186544a05e505a1","advice-mdc-traceId":"6ac6e3092a148e8c0186544a05e505a1"}
+

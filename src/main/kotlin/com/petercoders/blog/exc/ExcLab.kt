@@ -1,13 +1,21 @@
-// SPRING-INTERNALS 3편(예외 처리는 한 곳이 아니라 경계마다 다르다) — 실험 러너.
-// 마커 → 로그 파일: [X1]→x1.log · [X2]→x2.log · [X3]→x3.log · [X4]→x4.log · [X5]→x5.log
-//                   [X6]→x6.log · [X7]→x7.log · [X8]→x8.log · [X9]→x9.log
+// SPRING-INTERNALS 3편(@RestControllerAdvice: 전역 예외 처리가 덮지 않는 것) — 실험 러너.
+// 마커 → 로그 파일: [X1]→x1.log · [X2]→x2.log · [X3]→x3.log · [X4]→x4.log · [X5]→x5.log(X6 함께)
+//                   [X6]→x6.log(x5.log 발췌) · [X7]→x7.log(X7b 함께) · [X8]→x8.log · [X9]→x9.log
+// 새 마커(2026-10 재편, 전부 새 로그 파일 — 기존 x1~x9.log 는 다시 만들지 않는다):
+//   X1PLUS→x1plus.log · X2B→x2b.log · X3PLUS→x3plus.log · X5B→x5b.log · X7PLUS→x7plus.log
+//   X8B→x8b.log(X8b·X8c·X8d·X8e) · X10→x10.log · X11→x11.log · X12→x12.log · X13→x13.log
+//   X14→x14.log · X14OBS→x14obs.log(excLabObs 태스크) · X15→x15.log · X16→x16.log
+//   감사 반영(2026-10-08): X11CTX→x11ctx.log · X7C→x7c.log
+//   새 마커 함수는 ExcLabPlus.kt · ExcLabX15.kt · ExcLabObs.kt 에 있다.
 //
 // 실행: cd ~/Desktop/development/blog
-//       ./gradlew -q excLab                 # 최초 1회는 web 스타터를 받아야 해서 --offline 을 못 쓴다
-//       ./gradlew --offline -q excLab --args='X2'
+//       ./gradlew --offline -q excLab --args='X10'
+//       ./gradlew --offline -q excLabObs --args='X14OBS'
 //
-// 판정은 시간이 아니라 결과다. 실제 내장 톰캣을 띄우고 RestClient 로 때려
-// 상태 코드와 응답 바디를 그대로 찍는다. 로그 문자열은 증거로 쓰지 않는다.
+// 판정은 시간이 아니라 결과다. 실제 내장 톰캣을 띄우고 RestClient 로 요청을 보내
+// 상태 코드와 응답 바디를 그대로 찍는다. 로그 줄은 "남는가"를 볼 때만 증거로 쓴다.
+// 포트는 server.port=0(임의 포트)이다. 다른 편 실험과 동시에 돌아도 포트가 부딪히지 않는다.
+// (x1~x9.log 는 고정 포트 18099 시절에 찍었다.)
 package com.petercoders.blog.exc
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -22,27 +30,32 @@ import org.springframework.web.servlet.handler.HandlerExceptionResolverComposite
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver
 import kotlin.system.exitProcess
 
-const val PORT = 18099
+/** 마지막으로 띄운 컨텍스트의 실제 포트(server.port=0 → local.server.port). */
+internal var port = 0
+internal fun base() = "http://localhost:$port"
 
 @SpringBootApplication(scanBasePackages = ["com.petercoders.blog.exc"])
 @EnableAsync
 class ExcLabApp
 
-private fun boot(vararg profiles: String, props: Array<String> = emptyArray()): ConfigurableApplicationContext =
-    SpringApplicationBuilder(ExcLabApp::class.java)
+internal fun boot(vararg profiles: String, props: Array<String> = emptyArray()): ConfigurableApplicationContext {
+    val ctx = SpringApplicationBuilder(ExcLabApp::class.java)
         .profiles(*profiles)
         .properties(
             "spring.main.banner-mode=off",
-            "server.port=$PORT",
-            "server.error.include-message=always",
+            "server.port=0",
+            "server.error.include-message=always",   // Boot 4 에서 버려지는 옛 키. 대조군으로 계속 둔다(X5·X5b).
             "spring.datasource.url=jdbc:h2:mem:exclab;DB_CLOSE_DELAY=-1",
             "spring.datasource.driver-class-name=org.h2.Driver",
             "logging.level.root=WARN",
             *props,
         )
         .run()
+    port = ctx.environment.getProperty("local.server.port")!!.toInt()
+    return ctx
+}
 
-private fun schema(ctx: ConfigurableApplicationContext) {
+internal fun schema(ctx: ConfigurableApplicationContext) {
     val jdbc = ctx.getBean(JdbcTemplate::class.java)
     jdbc.execute("drop table if exists exc_log")
     jdbc.execute("create table exc_log(id identity primary key, tag varchar(40))")
@@ -51,7 +64,7 @@ private fun schema(ctx: ConfigurableApplicationContext) {
 private data class Res(val status: Int, val contentType: String, val body: String)
 
 private fun get(path: String): Res =
-    RestClient.create("http://localhost:$PORT").get().uri(path).exchange { _, res ->
+    RestClient.create(base()).get().uri(path).exchange { _, res ->
         Res(
             res.statusCode.value(),
             res.headers.contentType?.toString() ?: "-",
@@ -60,7 +73,7 @@ private fun get(path: String): Res =
     }!!
 
 private fun post(path: String): Res =
-    RestClient.create("http://localhost:$PORT").post().uri(path).exchange { _, res ->
+    RestClient.create(base()).post().uri(path).exchange { _, res ->
         Res(res.statusCode.value(), res.headers.contentType?.toString() ?: "-",
             res.bodyTo(String::class.java)?.replace("\n", " ")?.take(400) ?: "")
     }!!
@@ -232,9 +245,26 @@ fun main(args: Array<String>) {
     step("X2") { runX2() }
     step("X3") { runX3() }
     step("X4") { runX4() }
-    step("X5") { runX5X6() }
-    step("X7") { runX7() }
+    step("X5") { runX5X6() }          // X6 도 이 실행에서 찍힌다
+    step("X7") { runX7() }            // X7b 도 이 실행에서 찍힌다
     step("X8") { runX8() }
     step("X9") { runX9() }
+    step("X1PLUS") { runX1Plus() }
+    step("X2B") { runX2b() }
+    step("X3PLUS") { runX3Plus() }
+    step("X5B") { runX5b() }
+    step("X7PLUS") { runX7Plus() }
+    step("X8B") { runX8b() }          // X8b·X8c·X8d·X8e
+    step("X10") { runX10() }
+    step("X11") { runX11() }
+    step("X12") { runX12() }
+    step("X13") { runX13() }
+    step("X14") { runX14() }
+    step("X15") { runX15() }
+    step("X16") { runX16() }
+    step("X11CTX") { runX11Ctx() }    // 2026-10-08 감사 반영: ERROR dispatch 의 인증 상태
+    step("X7C") { runX7c() }          // 2026-10-08 감사 반영: root 매치 없을 때 cause 매치
+    // actuator·tracing 이 클래스패스에 있어야 하므로 excLabObs 태스크로 이름을 줘서만 돈다.
+    if (only == "X14OBS") { runX14Obs(); println() }
     exitProcess(0)
 }

@@ -1,0 +1,34 @@
+# experiment: x7c — @Async future joined(CompletionException ← IllegalStateException)를 advice 구성 둘로: handlers(AdviceA RuntimeException root 매치) / ise-only(IllegalStateException Handler 만, root 매치 없음 → cause 매치)
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X7C' > src/main/kotlin/com/petercoders/blog/exc/runs/x7c.log   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-08 10:07 KST)
+#
+## [X7C]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+10:07:23.066 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+2026-10-08T10:07:23.913+09:00  WARN 92982 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: fc9cf070-c23e-456d-8020-c8d3642748f0
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### handlers(AdviceA RuntimeException @Order(1) + AdviceB IllegalStateException @Order(2))
+advice beans = AdviceA(order=1), AdviceB(order=2)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| future joined GET /x7/async-join | 541 | application/json | - | {"who":"AdviceA#RuntimeException","ex":"java.util.concurrent.CompletionException"} |
+2026-10-08T10:07:24.730+09:00  WARN 92982 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: af137444-a1dc-4d32-8cd9-edef36f30fed
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### ise-only(IseOnlyAdvice IllegalStateException 만)
+advice beans = IseOnlyAdvice(order=2147483647)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| future joined GET /x7/async-join | 561 | application/json | - | {"who":"IseOnlyAdvice#IllegalStateException","ex":"java.lang.IllegalStateException"} |
+

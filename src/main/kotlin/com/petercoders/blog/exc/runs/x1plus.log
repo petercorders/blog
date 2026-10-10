@@ -1,0 +1,79 @@
+# experiment: x1plus — Resolver·Filter 의 실제 order·dispatcher type, Security Filter Chain 안 순서, REEH @ExceptionHandler 목록
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X1PLUS'   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-08 03:49 KST)
+#
+## [X1+]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+03:49:10.386 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+Resolver·Filter 의 실제 order·dispatcher type 과 REEH 가 맡는 표준 예외 목록
+2026-10-08T03:49:15.135+09:00  WARN 8316 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: ad295ac3-7efe-42da-9bce-4f1e7920b8fa
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### (1) HandlerExceptionResolver Bean 전부(OrderComparator 순)
+| bean name | class | getOrder() |
+|---|---|---|
+| errorAttributes | org.springframework.boot.webmvc.error.DefaultErrorAttributes | -2147483648 |
+| handlerExceptionResolver | org.springframework.web.servlet.handler.HandlerExceptionResolverComposite | 0 |
+DispatcherServlet.handlerExceptionResolvers (첫 요청 뒤, doDispatch 가 이 순서로 묻는다):
+  [0] org.springframework.boot.webmvc.error.DefaultErrorAttributes order=-2147483648
+  [1] org.springframework.web.servlet.handler.HandlerExceptionResolverComposite order=0
+handlerExceptionResolver(Composite) 안쪽:
+  [0] org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver
+  [1] org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver
+  [2] org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver
+
+### (2) 서블릿 컨테이너에 등록되는 Filter(ServletContextInitializerBeans 순서 = 실행 순서)
+| filter name | registration class | order | dispatcher types | url patterns |
+|---|---|---|---|---|
+| characterEncodingFilter | FilterRegistrationBean | -2147483648 | [FORWARD, INCLUDE, REQUEST, ASYNC, ERROR] | [] |
+| traceFilter | FilterRegistrationBean | -2147483638 | [REQUEST, ASYNC, ERROR] | [/*] |
+| boomFilter | FilterRegistrationBean | -2147483628 | [REQUEST] | [/*] |
+| formContentFilter | FilterRegistrationBean | -9900 | [FORWARD, INCLUDE, REQUEST, ASYNC, ERROR] | [] |
+| requestContextFilter | FilterRegistrationBean | -105 | [FORWARD, INCLUDE, REQUEST, ASYNC, ERROR] | [] |
+| springSecurityFilterChain | DelegatingFilterProxyRegistrationBean | -100 | [FORWARD, INCLUDE, REQUEST, ASYNC, ERROR] | [] |
+Security Filter Chain[0] (permitAll 체인) 안의 Filter:
+  [0] DisableEncodeUrlFilter
+  [1] WebAsyncManagerIntegrationFilter
+  [2] SecurityContextHolderFilter
+  [3] HeaderWriterFilter
+  [4] LogoutFilter
+  [5] RequestCacheAwareFilter
+  [6] SecurityContextHolderAwareRequestFilter
+  [7] AnonymousAuthenticationFilter
+  [8] ExceptionTranslationFilter
+  [9] AuthorizationFilter
+
+### (3) ResponseEntityExceptionHandler.handleException 의 @ExceptionHandler 목록: 20개
+  1. org.springframework.web.HttpRequestMethodNotSupportedException
+  2. org.springframework.web.HttpMediaTypeNotSupportedException
+  3. org.springframework.web.HttpMediaTypeNotAcceptableException
+  4. org.springframework.web.bind.MissingPathVariableException
+  5. org.springframework.web.bind.MissingServletRequestParameterException
+  6. org.springframework.web.multipart.support.MissingServletRequestPartException
+  7. org.springframework.web.bind.ServletRequestBindingException
+  8. org.springframework.web.bind.MethodArgumentNotValidException
+  9. org.springframework.web.method.annotation.HandlerMethodValidationException
+  10. org.springframework.web.servlet.NoHandlerFoundException
+  11. org.springframework.web.servlet.resource.NoResourceFoundException
+  12. org.springframework.web.context.request.async.AsyncRequestTimeoutException
+  13. org.springframework.web.ErrorResponseException
+  14. org.springframework.web.multipart.MaxUploadSizeExceededException
+  15. org.springframework.beans.ConversionNotSupportedException
+  16. org.springframework.beans.TypeMismatchException
+  17. org.springframework.http.converter.HttpMessageNotReadableException
+  18. org.springframework.http.converter.HttpMessageNotWritableException
+  19. org.springframework.validation.method.MethodValidationException
+  20. org.springframework.web.context.request.async.AsyncRequestNotUsableException
+MaxUploadSizeExceededException 포함 = true
+
+### (4) advice Bean 과 order(ControllerAdviceBean.findAnnotatedBeans 는 order 순으로 정렬해 돌려준다)
+  AdviceA order=1
+  AdviceB order=2
+  InheritOnlyAdvice order=2147483647
+

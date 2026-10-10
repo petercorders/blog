@@ -1,5 +1,6 @@
-// SPRING-INTERNALS 3편(예외 처리는 한 곳이 아니라 경계마다 다르다) — 프로브 정의.
+// SPRING-INTERNALS 3편(@RestControllerAdvice: 전역 예외 처리가 덮지 않는 것) — 프로브 정의.
 // 러너는 ExcLab.kt. 마커 [X1]~[X9] 와 runs/xN.log 가 1:1 로 대응한다.
+// 2026-10 재편에서 더한 프로브(X2b·X3+·X7+·X8b·X10~X13·X16, 감사 반영 X11CTX·X7C)는 ExcProbesPlus.kt 에 있다.
 //
 // 프로파일로 컨텍스트 구성을 갈라 쓴다.
 //   (없음)     : advice 가 하나도 없는 맨 컨텍스트 — [X3] 기본 응답 바디 측정용
@@ -31,6 +32,8 @@ import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -67,7 +70,7 @@ class ExcFilterConfig {
     fun traceFilter() = FilterRegistrationBean(TraceFilter()).apply {
         addUrlPatterns("/*")
         setDispatcherTypes(DispatcherType.REQUEST, DispatcherType.ERROR, DispatcherType.ASYNC)
-        order = Int.MIN_VALUE + 10          // 가장 바깥
+        order = Int.MIN_VALUE + 10          // CharacterEncodingFilter 다음, Security Filter Chain 보다 앞(x5.log 스택)
     }
 
     @Bean
@@ -121,6 +124,14 @@ class ExcController(private val svc: ExcService, private val async: AsyncProbe) 
 
     @GetMapping("/rows")
     fun rows(@RequestParam tag: String) = mapOf("rows" to svc.rows(tag))
+
+    /** [X2b] 415 매핑 단계 — consumes 가 맞지 않으면 Handler 를 정하기 전에 난다. */
+    @PostMapping("/x2b/consumes", consumes = [JSON])
+    fun consumes(@RequestBody body: Map<String, Any>) = body
+
+    /** [X2b] 415 인자 해석 단계 — consumes 없이 @RequestBody 를 읽다가 난다(Handler 는 이 Controller). */
+    @PostMapping("/x2b/body")
+    fun bodyOnly(@RequestBody body: Map<String, Any>) = body
 }
 
 /** 컨트롤러 로컬 `@ExceptionHandler` 가 advice 보다 먼저 보이는지 재는 전용 컨트롤러. */
@@ -233,9 +244,11 @@ class ExcService(private val jdbc: JdbcTemplate) {
 
 /**
  * 저장소에 spring-boot-starter-security 가 이미 들어 있다(2편이 넣었다).
- * 이 글의 실험은 인가가 아니라 예외 경계를 재므로 전부 permitAll 로 열어 둔다.
- * 시큐리티 필터가 체인에 그대로 남는다는 사실 자체는 [X1] 에서 순서로 찍는다.
+ * 이 글의 실험은 대부분 인가가 아니라 예외 경계를 재므로 permitAll 로 열어 둔다.
+ * 시큐리티 필터가 체인에 그대로 남는다는 사실 자체는 [X1]·[X1+] 에서 순서로 찍는다.
+ * 인가를 재는 [X11](profile secured)·[X16](profile methodsec)은 ExcProbesPlus.kt 의 다른 체인을 쓴다.
  */
+@Profile("!secured & !methodsec")
 @Configuration(proxyBeanMethods = false)
 class ExcSecurityConfig {
     @Bean
