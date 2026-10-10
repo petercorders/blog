@@ -1,9 +1,20 @@
-# experiment: e7 (§6 롤백 규칙) — RuleBasedTransactionAttribute.rollbackOn 의 네 갈래, txlab.log 의 [E5] 구간 추출
-# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  [실행은 Gradle 툴체인 Microsoft OpenJDK 25.0.4.1+1-LTS 로 함]
-# 기기: Apple M5 Pro, 15코어(물리 15/논리 15), hw.cachelinesize=128 bytes
-# 명령: cd ~/Desktop/development/blog && sed -n '/## \[E5\]/,$p' src/main/kotlin/com/petercoders/blog/tx/runs/txlab.log
+# experiment: e7 — 롤백 규칙: 네 경우 [e7], ALL_EXCEPTIONS + 직접 선언 시 Proxy 종류 [e7b], getDepth·문자열 규칙 [e7c], Java checked 예외의 Proxy 종류별 결과 [e7d], ALL_EXCEPTIONS 위 noRollbackFor [e7e]
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txLab   (run at 2026-10-08 03:41:29 KST; 출력 전체 = runs/txlab.log)
+# extract: awk '/^## \[/{keep = ($0 ~ /^## \[e0\]/ || $0 ~ /^## \[e7[a-z]?\]/)} keep' runs/txlab.log
 
-## [E5] rollback rules (rows left in H2: 0 = rolled back, 1 = committed)
+## [e0] runtime versions (printed by this JVM)
+java.runtime.version = 25.0.4.1+1-LTS
+java.vendor          = Microsoft / OpenJDK 64-Bit Server VM
+java.home            = /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+Spring Framework     = 7.0.9
+Spring Boot          = 4.1.1
+Kotlin stdlib        = 2.3.21
+HikariCP             = 7.0.2
+H2                   = 2.4.240
+
+## [e7] rollback rules (rows left in H2: 0 = rolled back, 1 = committed)
 | thrown | attribute | rows |
 |---|---|---|
 | IllegalStateException | (none) | 0 |
@@ -11,7 +22,39 @@
 | DomainFailure : Exception | rollbackFor=Exception | 0 |
 | IllegalStateException | rollbackFor=Exception, noRollbackFor=ISE | 1 |
 
-## [E5b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름
+## [e7c] RollbackRuleAttribute.getDepth — class rules, unmatched, string patterns
+RollbackRuleAttribute(Exception::class).getDepth(IllegalStateException)          = 2
+NoRollbackRuleAttribute(IllegalStateException::class).getDepth(IllegalStateException) = 0
+RollbackRuleAttribute(java.io.IOException::class).getDepth(IllegalStateException)  = -1
+rules [rollbackFor=Exception, noRollbackFor=ISE].rollbackOn(IllegalStateException)  = false
+RollbackRuleAttribute("Failure").getDepth(DomainFailure)                           = 0
+RollbackRuleAttribute("Failure").getDepth(DataAccessResourceFailureException)      = 0
+RollbackRuleAttribute("java.util").getDepth(ConcurrentModificationException)       = 0
+RollbackRuleAttribute("java.util").getDepth(NoSuchElementException)                = 0
+
+## [e7d] checked exception from a Java API inside a Kotlin @Transactional method (rows: 0 = rolled back, 1 = committed)
+| proxy | method | caller received | rows |
+|---|---|---|---|
+| CGLIB (RollbackProbe$$SpringCGLIB$$0) | javaChecked (no @Throws) | java.nio.file.NoSuchFileException | 1 |
+| CGLIB (RollbackProbe$$SpringCGLIB$$0) | javaCheckedThrows (@Throws(IOException)) | java.nio.file.NoSuchFileException | 1 |
+| CGLIB (interface bean, CheckedPortImpl$$SpringCGLIB$$0) | CheckedPort.javaChecked | java.nio.file.NoSuchFileException | 1 |
+
+## [e7d] (JDK Proxy) same interface bean with spring.aop.proxy-target-class=false
+| JDK (jdk.proxy2.$Proxy60) | CheckedPort.javaChecked | java.lang.reflect.UndeclaredThrowableException (cause java.nio.file.NoSuchFileException) | 1 |
+
+## [e7b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름
 | thrown | attribute | rows |
 |---|---|---|
 | DomainFailure : Exception | (none) + rollbackOn=ALL_EXCEPTIONS | 0 |
+proxy kinds with a user-declared @EnableTransactionManagement (proxyTargetClass attribute left at default):
+orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
+plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
+AbstractTransactionManagementConfiguration beans = [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration]
+Boot TransactionAutoConfiguration$EnableTransactionManagementConfiguration beans present = []
+Boot AopAutoConfiguration beans present = [org.springframework.boot.autoconfigure.aop.AopAutoConfiguration$ClassProxyingConfiguration, org.springframework.boot.autoconfigure.aop.AopAutoConfiguration]
+internalAutoProxyCreator.proxyTargetClass = true
+
+## [e7e] ALL_EXCEPTIONS + method-level noRollbackFor = [DomainFailure::class]
+| DomainFailure : Exception | noRollbackFor=DomainFailure + rollbackOn=ALL_EXCEPTIONS | 1 |
+

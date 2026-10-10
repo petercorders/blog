@@ -1,0 +1,79 @@
+# experiment: e5c 반복 — [e5c] (c) pool=2·Thread 2(CyclicBarrier, connection-timeout=1000ms)에서 REQUIRES_NEW 결과가 실행마다 갈리는지. 푸시 준비 중 커밋 대상 파일만 HEAD 위에 얹은 깨끗한 트리에서 txLab 을 7번 돌려 (c) 구간만 모았다(코드는 runs/txlab.log 실행과 같다)
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 각 실행의 [e0] 도 같은 값(25.0.4.1+1-LTS, Spring 7.0.9, Boot 4.1.1, Kotlin 2.3.21, HikariCP 7.0.2, H2 2.4.240)을 찍었다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: git archive HEAD | tar -x -C <scratch> && (이번 커밋 대상 파일을 같은 경로로 복사, runs/e6b.log 삭제) && cd <scratch> && for i in 1..7; do ./gradlew --offline -q txLab > runN.log; done
+# runs at: 2026-10-08 10:49:25 / 10:50:07 / 10:50:14 / 10:50:20 / 10:50:26 / 10:50:33 / 10:50:39 KST (각 실행의 출력 파일 mtime)
+# extract: sed -n "/^(c) pool=2/,/rows left/p; /^(c) pool=3/,/rows left/p" runN.log
+# 요약: pool=2 는 7번 중 둘 다 timeout 으로 실패(rows left 0)가 5번(1·2·3·6·7번째 실행), 한쪽만 실패하고 다른 쪽이 성공(rows left 2)이 2번(4·5번째)이다. runs/txlab.log(03:41 실행)의 [e5c] 는 한쪽만 실패였다. 로그로 남은 8번을 합치면 둘 다 실패 5, 한쪽만 실패 3. pool=3 은 7번 모두 둘 다 성공(rows left 4)
+# 해석(추정, 따로 재지 않았다): 두 Thread 가 같은 순간 두 번째 커넥션을 기다리기 시작하므로 timeout 시각이 거의 같다. 먼저 timeout 된 쪽의 바깥 롤백이 커넥션을 돌려주는 시점이 다른 쪽 timeout 보다 앞서면 다른 쪽이 그 커넥션을 받아 성공하고, 아니면 둘 다 실패한다. 어느 쪽이 될지는 ms 단위 타이밍이 정한다. 실패 메시지의 waiting 값은 메시지를 만든 순간의 대기 수라 결과를 가르지 않는다(6번째 실행은 waiting=0·1 이 섞인 채 둘 다 실패)
+
+## [e5c-repeat] run 1
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1009ms):
+    w1 after 1007ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1005ms (total=2, active=2, idle=0, waiting=0)
+    w2 after 1007ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1005ms (total=2, active=2, idle=0, waiting=0)
+    rows left: 0
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 35ms):
+    w1 after 35ms -> ok (inner body active=3)
+    w2 after 35ms -> ok (inner body active=2)
+    rows left: 4
+
+## [e5c-repeat] run 2
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1007ms):
+    w1 after 1006ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1004ms (total=2, active=2, idle=0, waiting=0)
+    w2 after 1006ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1004ms (total=2, active=2, idle=0, waiting=0)
+    rows left: 0
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 32ms):
+    w1 after 32ms -> ok (inner body active=3)
+    w2 after 32ms -> ok (inner body active=3)
+    rows left: 4
+
+## [e5c-repeat] run 3
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1008ms):
+    w1 after 1006ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1002ms (total=2, active=2, idle=0, waiting=0)
+    w2 after 1006ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1002ms (total=2, active=2, idle=0, waiting=0)
+    rows left: 0
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 35ms):
+    w1 after 35ms -> ok (inner body active=3)
+    w2 after 35ms -> ok (inner body active=3)
+    rows left: 4
+
+## [e5c-repeat] run 4
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1006ms):
+    w1 after 1005ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1003ms (total=2, active=2, idle=0, waiting=1)
+    w2 after 1005ms -> ok (inner body active=2)
+    rows left: 2
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 36ms):
+    w1 after 36ms -> ok (inner body active=2)
+    w2 after 36ms -> ok (inner body active=3)
+    rows left: 4
+
+## [e5c-repeat] run 5
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1006ms):
+    w1 after 1005ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1003ms (total=2, active=2, idle=0, waiting=1)
+    w2 after 1005ms -> ok (inner body active=2)
+    rows left: 2
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 37ms):
+    w1 after 36ms -> ok (inner body active=3)
+    w2 after 37ms -> ok (inner body active=2)
+    rows left: 4
+
+## [e5c-repeat] run 6
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1011ms):
+    w1 after 1010ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1008ms (total=2, active=2, idle=0, waiting=0)
+    w2 after 1010ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1006ms (total=2, active=2, idle=0, waiting=1)
+    rows left: 0
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 37ms):
+    w1 after 36ms -> ok (inner body active=3)
+    w2 after 36ms -> ok (inner body active=3)
+    rows left: 4
+
+## [e5c-repeat] run 7
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1007ms):
+    w1 after 1007ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1005ms (total=2, active=2, idle=0, waiting=0)
+    w2 after 1007ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1005ms (total=2, active=2, idle=0, waiting=0)
+    rows left: 0
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 34ms):
+    w1 after 34ms -> ok (inner body active=3)
+    w2 after 34ms -> ok (inner body active=2)
+    rows left: 4
+

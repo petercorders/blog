@@ -1,40 +1,55 @@
-# 실험: E2 — @Transactional 프록시를 통과하지 않는 8가지 호출 경로 (SPRING-INTERNALS 1편 §2)
-# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  [실행은 Gradle 툴체인 Microsoft OpenJDK 25.0.4.1+1-LTS 로 함 — build.gradle.kts: java.toolchain.languageVersion=25]
-# 기기: Apple M5 Pro, 15코어(물리 15/논리 15), hw.cachelinesize=128 bytes
-# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab   (실행 후 TxLab.kt 에 spring.main.allow-circular-references=true 를 더해 재실행 — 아래 notes 참조)
+# experiment: txlab — SPRING-INTERNALS 1편(@Transactional) TxLab.kt main() 전체 출력. 구간 마커 [eN]/[eNb]… = runs/eN.log
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txLab   (run at 2026-10-08 03:41:29 KST)
 
-## [E1] proxy kind — spring.aop.proxy-target-class 기본값
-2026-09-27T21:56:12.974+09:00  WARN 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T21:56:12.975+09:00 DEBUG 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
-2026-09-27T21:56:12.975+09:00  WARN 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T21:56:12.975+09:00 DEBUG 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+## [e0] runtime versions (printed by this JVM)
+java.runtime.version = 25.0.4.1+1-LTS
+java.vendor          = Microsoft / OpenJDK 64-Bit Server VM
+java.home            = /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+Spring Framework     = 7.0.9
+Spring Boot          = 4.1.1
+Kotlin stdlib        = 2.3.21
+HikariCP             = 7.0.2
+H2                   = 2.4.240
+
+## [e1] proxy kind — spring.aop.proxy-target-class 기본값
+2026-10-08T03:41:31.278+09:00  WARN 4109 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-08T03:41:31.280+09:00 DEBUG 4109 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
+2026-10-08T03:41:31.280+09:00  WARN 4109 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-08T03:41:31.281+09:00 DEBUG 4109 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
 orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
 plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
+Boot TransactionAutoConfiguration$EnableTransactionManagementConfiguration beans present = [org.springframework.boot.transaction.autoconfigure.TransactionAutoConfiguration$EnableTransactionManagementConfiguration$CglibAutoProxyConfiguration, org.springframework.boot.transaction.autoconfigure.TransactionAutoConfiguration$EnableTransactionManagementConfiguration]
+Boot AopAutoConfiguration beans present = [org.springframework.boot.autoconfigure.aop.AopAutoConfiguration$ClassProxyingConfiguration, org.springframework.boot.autoconfigure.aop.AopAutoConfiguration]
 
-## [E1b] proxy kind — spring.aop.proxy-target-class=false
-orderService  aop=true  cglib=false jdk=true  jdk.proxy2.$Proxy56
+## [e1b] proxy kind — spring.aop.proxy-target-class=false
+orderService  aop=true  cglib=false jdk=true  jdk.proxy2.$Proxy61
 plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
 
-## [E2] which calls reach TransactionInterceptor
-| case | expected | actual | match | tx name |
-|---|---|---|---|---|
-| constructor(init)                  | false    | false    | true  | - |
-| @PostConstruct → own @Transactional | true     | false    | false | - |
-| external → proxy                   | true     | true     | true  | tx |
-| self-invocation this.tx()          | true     | false    | false | - |
-| self field → proxy                 | true     | true     | true  | tx |
-| private @Transactional             | false    | false    | true  | - |
-| protected @Transactional           | false    | true     | false | protectedTx |
-| final @Transactional               | false    | false    | true  | - |
+## [e1c] proxy-target-class=false 의 대가 — 구현 클래스 타입 조회, @Proxyable
+ctx.getBean(OrderService::class.java) -> org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.petercoders.blog.tx.OrderService' available
+ctx.getBean(OrderPort::class.java)    -> jdk.proxy2.$Proxy61
+shipService (@Proxyable(TARGET_CLASS), implements ShipPort): cglib=true jdk=false com.petercoders.blog.tx.ShipService$$SpringCGLIB$$0
+shipService.ship() -> active=true
+2026-10-08T03:41:32.285+09:00  WARN 4109 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jdkInjectProbe' defined in file [/private/tmp/gradle-tx/build/classes/kotlin/main/com/petercoders/blog/tx/JdkInjectProbe.class]: Unsatisfied dependency expressed through constructor parameter 0: Bean named 'orderService' is expected to be of type 'com.petercoders.blog.tx.OrderService' but was actually of type 'jdk.proxy2.$Proxy61'
+constructor(orderService: OrderService) with proxy-target-class=false -> boot failed: org.springframework.beans.factory.UnsatisfiedDependencyException
+    root cause: org.springframework.beans.factory.BeanNotOfRequiredTypeException: Bean named 'orderService' is expected to be of type 'com.petercoders.blog.tx.OrderService' but was actually of type 'jdk.proxy2.$Proxy61'
 
-## [E2b] final method on a CGLIB proxy reads a constructor-injected field
-proxy class      = com.petercoders.blog.tx.BypassProbe$$SpringCGLIB$$0
-target class     = com.petercoders.blog.tx.BypassProbe
-finalTx modifier = public final
-finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springframework.jdbc.core.JdbcTemplate.getDataSource()" because "this.jdbc" is null
-internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
+## [e2] which calls reach TransactionInterceptor (isActualTransactionActive inside the method)
+| case | actual | tx name |
+|---|---|---|
+| constructor (no call, baseline)          | false  | - |
+| @PostConstruct → this.tx()               | false  | - |
+| external → proxy                         | true   | tx |
+| self-invocation this.tx()                | false  | - |
+| self field → proxy                       | true   | tx |
+| private @Transactional                   | false  | - |
+| protected @Transactional                 | true   | protectedTx |
+| final @Transactional                     | false  | - |
 
-## [E2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적
+## [e2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적
 protectedTx modifiers = protected
 privateTx   modifiers = private
 TransactionAttributeSource beans = [transactionAttributeSource=org.springframework.transaction.annotation.AnnotationTransactionAttributeSource]
@@ -43,14 +58,34 @@ TransactionAttributeSource beans = [transactionAttributeSource=org.springframewo
     getTransactionAttribute(privateTx)   = PROPAGATION_REQUIRED,ISOLATION_DEFAULT
 CGLIB 프록시의 오버라이드 = protected final
 
-## [E3] REQUIRES_NEW: self-invocation vs via proxy (rows left in H2)
+## [e2f] package-private @Transactional (Java class, called from another bean in the same package)
+PkgPrivateProbe proxy class = com.petercoders.blog.tx.PkgPrivateProbe$$SpringCGLIB$$0
+PkgPrivateCaller.call() -> probe.pkgTx() : active=true name=com.petercoders.blog.tx.PkgPrivateProbe.pkgTx
+
+## [e4] final method on a CGLIB proxy reads a constructor-injected field
+proxy class      = com.petercoders.blog.tx.BypassProbe$$SpringCGLIB$$0
+target class     = com.petercoders.blog.tx.BypassProbe
+finalTx modifier = public final
+finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springframework.jdbc.core.JdbcTemplate.getDataSource()" because "this.jdbc" is null
+
+## [e5] REQUIRES_NEW: self-invocation vs via proxy, REQUIRED (rows left in H2)
 | path | returned | rows committed |
 |---|---|---|
 | self-invocation   | caught InnerFailed | 2 |
 | self field(proxy) | caught InnerFailed | 1 |
 | REQUIRED(proxy)   | threw UnexpectedRollbackException | 0 |
 
-## [E4] TransactionSynchronizationManager ThreadLocal slots
+## [e5b] rollback-only marker conditions, NESTED, duplicate-key upsert (rows left in H2)
+| case | returned / thrown | rows committed |
+|---|---|---|
+| REQUIRED(proxy) + InnerFailed : RuntimeException | threw UnexpectedRollbackException: Transaction rolled back because it has been marked as rollback-only | 0 |
+| REQUIRED(proxy) + DomainFailure : Exception | caught DomainFailure | 2 |
+| NESTED(proxy) + InnerFailed : RuntimeException | caught InnerFailed | 1 |
+| upsert: other bean @Transactional insert -> duplicate key -> catch -> update | threw UnexpectedRollbackException: Transaction rolled back because it has been marked as rollback-only | v=1 (was 1) |
+upsert caught inside: org.springframework.dao.DuplicateKeyException
+transactionManager = org.springframework.jdbc.support.JdbcTransactionManager, globalRollbackOnParticipationFailure = true, nestedTransactionAllowed = true
+
+## [e6] TransactionSynchronizationManager ThreadLocal slots
 --- outside a transaction (main thread)
   resources                        = null
   synchronizations                 = null
@@ -59,7 +94,7 @@ CGLIB 프록시의 오버라이드 = protected final
   currentTransactionIsolationLevel = null
   actualTransactionActive          = null
 --- inside a transaction (main thread)
-  resources                        = {HikariDataSource (HikariPool-1)=org.springframework.jdbc.datasource.ConnectionHolder@67688110}
+  resources                        = {HikariDataSource (HikariPool-2)=org.springframework.jdbc.datasource.ConnectionHolder@7cdb7fc}
   synchronizations                 = []
   currentTransactionName           = null
   currentTransactionReadOnly       = null
@@ -73,10 +108,10 @@ CGLIB 프록시의 오버라이드 = protected final
   currentTransactionIsolationLevel = null
   actualTransactionActive          = null
 
-## [E4b] TransactionSynchronizationManager.bindResource — same key twice
+## [e6b] TransactionSynchronizationManager.bindResource — same key twice
 bindResource("probe-key", "second") -> IllegalStateException: Already value [first] for key [probe-key] bound to thread
 
-## [E5] rollback rules (rows left in H2: 0 = rolled back, 1 = committed)
+## [e7] rollback rules (rows left in H2: 0 = rolled back, 1 = committed)
 | thrown | attribute | rows |
 |---|---|---|
 | IllegalStateException | (none) | 0 |
@@ -84,7 +119,121 @@ bindResource("probe-key", "second") -> IllegalStateException: Already value [fir
 | DomainFailure : Exception | rollbackFor=Exception | 0 |
 | IllegalStateException | rollbackFor=Exception, noRollbackFor=ISE | 1 |
 
-## [E5b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름
+## [e7c] RollbackRuleAttribute.getDepth — class rules, unmatched, string patterns
+RollbackRuleAttribute(Exception::class).getDepth(IllegalStateException)          = 2
+NoRollbackRuleAttribute(IllegalStateException::class).getDepth(IllegalStateException) = 0
+RollbackRuleAttribute(java.io.IOException::class).getDepth(IllegalStateException)  = -1
+rules [rollbackFor=Exception, noRollbackFor=ISE].rollbackOn(IllegalStateException)  = false
+RollbackRuleAttribute("Failure").getDepth(DomainFailure)                           = 0
+RollbackRuleAttribute("Failure").getDepth(DataAccessResourceFailureException)      = 0
+RollbackRuleAttribute("java.util").getDepth(ConcurrentModificationException)       = 0
+RollbackRuleAttribute("java.util").getDepth(NoSuchElementException)                = 0
+
+## [e7d] checked exception from a Java API inside a Kotlin @Transactional method (rows: 0 = rolled back, 1 = committed)
+| proxy | method | caller received | rows |
+|---|---|---|---|
+| CGLIB (RollbackProbe$$SpringCGLIB$$0) | javaChecked (no @Throws) | java.nio.file.NoSuchFileException | 1 |
+| CGLIB (RollbackProbe$$SpringCGLIB$$0) | javaCheckedThrows (@Throws(IOException)) | java.nio.file.NoSuchFileException | 1 |
+| CGLIB (interface bean, CheckedPortImpl$$SpringCGLIB$$0) | CheckedPort.javaChecked | java.nio.file.NoSuchFileException | 1 |
+
+## [e10] TransactionExecutionListener events per call (Boot auto-configured TM, listener is just a @Component)
+listeners on TM = [CountingTxListener]
+| call | events |
+|---|---|
+| p.tx() (external) | begin(BypassProbe.tx), commit(BypassProbe.tx) |
+| p.selfInvoke() | (none) |
+| n.outerViaProxy() (REQUIRES_NEW inner fails) | begin(NestedProbe.outerViaProxy), begin(NestedProbe.requiresNewInner), rollback(NestedProbe.requiresNewInner), commit(NestedProbe.outerViaProxy) |
+| n.outerRequiredViaProxy() (REQUIRED inner fails) | begin(NestedProbe.outerRequiredViaProxy), rollback(NestedProbe.outerRequiredViaProxy) |
+
+contrast: inside an outer TransactionTemplate(name=test-outer), as a @Transactional test would be
+| p.tx()         | active=true name=test-outer |
+| p.selfInvoke() | active=true name=test-outer |
+without the outer transaction: p.tx() name=com.petercoders.blog.tx.BypassProbe.tx, p.selfInvoke() active=false name=null
+
+## [e5b] globalRollbackOnParticipationFailure=false via TransactionManagerCustomizer (profile noglobal)
+transactionManager = org.springframework.jdbc.support.JdbcTransactionManager, globalRollbackOnParticipationFailure = false
+| REQUIRED(proxy) + InnerFailed, flag=false | caught InnerFailed | 2 |
+rows by note: [outer, inner]
+
+## [e5c] connections held: REQUIRES_NEW vs NESTED, and pool size vs concurrent threads (connection-timeout=1000ms)
+(a) pool=3, one thread: outer body active=1, REQUIRES_NEW inner body active=2
+(a) pool=3, one thread: outer body active=1, NESTED inner body active=1
+(b) pool=1, one thread, REQUIRES_NEW after 1026ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction
+    cause: java.sql.SQLTransientConnectionException: HikariPool-5 - Connection is not available, request timed out after 1012ms (total=1, active=1, idle=0, waiting=0)
+    rows left: 0
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1038ms):
+    w1 after 1022ms -> ok (inner body active=2)
+    w2 after 1018ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1013ms (total=2, active=2, idle=0, waiting=1)
+    rows left: 2
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 155ms):
+    w1 after 118ms -> ok (inner body active=2)
+    w2 after 112ms -> ok (inner body active=3)
+    rows left: 4
+
+## [e6c] writes handed to other threads inside an outer @Transactional that finally rolls back
+outer: caller got OuterFailed
+| path | thread | isActualTransactionActive | rows left after outer rollback |
+|---|---|---|---|
+| caller | main | true | 0 |
+| @Async | task-1 | false | 1 |
+| CompletableFuture.supplyAsync | ForkJoinPool.commonPool-worker-1 | false | 1 |
+| parallelStream (3 of 16) | ForkJoinPool.commonPool-worker-1 | false | 3 |
+| parallelStream (1 of 16) | ForkJoinPool.commonPool-worker-2 | false | 1 |
+| parallelStream (2 of 16) | ForkJoinPool.commonPool-worker-3 | false | 2 |
+| parallelStream (2 of 16) | ForkJoinPool.commonPool-worker-4 | false | 2 |
+| parallelStream (2 of 16) | ForkJoinPool.commonPool-worker-5 | false | 2 |
+| parallelStream (1 of 16) | ForkJoinPool.commonPool-worker-6 | false | 1 |
+| parallelStream (1 of 16) | ForkJoinPool.commonPool-worker-7 | false | 1 |
+| parallelStream (1 of 16) | ForkJoinPool.commonPool-worker-9 | false | 1 |
+| parallelStream (3 of 16) | main | true | 0 |
+| new Thread | manual-thread | false | 1 |
+parallelStream rows left in total: 13 of 16
+
+## [e6d] outer updates a row, then a worker thread updates the same row (H2 LOCK_TIMEOUT=1000)
+after 1029ms -> org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [update tx_log set note = 'worker' where tag = 'e6d']; Timeout trying to lock table "TX_LOG"; SQL statement:
+    root cause: org.h2.mvstore.MVStoreException
+
+## [e7d] (JDK Proxy) same interface bean with spring.aop.proxy-target-class=false
+| JDK (jdk.proxy2.$Proxy60) | CheckedPort.javaChecked | java.lang.reflect.UndeclaredThrowableException (cause java.nio.file.NoSuchFileException) | 1 |
+
+## [e7b] @EnableTransactionManagement(rollbackOn = ALL_EXCEPTIONS) — 같은 코드, 전역 설정만 다름
 | thrown | attribute | rows |
 |---|---|---|
 | DomainFailure : Exception | (none) + rollbackOn=ALL_EXCEPTIONS | 0 |
+proxy kinds with a user-declared @EnableTransactionManagement (proxyTargetClass attribute left at default):
+orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
+plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
+AbstractTransactionManagementConfiguration beans = [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration]
+Boot TransactionAutoConfiguration$EnableTransactionManagementConfiguration beans present = []
+Boot AopAutoConfiguration beans present = [org.springframework.boot.autoconfigure.aop.AopAutoConfiguration$ClassProxyingConfiguration, org.springframework.boot.autoconfigure.aop.AopAutoConfiguration]
+internalAutoProxyCreator.proxyTargetClass = true
+
+## [e7e] ALL_EXCEPTIONS + method-level noRollbackFor = [DomainFailure::class]
+| DomainFailure : Exception | noRollbackFor=DomainFailure + rollbackOn=ALL_EXCEPTIONS | 1 |
+
+## [e2d] self injection with spring.main.allow-circular-references=false
+2026-10-08T03:41:40.610+09:00  WARN 4109 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'selfFieldProbe': Unsatisfied dependency expressed through field 'self': Error creating bean with name 'selfFieldProbe': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+(a) @Autowired lateinit var self -> boot failed: org.springframework.beans.factory.UnsatisfiedDependencyException
+    root cause: org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name 'selfFieldProbe': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+(b) @Autowired @Lazy lateinit var self -> booted
+    | (b) @Autowired @Lazy lateinit var self   | true   | tx |
+(c) constructor ObjectProvider<Self> -> booted
+    | (c) ObjectProvider<Self>.getObject()     | true   | tx |
+
+## [e2g] @PostConstruct calling through the proxy
+(2) allow-circular-references=false, @PostConstruct → ObjectProvider.getObject().tx() -> org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name 'postConstructProviderProbe': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+(1) allow-circular-references=true, @PostConstruct → self.tx() -> | @PostConstruct → self.tx() (allow-circular-references=true) | true   | tx |
+    self is com.petercoders.blog.tx.PostConstructSelfProbe$$SpringCGLIB$$0
+
+## [e2e] exposeProxy = true + AopContext.currentProxy()
+internalAutoProxyCreator.exposeProxy = true
+| (AopContext.currentProxy() as ExposeProbe).tx() | true   | tx |
+| this.tx() (exposeProxy 켜도 자기 호출)         | false  | - |
+
+## [e12] readOnly routing: which H2 database did a @Transactional(readOnly = true) method actually use
+| DataSource given to the TransactionManager | readOnly=true method | readOnly=false method |
+|---|---|---|
+| (a) AbstractRoutingDataSource (key = isCurrentTransactionReadOnly) | db=WRITER readOnlyFlag=true | db=WRITER readOnlyFlag=false |
+| (b) LazyConnectionDataSourceProxy(routing DataSource) | db=READER readOnlyFlag=true | db=WRITER readOnlyFlag=false |
+| (c) LazyConnectionDataSourceProxy(writer) + setReadOnlyDataSource(reader) | db=READER readOnlyFlag=true | db=WRITER readOnlyFlag=false |

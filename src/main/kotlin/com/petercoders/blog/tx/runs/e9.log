@@ -1,0 +1,46 @@
+# experiment: e9 — @Transactional 과 커스텀 @Aspect(락 대역)가 한 메서드에 걸릴 때의 Advisor 순서. spring-boot-starter-aspectj 는 txOrder configuration 으로 이 태스크 classpath 에만 넣었다
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txOrderLab   (run at 2026-10-08 03:42:03 KST; spring-boot-starter-aspectj 4.1.1·aspectjweaver 1.9.25.1 jar 는 이 세션에서 한 번 온라인으로 받아 Gradle 캐시에 넣은 뒤 --offline 으로 실행)
+
+## [e9] advisor order: @Transactional + custom @Aspect on the same method (spring-boot-starter-aspectj on this classpath only)
+aspectjweaver = 1.9.25.1
+
+### [e9] (a) Aspect without @Order, transaction advisor default order
+internalAutoProxyCreator = org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
+advisors on the CouponService proxy (outermost first):
+  [0] ExposeInvocationInterceptor$1 order=HIGHEST_PRECEDENCE + 1 advice=ExposeInvocationInterceptor
+  [1] BeanFactoryTransactionAttributeSourceAdvisor order=LOWEST_PRECEDENCE advice=TransactionInterceptor
+  [2] InstantiationModelAwarePointcutAdvisorImpl order=LOWEST_PRECEDENCE advice=AspectJAroundAdvice
+sequence:
+  lock acquire (isActualTransactionActive=true)
+  target body  (isActualTransactionActive=true)
+  lock release (isActualTransactionActive=true)
+  afterCommit
+=> lock release before commit
+
+### [e9] (b) Aspect @Order(LOWEST_PRECEDENCE - 1), transaction advisor default order
+internalAutoProxyCreator = org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
+advisors on the CouponService proxy (outermost first):
+  [0] ExposeInvocationInterceptor$1 order=HIGHEST_PRECEDENCE + 1 advice=ExposeInvocationInterceptor
+  [1] InstantiationModelAwarePointcutAdvisorImpl order=LOWEST_PRECEDENCE - 1 advice=AspectJAroundAdvice
+  [2] BeanFactoryTransactionAttributeSourceAdvisor order=LOWEST_PRECEDENCE advice=TransactionInterceptor
+sequence:
+  lock acquire (isActualTransactionActive=false)
+  target body  (isActualTransactionActive=true)
+  afterCommit
+  lock release (isActualTransactionActive=false)
+=> commit before lock release
+
+### [e9] (c) @EnableTransactionManagement(order = LOWEST_PRECEDENCE - 1) + Aspect @Order(LOWEST_PRECEDENCE)
+internalAutoProxyCreator = org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
+advisors on the CouponService proxy (outermost first):
+  [0] ExposeInvocationInterceptor$1 order=HIGHEST_PRECEDENCE + 1 advice=ExposeInvocationInterceptor
+  [1] BeanFactoryTransactionAttributeSourceAdvisor order=LOWEST_PRECEDENCE - 1 advice=TransactionInterceptor
+  [2] InstantiationModelAwarePointcutAdvisorImpl order=LOWEST_PRECEDENCE advice=AspectJAroundAdvice
+sequence:
+  lock acquire (isActualTransactionActive=true)
+  target body  (isActualTransactionActive=true)
+  lock release (isActualTransactionActive=true)
+  afterCommit
+=> lock release before commit

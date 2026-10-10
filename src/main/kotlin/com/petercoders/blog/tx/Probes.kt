@@ -1,16 +1,19 @@
-// SPRING-INTERNALS 1편 — @Transactional 프록시 실험용 빈 전체.
-// E2(BypassProbe, 아래)는 프록시를 "통과하지 않는" 8가지 호출 경로를 한 클래스에 모아
+// SPRING-INTERNALS 1편 — @Transactional 프록시 실험용 빈 전체(재편 때 더한 빈은 MoreProbes.kt).
+// [e2](BypassProbe, 아래)는 Proxy 를 "통과하지 않는" 경로를 한 클래스에 모아
 // 각 경로에서 TransactionSynchronizationManager.isActualTransactionActive() 가 실제로
-// true 인지를 잰다: 생성자, @PostConstruct, this.tx() 자기호출, self 필드(=프록시) 경유,
-// private/protected/final @Transactional. E1 은 OrderService/PlainService 로 프록시 종류를,
-// E3 은 NestedProbe 로 REQUIRES_NEW 자기호출을, E5 는 RollbackProbe 로 롤백 규칙을 본다.
+// true 인지를 잰다: 생성자(호출 없음, 기준선), @PostConstruct → this.tx(), this.tx() 자기 호출,
+// self 필드(=Proxy) 경유, private/protected/final @Transactional. [e1] 은 OrderService/PlainService 로 Proxy 종류를,
+// [e4] 는 final 메서드 NPE 를, [e5] 는 NestedProbe 로 전파를, [e7] 은 RollbackProbe 로 롤백 규칙을 본다.
 // 실행: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab
 // (BypassProbe 의 self 필드 자기주입은 Spring Boot 4 기본값에서 순환참조로 거부되므로
-//  TxLab.kt 의 boot() 에 spring.main.allow-circular-references=true 가 필요하다.)
+//  TxLab.kt 의 boot() 에 spring.main.allow-circular-references=true 가 필요하다.
+//  self 필드를 가진 빈은 @Profile("!circ-off") 로 묶어, 순환 참조를 끈 [e2d]·[e2g] 컨텍스트에서는 빠지게 한다.)
+// 구간 마커는 로그 파일 id 와 같다: [e1]·[e2]·[e4]·[e5]·[e7] … (README 대응표 참조)
 package com.petercoders.blog.tx
 
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Profile
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
@@ -23,7 +26,7 @@ data class Hit(val case: String, val expected: Boolean, val active: Boolean, val
 fun hit(case: String, expected: Boolean, note: String = "") =
     Hit(case, expected, TSM.isActualTransactionActive(), TSM.getCurrentTransactionName(), note)
 
-// ---------------------------------------------------------------- E1 프록시 종류
+// ---------------------------------------------------------------- [e1] 프록시 종류
 
 interface OrderPort {
     fun place(): Hit
@@ -43,9 +46,10 @@ class PlainService {
     fun place(): Hit = hit("no-interface bean", true)
 }
 
-// ---------------------------------------------------------------- E2 프록시 미통과 5종
+// ---------------------------------------------------------------- [e2] 프록시 미통과 경로 · [e4] final NPE
 
 @Service
+@Profile("!circ-off")
 open class BypassProbe(private val jdbc: JdbcTemplate) {
 
     @Autowired
@@ -54,14 +58,16 @@ open class BypassProbe(private val jdbc: JdbcTemplate) {
     private val postConstructHit = mutableListOf<Hit>()
 
     init {
-        // 생성자 안: 프록시는 아직 존재하지 않는다.
-        postConstructHit += hit("constructor(init)", false)
+        // 생성자 안: 아무 메서드도 부르지 않는 기준선. 이 시점의 this 는 원본(target)이다.
+        postConstructHit += hit("constructor (no call, baseline)", false)
     }
 
     @PostConstruct
     fun afterInit() {
-        // BeanPostProcessor 가 프록시로 감싸기 전에 불린다.
-        postConstructHit += tx().copy(case = "@PostConstruct → own @Transactional")
+        // @PostConstruct 는 원본(target) 객체 위에서 돈다. 이 앱은 순환 참조 허용 + self 필드라
+        // 이 시점에 early Proxy 가 이미 만들어졌을 수 있다. 그래도 this.tx() 는 자기 호출이라
+        // Proxy 를 지나지 않는다. 이 행은 "Proxy 가 아직 없다"의 증거가 아니라 자기 호출의 결과다.
+        postConstructHit += tx().copy(case = "@PostConstruct → this.tx()")
     }
 
     fun lifecycleHits(): List<Hit> = postConstructHit.toList()
@@ -97,11 +103,12 @@ open class BypassProbe(private val jdbc: JdbcTemplate) {
         jdbc.queryForObject("select count(*) from tx_log where tag = ?", Int::class.java, tag) ?: -1
 }
 
-// ---------------------------------------------------------------- E3 REQUIRES_NEW 자기 호출
+// ---------------------------------------------------------------- [e5] REQUIRES_NEW 자기 호출 · REQUIRED · NESTED
 
 class InnerFailed : RuntimeException("inner failed on purpose")
 
 @Service
+@Profile("!circ-off")
 class NestedProbe(private val jdbc: JdbcTemplate) {
 
     @Autowired
@@ -151,9 +158,56 @@ class NestedProbe(private val jdbc: JdbcTemplate) {
         jdbc.update("insert into tx_log(tag, note) values (?, 'inner')", tag)
         throw InnerFailed()
     }
+
+    // ------------------------------------------------------------ [e5b] rollback-only 표시 조건 · NESTED
+
+    /** REQUIRED 로 참여한 안쪽이 Exception 상속 예외(DomainFailure)를 던진다. 기본 rollbackOn 은 거짓이다. */
+    @Transactional
+    fun outerRequiredCheckedViaProxy(tag: String): String {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'outer')", tag)
+        return try {
+            self.requiredInnerChecked(tag); "no exception"
+        } catch (e: DomainFailure) {
+            "caught " + e.javaClass.simpleName
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    fun requiredInnerChecked(tag: String) {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'inner')", tag)
+        throw DomainFailure("participating inner threw an Exception subtype")
+    }
+
+    /** NESTED: 같은 커넥션의 savepoint. 안쪽만 되돌리고 바깥은 커밋할 수 있나. */
+    @Transactional
+    fun outerNestedViaProxy(tag: String): String {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'outer')", tag)
+        return try {
+            self.nestedInner(tag); "no exception"
+        } catch (e: InnerFailed) {
+            "caught " + e.javaClass.simpleName
+        }
+    }
+
+    @Transactional(propagation = Propagation.NESTED)
+    fun nestedInner(tag: String) {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'inner')", tag)
+        throw InnerFailed()
+    }
+
+    /** outerRequiredViaProxy 와 같지만 태그를 받는다(플래그를 끈 컨텍스트에서 쓴다). */
+    @Transactional
+    fun outerRequiredViaProxyTagged(tag: String): String {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'outer')", tag)
+        return try {
+            self.requiredInner(tag); "no exception"
+        } catch (e: InnerFailed) {
+            "caught " + e.javaClass.simpleName
+        }
+    }
 }
 
-// ---------------------------------------------------------------- E5 롤백 규칙
+// ---------------------------------------------------------------- [e7] 롤백 규칙
 
 /** Kotlin 에는 체크 예외가 없다. 상속 계층은 Java 와 똑같다. */
 class DomainFailure(msg: String) : Exception(msg)
@@ -183,6 +237,31 @@ class RollbackProbe(private val jdbc: JdbcTemplate) {
     @Transactional(rollbackFor = [Exception::class], noRollbackFor = [IllegalStateException::class])
     fun depthRule(tag: String) {
         jdbc.update("insert into tx_log(tag, note) values (?, 'r')", tag)
-        throw IllegalStateException("depth 0 rule wins over depth 3 rule")
+        throw IllegalStateException("depth 0 rule wins over depth 2 rule")
+    }
+
+    // ------------------------------------------------------------ [e7d] Java 메서드가 던지는 checked 예외
+
+    /** Kotlin 은 선언하지 않는다. Files.readString 이 던지는 NoSuchFileException(IOException 계열)이 그대로 나간다. */
+    @Transactional
+    fun javaChecked(tag: String) {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'r')", tag)
+        java.nio.file.Files.readString(java.nio.file.Path.of("/nonexistent-tx-lab"))
+    }
+
+    /** 같은 코드에 @Throws 로 선언만 더한다(바이트코드에 throws IOException 이 붙는다). */
+    @Transactional
+    @Throws(java.io.IOException::class)
+    fun javaCheckedThrows(tag: String) {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'r')", tag)
+        java.nio.file.Files.readString(java.nio.file.Path.of("/nonexistent-tx-lab"))
+    }
+
+    // ------------------------------------------------------------ [e7e] ALL_EXCEPTIONS 위의 개별 noRollbackFor
+
+    @Transactional(noRollbackFor = [DomainFailure::class])
+    fun checkedLikeNoRollback(tag: String) {
+        jdbc.update("insert into tx_log(tag, note) values (?, 'r')", tag)
+        throw DomainFailure("extends Exception directly")
     }
 }

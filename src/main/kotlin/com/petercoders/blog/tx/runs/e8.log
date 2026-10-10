@@ -1,0 +1,143 @@
+# experiment: e8 — Transaction 로그가 찍히는 logger·레벨([e8], TRACE 모드)과 부팅 CGLIB 경고의 root 레벨 조건([e8b], INFO·WARN 모드)
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && for m in TRACE INFO WARN; do ./gradlew --offline -q txLogLab --args=$m; done   (모드마다 새 JVM. CglibAopProxy.validatedClasses 가 static 이라 같은 JVM 의 두 번째 부팅은 검사를 다시 하지 않는다)
+# runs at: TRACE 2026-10-08 03:41:54 KST / INFO 2026-10-08 03:41:55 KST / WARN 2026-10-08 03:41:58 KST
+
+########## mode=TRACE
+## [e8] txLogLab mode=TRACE properties=[logging.level.root=INFO, logging.level.org.springframework.transaction.interceptor=TRACE, logging.level.org.springframework.jdbc.support.JdbcTransactionManager=DEBUG, logging.level.org.springframework.jdbc.datasource.DataSourceUtils=DEBUG]
+2026-10-08T03:41:55.082+09:00  INFO 4343 --- [blog] [           main] com.petercoders.blog.tx.TxLogLabKt       : Starting TxLogLabKt using Java 25.0.4.1 with PID 4343 (/private/tmp/gradle-tx/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-tx)
+2026-10-08T03:41:55.083+09:00  INFO 4343 --- [blog] [           main] com.petercoders.blog.tx.TxLogLabKt       : The following 1 profile is active: "loglab"
+2026-10-08T03:41:55.477+09:00  WARN 4343 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-08T03:41:55.477+09:00  WARN 4343 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-08T03:41:55.487+09:00  WARN 4343 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final java.lang.String com.petercoders.blog.tx.FinalOverrideProbe.ping()] because it is marked as final, consider using interface-based JDK proxies instead.
+2026-10-08T03:41:55.576+09:00  INFO 4343 --- [blog] [           main] com.petercoders.blog.tx.TxLogLabKt       : Started TxLogLabKt in 0.646 seconds (process running for 0.78)
+----- booted
+transactionManager class = org.springframework.jdbc.support.JdbcTransactionManager
+2026-10-08T03:41:55.579+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.datasource.DataSourceUtils      : Fetching JDBC Connection from DataSource
+2026-10-08T03:41:55.579+09:00  INFO 4343 --- [blog] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-08T03:41:55.664+09:00  INFO 4343 --- [blog] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:txlog user=SA
+2026-10-08T03:41:55.665+09:00  INFO 4343 --- [blog] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+----- call: p.tx()  (external call through the proxy)
+2026-10-08T03:41:55.678+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Creating new transaction with name [com.petercoders.blog.tx.BypassProbe.tx]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+2026-10-08T03:41:55.679+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Acquired Connection [HikariProxyConnection@38023477 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] for JDBC transaction
+2026-10-08T03:41:55.679+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Switching JDBC Connection [HikariProxyConnection@38023477 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] to manual commit
+2026-10-08T03:41:55.680+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Getting transaction for [com.petercoders.blog.tx.BypassProbe.tx]
+2026-10-08T03:41:55.680+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Completing transaction for [com.petercoders.blog.tx.BypassProbe.tx]
+2026-10-08T03:41:55.680+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Initiating transaction commit
+2026-10-08T03:41:55.680+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Committing JDBC transaction on Connection [HikariProxyConnection@38023477 wrapping conn0: url=jdbc:h2:mem:txlog user=SA]
+2026-10-08T03:41:55.680+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Releasing JDBC Connection [HikariProxyConnection@38023477 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] after transaction
+----- call: p.selfInvoke()  (this.tx() inside the target)
+----- call: n.outerViaProxy()  (REQUIRES_NEW inner throws, outer catches)
+2026-10-08T03:41:55.681+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Creating new transaction with name [com.petercoders.blog.tx.NestedProbe.outerViaProxy]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+2026-10-08T03:41:55.681+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Acquired Connection [HikariProxyConnection@44627686 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] for JDBC transaction
+2026-10-08T03:41:55.681+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Switching JDBC Connection [HikariProxyConnection@44627686 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] to manual commit
+2026-10-08T03:41:55.681+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Getting transaction for [com.petercoders.blog.tx.NestedProbe.outerViaProxy]
+2026-10-08T03:41:55.682+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Suspending current transaction, creating new transaction with name [com.petercoders.blog.tx.NestedProbe.requiresNewInner]
+2026-10-08T03:41:55.683+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Acquired Connection [HikariProxyConnection@1643345873 wrapping conn1: url=jdbc:h2:mem:txlog user=SA] for JDBC transaction
+2026-10-08T03:41:55.683+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Switching JDBC Connection [HikariProxyConnection@1643345873 wrapping conn1: url=jdbc:h2:mem:txlog user=SA] to manual commit
+2026-10-08T03:41:55.683+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Getting transaction for [com.petercoders.blog.tx.NestedProbe.requiresNewInner]
+2026-10-08T03:41:55.686+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Completing transaction for [com.petercoders.blog.tx.NestedProbe.requiresNewInner] after exception: com.petercoders.blog.tx.InnerFailed: inner failed on purpose
+2026-10-08T03:41:55.686+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : MethodRollbackEvent: com.petercoders.blog.tx.NestedProbe.requiresNewInner [com.petercoders.blog.tx.InnerFailed: inner failed on purpose]
+
+com.petercoders.blog.tx.InnerFailed: inner failed on purpose
+	at com.petercoders.blog.tx.NestedProbe.requiresNewInner(Probes.kt:153) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.tx.NestedProbe$$SpringCGLIB$$0.requiresNewInner(<generated>) ~[main/:na]
+	at com.petercoders.blog.tx.NestedProbe.outerViaProxy(Probes.kt:133) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.tx.NestedProbe$$SpringCGLIB$$0.outerViaProxy(<generated>) ~[main/:na]
+	at com.petercoders.blog.tx.TxLogLabKt.main(TxLogLab.kt:50) ~[main/:na]
+
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Initiating transaction rollback
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Rolling back JDBC transaction on Connection [HikariProxyConnection@1643345873 wrapping conn1: url=jdbc:h2:mem:txlog user=SA]
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Releasing JDBC Connection [HikariProxyConnection@1643345873 wrapping conn1: url=jdbc:h2:mem:txlog user=SA] after transaction
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Resuming suspended transaction after completion of inner transaction
+2026-10-08T03:41:55.688+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Completing transaction for [com.petercoders.blog.tx.NestedProbe.outerViaProxy]
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Initiating transaction commit
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Committing JDBC transaction on Connection [HikariProxyConnection@44627686 wrapping conn0: url=jdbc:h2:mem:txlog user=SA]
+2026-10-08T03:41:55.688+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Releasing JDBC Connection [HikariProxyConnection@44627686 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] after transaction
+----- call: n.outerRequiredViaProxy()  (REQUIRED inner throws, outer catches)
+2026-10-08T03:41:55.689+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Creating new transaction with name [com.petercoders.blog.tx.NestedProbe.outerRequiredViaProxy]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+2026-10-08T03:41:55.689+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Acquired Connection [HikariProxyConnection@102946788 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] for JDBC transaction
+2026-10-08T03:41:55.689+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Switching JDBC Connection [HikariProxyConnection@102946788 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] to manual commit
+2026-10-08T03:41:55.689+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Getting transaction for [com.petercoders.blog.tx.NestedProbe.outerRequiredViaProxy]
+2026-10-08T03:41:55.689+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Participating in existing transaction
+2026-10-08T03:41:55.689+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Getting transaction for [com.petercoders.blog.tx.NestedProbe.requiredInner]
+2026-10-08T03:41:55.689+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Completing transaction for [com.petercoders.blog.tx.NestedProbe.requiredInner] after exception: com.petercoders.blog.tx.InnerFailed: inner failed on purpose
+2026-10-08T03:41:55.689+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : MethodRollbackEvent: com.petercoders.blog.tx.NestedProbe.requiredInner [com.petercoders.blog.tx.InnerFailed: inner failed on purpose]
+
+com.petercoders.blog.tx.InnerFailed: inner failed on purpose
+	at com.petercoders.blog.tx.NestedProbe.requiredInner(Probes.kt:159) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.tx.NestedProbe$$SpringCGLIB$$0.requiredInner(<generated>) ~[main/:na]
+	at com.petercoders.blog.tx.NestedProbe.outerRequiredViaProxy(Probes.kt:144) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:133) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:371) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:130) ~[spring-tx-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719) ~[spring-aop-7.0.9.jar:7.0.9]
+	at com.petercoders.blog.tx.NestedProbe$$SpringCGLIB$$0.outerRequiredViaProxy(<generated>) ~[main/:na]
+	at com.petercoders.blog.tx.TxLogLabKt.main(TxLogLab.kt:52) ~[main/:na]
+
+2026-10-08T03:41:55.689+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Participating transaction failed - marking existing transaction as rollback-only
+2026-10-08T03:41:55.690+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Setting JDBC transaction [HikariProxyConnection@102946788 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] rollback-only
+2026-10-08T03:41:55.690+09:00 TRACE 4343 --- [blog] [           main] o.s.t.i.TransactionInterceptor           : Completing transaction for [com.petercoders.blog.tx.NestedProbe.outerRequiredViaProxy]
+2026-10-08T03:41:55.690+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Global transaction is marked as rollback-only but transactional code requested commit
+2026-10-08T03:41:55.690+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Initiating transaction rollback
+2026-10-08T03:41:55.690+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Rolling back JDBC transaction on Connection [HikariProxyConnection@102946788 wrapping conn0: url=jdbc:h2:mem:txlog user=SA]
+2026-10-08T03:41:55.690+09:00 DEBUG 4343 --- [blog] [           main] o.s.jdbc.support.JdbcTransactionManager  : Releasing JDBC Connection [HikariProxyConnection@102946788 wrapping conn0: url=jdbc:h2:mem:txlog user=SA] after transaction
+caller got org.springframework.transaction.UnexpectedRollbackException
+----- end
+2026-10-08T03:41:55.691+09:00  INFO 4343 --- [blog] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-10-08T03:41:55.722+09:00  INFO 4343 --- [blog] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+########## mode=INFO
+## [e8b] txLogLab mode=INFO properties=[logging.level.root=INFO]
+2026-10-08T03:41:56.778+09:00  INFO 4368 --- [blog] [           main] com.petercoders.blog.tx.TxLogLabKt       : Starting TxLogLabKt using Java 25.0.4.1 with PID 4368 (/private/tmp/gradle-tx/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-tx)
+2026-10-08T03:41:56.780+09:00  INFO 4368 --- [blog] [           main] com.petercoders.blog.tx.TxLogLabKt       : The following 1 profile is active: "loglab"
+2026-10-08T03:41:57.668+09:00  WARN 4368 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-08T03:41:57.668+09:00  WARN 4368 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-08T03:41:57.690+09:00  WARN 4368 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final java.lang.String com.petercoders.blog.tx.FinalOverrideProbe.ping()] because it is marked as final, consider using interface-based JDK proxies instead.
+2026-10-08T03:41:57.935+09:00  INFO 4368 --- [blog] [           main] com.petercoders.blog.tx.TxLogLabKt       : Started TxLogLabKt in 1.411 seconds (process running for 1.634)
+----- booted
+
+########## mode=WARN
+## [e8b] txLogLab mode=WARN properties=[logging.level.root=WARN]
+----- booted
+
+########## grep -c (셸에서 위 두 모드 출력을 센 값)
+mode=INFO  'cannot get proxied via CGLIB' = 2   'Unable to proxy interface-implementing method' = 1
+mode=WARN  'cannot get proxied via CGLIB' = 0   'Unable to proxy interface-implementing method' = 0

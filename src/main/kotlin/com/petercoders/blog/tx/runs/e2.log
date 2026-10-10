@@ -1,40 +1,32 @@
-# 실험: E2 — @Transactional 프록시를 통과하지 않는 8가지 호출 경로 (SPRING-INTERNALS 1편 §2)
-# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)  [실행은 Gradle 툴체인 Microsoft OpenJDK 25.0.4.1+1-LTS 로 함 — build.gradle.kts: java.toolchain.languageVersion=25]
-# 기기: Apple M5 Pro, 15코어(물리 15/논리 15), hw.cachelinesize=128 bytes
-# 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q txLab   (실행 후 TxLab.kt 에 spring.main.allow-circular-references=true 를 더해 재실행 — 아래 notes 참조)
+# experiment: e2 — Proxy 를 지나지 않는 여덟 경로 [e2], protected 속성 [e2c], package-private(Java) [e2f], 순환 참조 금지 시 self 주입 세 갈래 [e2d], @PostConstruct 에서 Proxy 경유 호출 [e2g], exposeProxy [e2e]
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txLab   (run at 2026-10-08 03:41:29 KST; 출력 전체 = runs/txlab.log)
+# extract: awk '/^## \[/{keep = ($0 ~ /^## \[e0\]/ || $0 ~ /^## \[e2[a-z]?\]/)} keep' runs/txlab.log
 
-## [E1] proxy kind — spring.aop.proxy-target-class 기본값
-2026-09-27T21:56:12.974+09:00  WARN 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T21:56:12.975+09:00 DEBUG 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final com.petercoders.blog.tx.Hit com.petercoders.blog.tx.BypassProbe.finalTx()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
-2026-09-27T21:56:12.975+09:00  WARN 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
-2026-09-27T21:56:12.975+09:00 DEBUG 33731 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Final method [public final java.lang.String com.petercoders.blog.tx.BypassProbe.finalReadsField()] cannot get proxied via CGLIB: Calls to this method will NOT be routed to the target instance and might lead to NPEs against uninitialized fields in the proxy instance.
-orderService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.OrderService$$SpringCGLIB$$0
-plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+## [e0] runtime versions (printed by this JVM)
+java.runtime.version = 25.0.4.1+1-LTS
+java.vendor          = Microsoft / OpenJDK 64-Bit Server VM
+java.home            = /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+Spring Framework     = 7.0.9
+Spring Boot          = 4.1.1
+Kotlin stdlib        = 2.3.21
+HikariCP             = 7.0.2
+H2                   = 2.4.240
 
-## [E1b] proxy kind — spring.aop.proxy-target-class=false
-orderService  aop=true  cglib=false jdk=true  jdk.proxy2.$Proxy56
-plainService  aop=true  cglib=true  jdk=false com.petercoders.blog.tx.PlainService$$SpringCGLIB$$0
+## [e2] which calls reach TransactionInterceptor (isActualTransactionActive inside the method)
+| case | actual | tx name |
+|---|---|---|
+| constructor (no call, baseline)          | false  | - |
+| @PostConstruct → this.tx()               | false  | - |
+| external → proxy                         | true   | tx |
+| self-invocation this.tx()                | false  | - |
+| self field → proxy                       | true   | tx |
+| private @Transactional                   | false  | - |
+| protected @Transactional                 | true   | protectedTx |
+| final @Transactional                     | false  | - |
 
-## [E2] which calls reach TransactionInterceptor
-| case | expected | actual | match | tx name |
-|---|---|---|---|---|
-| constructor(init)                  | false    | false    | true  | - |
-| @PostConstruct → own @Transactional | true     | false    | false | - |
-| external → proxy                   | true     | true     | true  | tx |
-| self-invocation this.tx()          | true     | false    | false | - |
-| self field → proxy                 | true     | true     | true  | tx |
-| private @Transactional             | false    | false    | true  | - |
-| protected @Transactional           | false    | true     | false | protectedTx |
-| final @Transactional               | false    | false    | true  | - |
-
-## [E2b] final method on a CGLIB proxy reads a constructor-injected field
-proxy class      = com.petercoders.blog.tx.BypassProbe$$SpringCGLIB$$0
-target class     = com.petercoders.blog.tx.BypassProbe
-finalTx modifier = public final
-finalReadsField() -> java.lang.NullPointerException: Cannot invoke "org.springframework.jdbc.core.JdbcTemplate.getDataSource()" because "this.jdbc" is null
-internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
-
-## [E2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적
+## [e2c] protected 의 트랜잭션 속성을 직접 조회 — publicMethodsOnly 게이트 추적
 protectedTx modifiers = protected
 privateTx   modifiers = private
 TransactionAttributeSource beans = [transactionAttributeSource=org.springframework.transaction.annotation.AnnotationTransactionAttributeSource]
@@ -42,4 +34,27 @@ TransactionAttributeSource beans = [transactionAttributeSource=org.springframewo
     getTransactionAttribute(protectedTx) = PROPAGATION_REQUIRED,ISOLATION_DEFAULT
     getTransactionAttribute(privateTx)   = PROPAGATION_REQUIRED,ISOLATION_DEFAULT
 CGLIB 프록시의 오버라이드 = protected final
+
+## [e2f] package-private @Transactional (Java class, called from another bean in the same package)
+PkgPrivateProbe proxy class = com.petercoders.blog.tx.PkgPrivateProbe$$SpringCGLIB$$0
+PkgPrivateCaller.call() -> probe.pkgTx() : active=true name=com.petercoders.blog.tx.PkgPrivateProbe.pkgTx
+
+## [e2d] self injection with spring.main.allow-circular-references=false
+2026-10-08T03:41:40.610+09:00  WARN 4109 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'selfFieldProbe': Unsatisfied dependency expressed through field 'self': Error creating bean with name 'selfFieldProbe': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+(a) @Autowired lateinit var self -> boot failed: org.springframework.beans.factory.UnsatisfiedDependencyException
+    root cause: org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name 'selfFieldProbe': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+(b) @Autowired @Lazy lateinit var self -> booted
+    | (b) @Autowired @Lazy lateinit var self   | true   | tx |
+(c) constructor ObjectProvider<Self> -> booted
+    | (c) ObjectProvider<Self>.getObject()     | true   | tx |
+
+## [e2g] @PostConstruct calling through the proxy
+(2) allow-circular-references=false, @PostConstruct → ObjectProvider.getObject().tx() -> org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name 'postConstructProviderProbe': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+(1) allow-circular-references=true, @PostConstruct → self.tx() -> | @PostConstruct → self.tx() (allow-circular-references=true) | true   | tx |
+    self is com.petercoders.blog.tx.PostConstructSelfProbe$$SpringCGLIB$$0
+
+## [e2e] exposeProxy = true + AopContext.currentProxy()
+internalAutoProxyCreator.exposeProxy = true
+| (AopContext.currentProxy() as ExposeProbe).tx() | true   | tx |
+| this.tx() (exposeProxy 켜도 자기 호출)         | false  | - |
 

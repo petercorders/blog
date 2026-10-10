@@ -1,13 +1,53 @@
-# experiment: e5 (§4 all-open 이 열어도 안 걸리는 곳) — verifies E3 REQUIRES_NEW self-invocation vs proxy(REQUIRES_NEW/REQUIRED) rows in runs/txlab.log
-# java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
-# device: Apple M5 Pro / 15 cores (physical=15, logical=15) / hw.cachelinesize=128
-# command: cd ~/Desktop/development/blog && sed -n '/## \[E3\]/,/## \[E4\]/p' src/main/kotlin/com/petercoders/blog/tx/runs/txlab.log
+# experiment: e5 — 전파: REQUIRES_NEW self vs proxy·REQUIRED [e5], rollback-only 표시 조건·NESTED·중복 키 upsert·참여 실패 플래그 [e5b], 커넥션 수와 풀 교착 [e5c]
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txLab   (run at 2026-10-08 03:41:29 KST; 출력 전체 = runs/txlab.log)
+# extract: awk '/^## \[/{keep = ($0 ~ /^## \[e0\]/ || $0 ~ /^## \[e5[a-z]?\]/)} keep' runs/txlab.log
 
-## [E3] REQUIRES_NEW: self-invocation vs via proxy (rows left in H2)
+## [e0] runtime versions (printed by this JVM)
+java.runtime.version = 25.0.4.1+1-LTS
+java.vendor          = Microsoft / OpenJDK 64-Bit Server VM
+java.home            = /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+Spring Framework     = 7.0.9
+Spring Boot          = 4.1.1
+Kotlin stdlib        = 2.3.21
+HikariCP             = 7.0.2
+H2                   = 2.4.240
+
+## [e5] REQUIRES_NEW: self-invocation vs via proxy, REQUIRED (rows left in H2)
 | path | returned | rows committed |
 |---|---|---|
 | self-invocation   | caught InnerFailed | 2 |
 | self field(proxy) | caught InnerFailed | 1 |
 | REQUIRED(proxy)   | threw UnexpectedRollbackException | 0 |
 
-## [E4] TransactionSynchronizationManager ThreadLocal slots
+## [e5b] rollback-only marker conditions, NESTED, duplicate-key upsert (rows left in H2)
+| case | returned / thrown | rows committed |
+|---|---|---|
+| REQUIRED(proxy) + InnerFailed : RuntimeException | threw UnexpectedRollbackException: Transaction rolled back because it has been marked as rollback-only | 0 |
+| REQUIRED(proxy) + DomainFailure : Exception | caught DomainFailure | 2 |
+| NESTED(proxy) + InnerFailed : RuntimeException | caught InnerFailed | 1 |
+| upsert: other bean @Transactional insert -> duplicate key -> catch -> update | threw UnexpectedRollbackException: Transaction rolled back because it has been marked as rollback-only | v=1 (was 1) |
+upsert caught inside: org.springframework.dao.DuplicateKeyException
+transactionManager = org.springframework.jdbc.support.JdbcTransactionManager, globalRollbackOnParticipationFailure = true, nestedTransactionAllowed = true
+
+## [e5b] globalRollbackOnParticipationFailure=false via TransactionManagerCustomizer (profile noglobal)
+transactionManager = org.springframework.jdbc.support.JdbcTransactionManager, globalRollbackOnParticipationFailure = false
+| REQUIRED(proxy) + InnerFailed, flag=false | caught InnerFailed | 2 |
+rows by note: [outer, inner]
+
+## [e5c] connections held: REQUIRES_NEW vs NESTED, and pool size vs concurrent threads (connection-timeout=1000ms)
+(a) pool=3, one thread: outer body active=1, REQUIRES_NEW inner body active=2
+(a) pool=3, one thread: outer body active=1, NESTED inner body active=1
+(b) pool=1, one thread, REQUIRES_NEW after 1026ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction
+    cause: java.sql.SQLTransientConnectionException: HikariPool-5 - Connection is not available, request timed out after 1012ms (total=1, active=1, idle=0, waiting=0)
+    rows left: 0
+(c) pool=2, 2 threads each holding an outer connection then REQUIRES_NEW (total 1038ms):
+    w1 after 1022ms -> ok (inner body active=2)
+    w2 after 1018ms -> threw org.springframework.transaction.CannotCreateTransactionException: Could not open JDBC Connection for transaction / cause: java.sql.SQLTransientConnectionException: HikariPool-6 - Connection is not available, request timed out after 1013ms (total=2, active=2, idle=0, waiting=1)
+    rows left: 2
+(c) pool=3, 2 threads each holding an outer connection then REQUIRES_NEW (total 155ms):
+    w1 after 118ms -> ok (inner body active=2)
+    w2 after 112ms -> ok (inner body active=3)
+    rows left: 4
+

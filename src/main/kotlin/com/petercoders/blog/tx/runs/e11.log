@@ -1,0 +1,65 @@
+# experiment: e11 — JDBC TransactionManager(Boot 4.1.1 JdbcTransactionManager)에서 suspend fun 에 붙인 @Transactional. 조건: Spring MVC 없음, runBlocking 에서 호출, H2 인메모리, Hikari 기본 풀
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txCoLab && ./gradlew --offline -q txCoLabReactor   (run at 2026-10-08 03:42:10 KST; txCoLab = kotlinx-coroutines-core 1.10.2 만, txCoLabReactor = + kotlinx-coroutines-reactor 1.10.2·reactor-core. reactor 쪽 jar 는 이 세션에서 한 번 온라인으로 받았다)
+
+########## txCoLab (kotlinx-coroutines-core only)
+## [e11] @Transactional suspend fun with a JDBC TransactionManager
+kotlinx-coroutines-reactor on classpath = false
+kotlinx-coroutines-core jar = kotlinx-coroutines-core-jvm-1.10.2.jar
+transactionManager = org.springframework.jdbc.support.JdbcTransactionManager
+
+### [e11] (A) @Transactional suspend fun
+| point | thread | isActualTransactionActive | transaction name |
+|---|---|---|---|
+| listener: begin | main | - | suspendTx |
+| 1 entry, before first suspension | main | true | suspendTx |
+| listener: commit | main | - | suspendTx |
+| 2 after delay(100) | main | false | - |
+| 3 inside withContext(Dispatchers.IO) | DefaultDispatcher-worker-1 | false | - |
+| 4 after withContext | main | false | - |
+rows another connection sees right after delay(100) resumed: 1 [before-delay]
+outcome: caller got java.lang.IllegalStateException: roll back on purpose
+rows left after the exception (another connection): 2 [before-delay, in-io]
+
+### [e11] (B) suspend fun → withContext(IO) → plain @Transactional fun
+| point | thread | isActualTransactionActive | transaction name |
+|---|---|---|---|
+| 1 entry (no @Transactional on the suspend fun) | main | false | - |
+| listener: begin | DefaultDispatcher-worker-1 | - | work |
+| 2 inside a plain @Transactional fun called within withContext(Dispatchers.IO) | DefaultDispatcher-worker-1 | true | work |
+| listener: rollback | DefaultDispatcher-worker-1 | - | work |
+rows another connection sees right after delay(100) resumed: 0 []
+outcome: caller got java.lang.IllegalStateException: roll back on purpose
+rows left after the exception (another connection): 0 []
+
+########## txCoLabReactor (+ kotlinx-coroutines-reactor)
+## [e11] @Transactional suspend fun with a JDBC TransactionManager
+kotlinx-coroutines-reactor on classpath = true
+kotlinx-coroutines-core jar = kotlinx-coroutines-core-jvm-1.10.2.jar
+kotlinx-coroutines-reactor jar = kotlinx-coroutines-reactor-1.10.2.jar
+transactionManager = org.springframework.jdbc.support.JdbcTransactionManager
+
+### [e11] (A) @Transactional suspend fun
+| point | thread | isActualTransactionActive | transaction name |
+|---|---|---|---|
+| listener: begin | main | - | suspendTx |
+| listener: commit | main | - | suspendTx |
+| 1 entry, before first suspension | main | false | - |
+| 2 after delay(100) | main | false | - |
+| 3 inside withContext(Dispatchers.IO) | DefaultDispatcher-worker-1 | false | - |
+| 4 after withContext | main | false | - |
+rows another connection sees right after delay(100) resumed: 1 [before-delay]
+outcome: caller got java.lang.IllegalStateException: roll back on purpose
+rows left after the exception (another connection): 2 [before-delay, in-io]
+
+### [e11] (B) suspend fun → withContext(IO) → plain @Transactional fun
+| point | thread | isActualTransactionActive | transaction name |
+|---|---|---|---|
+| 1 entry (no @Transactional on the suspend fun) | main | false | - |
+| listener: begin | DefaultDispatcher-worker-1 | - | work |
+| 2 inside a plain @Transactional fun called within withContext(Dispatchers.IO) | DefaultDispatcher-worker-1 | true | work |
+| listener: rollback | DefaultDispatcher-worker-1 | - | work |
+rows another connection sees right after delay(100) resumed: 0 []
+outcome: caller got java.lang.IllegalStateException: roll back on purpose
+rows left after the exception (another connection): 0 []
