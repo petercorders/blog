@@ -1,0 +1,91 @@
+# experiment: P11 — 환경 변수 하나씩(이름이 -systemEnvironment 로 끝나는 SystemEnvironmentPropertySource 로 주입): 리스트 인덱스·리스트 원소 공식/레거시·단일 키 대문자/소문자 × 공식/레거시·대문자 접두사+소문자 snake·constructor binding 클래스, numberOfElements, 원소 3개/5개 리스트, Map(logging.level)
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:50:57+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLab --args='P11'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:50:57.852 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+[P11] var=PROP_ENVX_ITEMS_0_NAME numberOfElements=5
+2026-10-08T10:50:58.038+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.040+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.218+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.318 seconds (process running for 0.458)
+[P11 PROP_ENVX_ITEMS_0_NAME] envx.items=[Item(name=v-PROP_ENVX_ITEMS_0_NAME, serverAddress=null)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=PROP_ENVX_ITEMS_0_SERVERADDRESS numberOfElements=5
+2026-10-08T10:50:58.233+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.233+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.242+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.02 seconds (process running for 0.482)
+[P11 PROP_ENVX_ITEMS_0_SERVERADDRESS] envx.items=[Item(name=null, serverAddress=v-PROP_ENVX_ITEMS_0_SERVERADDRESS)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=PROP_ENVX_ITEMS_0_SERVER_ADDRESS numberOfElements=6
+2026-10-08T10:50:58.254+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.254+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.261+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.018 seconds (process running for 0.5)
+[P11 PROP_ENVX_ITEMS_0_SERVER_ADDRESS] envx.items=[Item(name=null, serverAddress=v-PROP_ENVX_ITEMS_0_SERVER_ADDRESS)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=PROP_ENVX_MYTARGETVALUE numberOfElements=3
+2026-10-08T10:50:58.270+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.270+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.275+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.014 seconds (process running for 0.515)
+[P11 PROP_ENVX_MYTARGETVALUE] envx.items=[] envx.myTargetValue=v-PROP_ENVX_MYTARGETVALUE envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=PROP_ENVX_MY_TARGET_VALUE numberOfElements=5
+2026-10-08T10:50:58.283+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.283+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.287+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.011 seconds (process running for 0.527)
+[P11 PROP_ENVX_MY_TARGET_VALUE] envx.items=[] envx.myTargetValue=v-PROP_ENVX_MY_TARGET_VALUE envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=prop_envx_mytargetvalue numberOfElements=3
+2026-10-08T10:50:58.294+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.294+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.298+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.01 seconds (process running for 0.538)
+[P11 prop_envx_mytargetvalue] envx.items=[] envx.myTargetValue=v-prop_envx_mytargetvalue envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=prop_envx_my_target_value numberOfElements=5
+2026-10-08T10:50:58.305+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.305+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.309+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.01 seconds (process running for 0.549)
+[P11 prop_envx_my_target_value] envx.items=[] envx.myTargetValue=v-prop_envx_my_target_value envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=PROP_ENVX_my_target_value numberOfElements=5
+2026-10-08T10:50:58.315+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.315+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.319+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.009 seconds (process running for 0.559)
+[P11 PROP_ENVX_my_target_value] envx.items=[] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+[P11] var=prop_envc_my_target_value numberOfElements=5
+2026-10-08T10:50:58.324+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.324+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.328+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.008 seconds (process running for 0.568)
+[P11 prop_envc_my_target_value] envx.items=[] envx.myTargetValue=<null> envc.myTargetValue=v-prop_envc_my_target_value relax.myTargetValue=<null>
+[P11] var=PROP_ENVC_MY_TARGET_VALUE numberOfElements=5
+2026-10-08T10:50:58.336+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.336+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.340+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.011 seconds (process running for 0.579)
+[P11 PROP_ENVC_MY_TARGET_VALUE] envx.items=[] envx.myTargetValue=<null> envc.myTargetValue=v-PROP_ENVC_MY_TARGET_VALUE relax.myTargetValue=<null>
+[P11] var=prop_relax_my_target_value numberOfElements=5
+2026-10-08T10:50:58.345+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.345+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.348+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.008 seconds (process running for 0.588)
+[P11 prop_relax_my_target_value] envx.items=[] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=v-prop_relax_my_target_value
+[P11] var=PROP_RELAX_my-target-value numberOfElements=3
+[P11] var=PROP_RELAX_myTargetValue numberOfElements=3
+[P11] var=PROP_RELAX_my_target_value numberOfElements=5
+[P11] var=PROP_RELAX_MY_TARGET_VALUE numberOfElements=5
+[P11] var=PROP_RELAX_MYTARGETVALUE numberOfElements=3
+[P11] canonical prop.relax.my-target-value numberOfElements=3
+2026-10-08T10:50:58.353+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.354+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.357+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.008 seconds (process running for 0.597)
+[P11 legacy list x3] envx.items=[Item(name=null, serverAddress=addr-0), Item(name=null, serverAddress=addr-1), Item(name=null, serverAddress=addr-2)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+2026-10-08T10:50:58.362+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.362+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.366+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.007 seconds (process running for 0.605)
+[P11 official list x3] envx.items=[Item(name=null, serverAddress=addr-0), Item(name=null, serverAddress=addr-1), Item(name=null, serverAddress=addr-2)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+2026-10-08T10:50:58.372+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.372+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.377+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.01 seconds (process running for 0.616)
+[P11 legacy list x5] envx.items=[Item(name=null, serverAddress=addr-0), Item(name=null, serverAddress=addr-1), Item(name=null, serverAddress=addr-2), Item(name=null, serverAddress=addr-3), Item(name=null, serverAddress=addr-4)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+2026-10-08T10:50:58.382+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.382+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.387+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.01 seconds (process running for 0.626)
+[P11 official list x5] envx.items=[Item(name=null, serverAddress=addr-0), Item(name=null, serverAddress=addr-1), Item(name=null, serverAddress=addr-2), Item(name=null, serverAddress=addr-3), Item(name=null, serverAddress=addr-4)] envx.myTargetValue=<null> envc.myTargetValue=<null> relax.myTargetValue=<null>
+2026-10-08T10:50:58.392+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24677 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:58.392+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:58.397+09:00  INFO 24677 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.009 seconds (process running for 0.636)
+[P11 map] LOGGING_LEVEL_COM_EXAMPLE=DEBUG → logging.level={com.example=DEBUG}
+

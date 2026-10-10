@@ -1,10 +1,26 @@
-[P3][00] configurationProperties                              :: ConfigurationPropertySourcesPropertySource
-[P3][01] systemProperties                                     :: PropertiesPropertySource
-[P3][02] systemEnvironment                                    :: OriginAwareSystemEnvironmentPropertySource
-[P3][03] random                                               :: RandomValuePropertySource
-[P3][04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-93720607844166/external.yml]' via location 'optional:file:/var/folders/cg/_z7 :: OriginTrackedMapPropertySource
-[P3][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-93720607844166/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0 :: OriginTrackedMapPropertySource
+# experiment: P3 (E2 재실행) — spring.config.import 로 당긴 문서와 그것을 선언한 문서의 상대 위치
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:50:41+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLab --args='P3'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:50:41.841 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+2026-10-08T10:50:42.069+09:00  INFO 24411 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24411 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:42.069+09:00  INFO 24411 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:50:42.211+09:00  INFO 24411 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.312 seconds (process running for 0.464)
+[P3][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P3][01] systemProperties :: PropertiesPropertySource
+[P3][02] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P3][03] random :: RandomValuePropertySource
+[P3][04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/external.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/external.yml' :: OriginTrackedMapPropertySource
+[P3][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/' :: OriginTrackedMapPropertySource
 [P3][06] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
-[P3][07] applicationInfo                                      :: ApplicationInfoPropertySource
-[P3][08] defaultProperties                                    :: DefaultPropertiesPropertySource
-[P3] value=fromImportFile from=configurationProperties
+[P3][07] applicationInfo :: ApplicationInfoPropertySource
+[P3][08] defaultProperties :: DefaultPropertiesPropertySource
+[P3] value=fromImportFile from=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/external.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/external.yml'
+[P3] holds[00] value=fromImportFile :: configurationProperties (창구)
+[P3] holds[04] value=fromImportFile :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/external.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/external.yml'
+[P3] holds[05] value=fromApplicationYml :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p3-462188880836625/'
+

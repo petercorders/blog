@@ -1,0 +1,170 @@
+# experiment: P9/P9b — 두 프로파일 순서(dev,local 대 local,dev), 한 파일 멀티 문서 on-profile, 프로파일 파일 안 spring.profiles.active, 옛 키 spring.profiles
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:50:55+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLab --args='P9'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:50:55.740 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+2026-10-08T10:50:55.948+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24611 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:55.949+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 2 profiles are active: "dev", "local"
+2026-10-08T10:50:56.086+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.29 seconds (process running for 0.444)
+[P9-files active=dev,local][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P9-files active=dev,local][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P9-files active=dev,local][02] systemProperties :: PropertiesPropertySource
+[P9-files active=dev,local][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P9-files active=dev,local][04] random :: RandomValuePropertySource
+[P9-files active=dev,local][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/application-local.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/' :: OriginTrackedMapPropertySource
+[P9-files active=dev,local][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/application-dev.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/' :: OriginTrackedMapPropertySource
+[P9-files active=dev,local][07] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P9-files active=dev,local][08] applicationInfo :: ApplicationInfoPropertySource
+[P9-files active=dev,local][09] defaultProperties :: DefaultPropertiesPropertySource
+[P9-files active=dev,local] activeProfiles=[dev, local] getProperty=fromLocalYml winner=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/application-local.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/'
+2026-10-08T10:50:56.103+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24611 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:56.103+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 2 profiles are active: "local", "dev"
+2026-10-08T10:50:56.106+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.016 seconds (process running for 0.464)
+[P9-files active=local,dev][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P9-files active=local,dev][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P9-files active=local,dev][02] systemProperties :: PropertiesPropertySource
+[P9-files active=local,dev][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P9-files active=local,dev][04] random :: RandomValuePropertySource
+[P9-files active=local,dev][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/application-dev.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/' :: OriginTrackedMapPropertySource
+[P9-files active=local,dev][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/application-local.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/' :: OriginTrackedMapPropertySource
+[P9-files active=local,dev][07] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P9-files active=local,dev][08] applicationInfo :: ApplicationInfoPropertySource
+[P9-files active=local,dev][09] defaultProperties :: DefaultPropertiesPropertySource
+[P9-files active=local,dev] activeProfiles=[local, dev] getProperty=fromDevYml winner=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/application-dev.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-462202780658875/'
+2026-10-08T10:50:56.124+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24611 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:56.124+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 2 profiles are active: "dev", "local"
+2026-10-08T10:50:56.128+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.019 seconds (process running for 0.485)
+[P9-multidoc docs=dev→local active=dev,local][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P9-multidoc docs=dev→local active=dev,local][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P9-multidoc docs=dev→local active=dev,local][02] systemProperties :: PropertiesPropertySource
+[P9-multidoc docs=dev→local active=dev,local][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P9-multidoc docs=dev→local active=dev,local][04] random :: RandomValuePropertySource
+[P9-multidoc docs=dev→local active=dev,local][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/' (document #2) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=dev,local][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/' (document #1) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=dev,local][07] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/' (document #0) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=dev,local][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=dev,local][09] applicationInfo :: ApplicationInfoPropertySource
+[P9-multidoc docs=dev→local active=dev,local][10] defaultProperties :: DefaultPropertiesPropertySource
+[P9-multidoc docs=dev→local active=dev,local] getProperty=fromLocalDoc
+2026-10-08T10:50:56.139+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24611 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:56.139+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 2 profiles are active: "local", "dev"
+2026-10-08T10:50:56.142+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.013 seconds (process running for 0.5)
+[P9-multidoc docs=dev→local active=local,dev][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P9-multidoc docs=dev→local active=local,dev][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P9-multidoc docs=dev→local active=local,dev][02] systemProperties :: PropertiesPropertySource
+[P9-multidoc docs=dev→local active=local,dev][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P9-multidoc docs=dev→local active=local,dev][04] random :: RandomValuePropertySource
+[P9-multidoc docs=dev→local active=local,dev][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/' (document #2) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=local,dev][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/' (document #1) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=local,dev][07] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-dev-local-462203140430208/' (document #0) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=local,dev][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P9-multidoc docs=dev→local active=local,dev][09] applicationInfo :: ApplicationInfoPropertySource
+[P9-multidoc docs=dev→local active=local,dev][10] defaultProperties :: DefaultPropertiesPropertySource
+[P9-multidoc docs=dev→local active=local,dev] getProperty=fromLocalDoc
+2026-10-08T10:50:56.152+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24611 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:56.153+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 2 profiles are active: "dev", "local"
+2026-10-08T10:50:56.155+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.011 seconds (process running for 0.513)
+[P9-multidoc docs=local→dev active=dev,local][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P9-multidoc docs=local→dev active=dev,local][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P9-multidoc docs=local→dev active=dev,local][02] systemProperties :: PropertiesPropertySource
+[P9-multidoc docs=local→dev active=dev,local][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P9-multidoc docs=local→dev active=dev,local][04] random :: RandomValuePropertySource
+[P9-multidoc docs=local→dev active=dev,local][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/' (document #2) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=dev,local][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/' (document #1) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=dev,local][07] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/' (document #0) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=dev,local][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=dev,local][09] applicationInfo :: ApplicationInfoPropertySource
+[P9-multidoc docs=local→dev active=dev,local][10] defaultProperties :: DefaultPropertiesPropertySource
+[P9-multidoc docs=local→dev active=dev,local] getProperty=fromDevDoc
+2026-10-08T10:50:56.164+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24611 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:50:56.164+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 2 profiles are active: "local", "dev"
+2026-10-08T10:50:56.166+09:00  INFO 24611 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.01 seconds (process running for 0.524)
+[P9-multidoc docs=local→dev active=local,dev][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P9-multidoc docs=local→dev active=local,dev][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P9-multidoc docs=local→dev active=local,dev][02] systemProperties :: PropertiesPropertySource
+[P9-multidoc docs=local→dev active=local,dev][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P9-multidoc docs=local→dev active=local,dev][04] random :: RandomValuePropertySource
+[P9-multidoc docs=local→dev active=local,dev][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/' (document #2) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=local,dev][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/' (document #1) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=local,dev][07] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9-multi-local-dev-462203176296125/' (document #0) :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=local,dev][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P9-multidoc docs=local→dev active=local,dev][09] applicationInfo :: ApplicationInfoPropertySource
+[P9-multidoc docs=local→dev active=local,dev][10] defaultProperties :: DefaultPropertiesPropertySource
+[P9-multidoc docs=local→dev active=local,dev] getProperty=fromDevDoc
+
+2026-10-08T10:50:56.179+09:00 ERROR 24611 --- [blog] [           main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.boot.context.config.InvalidConfigDataPropertyException: Property 'spring.profiles.active' imported from location 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-1-462203200102083/application-dev.yml]' is invalid in a profile specific resource [origin: URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-1-462203200102083/application-dev.yml] - 3:13]
+	at org.springframework.boot.context.config.InvalidConfigDataPropertyException.lambda$throwIfPropertyFound$1(InvalidConfigDataPropertyException.java:123) ~[spring-boot-4.1.1.jar:4.1.1]
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75) ~[na:na]
+	at java.base/java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1118) ~[na:na]
+	at org.springframework.boot.context.config.InvalidConfigDataPropertyException.throwIfPropertyFound(InvalidConfigDataPropertyException.java:120) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironment.checkForInvalidProperties(ConfigDataEnvironment.java:378) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironment.applyToEnvironment(ConfigDataEnvironment.java:341) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironment.processAndApply(ConfigDataEnvironment.java:246) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor.postProcessEnvironment(ConfigDataEnvironmentPostProcessor.java:97) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor.postProcessEnvironment(ConfigDataEnvironmentPostProcessor.java:90) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.support.EnvironmentPostProcessorApplicationListener.onApplicationEnvironmentPreparedEvent(EnvironmentPostProcessorApplicationListener.java:137) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.support.EnvironmentPostProcessorApplicationListener.onApplicationEvent(EnvironmentPostProcessorApplicationListener.java:120) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:180) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:173) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:151) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:133) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.boot.context.event.EventPublishingRunListener.multicastInitialEvent(EventPublishingRunListener.java:137) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:82) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$0(SpringApplicationRunListeners.java:66) ~[spring-boot-4.1.1.jar:4.1.1]
+	at java.base/java.util.ImmutableCollections$List12.forEach(ImmutableCollections.java:681) ~[na:na]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:123) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:117) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:356) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:316) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.builder.SpringApplicationBuilder.run(SpringApplicationBuilder.java:154) ~[spring-boot-4.1.1.jar:4.1.1]
+	at com.petercoders.blog.prop.PropLabPlusKt.tryRun(PropLabPlus.kt:80) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabPlusKt.runP9(PropLabPlus.kt:262) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabKt.main$lambda$9(PropLab.kt:330) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabKt.main$step(PropLab.kt:319) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabKt.main(PropLab.kt:330) ~[main/:na]
+
+[P9b-1 spring.profiles.active in application-dev.yml] failure[0] org.springframework.boot.context.config.InvalidConfigDataPropertyException: Property 'spring.profiles.active' imported from location 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-1-462203200102083/application-dev.yml]' is invalid in a profile specific resource [origin: URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-1-462203200102083/application-dev.yml] - 3:13]
+
+2026-10-08T10:50:56.187+09:00 ERROR 24611 --- [blog] [           main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.boot.context.config.InvalidConfigDataPropertyException: Property 'spring.profiles' imported from location 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-2-462203214721250/application.yml]' is invalid and should be replaced with 'spring.config.activate.on-profile' [origin: URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-2-462203214721250/application.yml] - 6:13]
+	at org.springframework.boot.context.config.InvalidConfigDataPropertyException.lambda$throwIfPropertyFound$0(InvalidConfigDataPropertyException.java:115) ~[spring-boot-4.1.1.jar:4.1.1]
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:987) ~[na:na]
+	at java.base/java.util.Collections$UnmodifiableMap.forEach(Collections.java:1712) ~[na:na]
+	at org.springframework.boot.context.config.InvalidConfigDataPropertyException.throwIfPropertyFound(InvalidConfigDataPropertyException.java:111) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironment.checkForInvalidProperties(ConfigDataEnvironment.java:378) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironment.applyToEnvironment(ConfigDataEnvironment.java:341) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironment.processAndApply(ConfigDataEnvironment.java:246) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor.postProcessEnvironment(ConfigDataEnvironmentPostProcessor.java:97) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor.postProcessEnvironment(ConfigDataEnvironmentPostProcessor.java:90) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.support.EnvironmentPostProcessorApplicationListener.onApplicationEnvironmentPreparedEvent(EnvironmentPostProcessorApplicationListener.java:137) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.support.EnvironmentPostProcessorApplicationListener.onApplicationEvent(EnvironmentPostProcessorApplicationListener.java:120) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:180) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:173) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:151) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:133) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.boot.context.event.EventPublishingRunListener.multicastInitialEvent(EventPublishingRunListener.java:137) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:82) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$0(SpringApplicationRunListeners.java:66) ~[spring-boot-4.1.1.jar:4.1.1]
+	at java.base/java.util.ImmutableCollections$List12.forEach(ImmutableCollections.java:681) ~[na:na]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:123) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:117) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:356) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:316) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.builder.SpringApplicationBuilder.run(SpringApplicationBuilder.java:154) ~[spring-boot-4.1.1.jar:4.1.1]
+	at com.petercoders.blog.prop.PropLabPlusKt.tryRun(PropLabPlus.kt:80) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabPlusKt.runP9(PropLabPlus.kt:271) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabKt.main$lambda$9(PropLab.kt:330) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabKt.main$step(PropLab.kt:319) ~[main/:na]
+	at com.petercoders.blog.prop.PropLabKt.main(PropLab.kt:330) ~[main/:na]
+
+[P9b-2 legacy spring.profiles key] failure[0] org.springframework.boot.context.config.InvalidConfigDataPropertyException: Property 'spring.profiles' imported from location 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-2-462203214721250/application.yml]' is invalid and should be replaced with 'spring.config.activate.on-profile' [origin: URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p9b-2-462203214721250/application.yml] - 6:13]
+

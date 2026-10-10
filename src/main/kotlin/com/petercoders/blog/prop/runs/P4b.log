@@ -1,0 +1,128 @@
+# experiment: P4b — jar 밖(workingDir 의 file:./, ./config/) 대 jar 안(classpath, URLClassLoader 로 얹은 jar 의 application.yml·application-dev.yml), dev 활성. 대안: spring.config.location 두 그룹(콤마)과 한 그룹(세미콜론)
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:50:44+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLabCwd --args='P4B'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:50:44.900 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop/build/proplab-cwd
+[P4B] cwd=/private/tmp/gradle-prop/build/proplab-cwd
+[P4B] packaged jar=/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-462191940618041/packaged.jar entries=[application.yml, application-dev.yml]
+2026-10-08T10:50:45.140+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24496 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop/build/proplab-cwd)
+2026-10-08T10:50:45.141+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-10-08T10:50:45.291+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.333 seconds (process running for 0.496)
+[P4B-control(no external)][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P4B-control(no external)][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P4B-control(no external)][02] systemProperties :: PropertiesPropertySource
+[P4B-control(no external)][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P4B-control(no external)][04] random :: RandomValuePropertySource
+[P4B-control(no external)][05] Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-control(no external)][06] Config resource 'class path resource [application.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-control(no external)][07] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-control(no external)][08] applicationInfo :: ApplicationInfoPropertySource
+[P4B-control(no external)] holds[00] value=fromPackagedProfileYml :: configurationProperties (창구)
+[P4B-control(no external)] holds[05] value=fromPackagedProfileYml :: Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+[P4B-control(no external)] holds[06] value=fromPackagedYml :: Config resource 'class path resource [application.yml]' via location 'optional:classpath:/'
+[P4B-control(no external)] getProperty=fromPackagedProfileYml winner=Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+
+2026-10-08T10:50:45.310+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24496 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop/build/proplab-cwd)
+2026-10-08T10:50:45.310+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-10-08T10:50:45.313+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.016 seconds (process running for 0.519)
+[P4B-1 ./application.yml][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P4B-1 ./application.yml][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P4B-1 ./application.yml][02] systemProperties :: PropertiesPropertySource
+[P4B-1 ./application.yml][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P4B-1 ./application.yml][04] random :: RandomValuePropertySource
+[P4B-1 ./application.yml][05] Config resource 'file [application.yml]' via location 'optional:file:./' :: OriginTrackedMapPropertySource
+[P4B-1 ./application.yml][06] Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-1 ./application.yml][07] Config resource 'class path resource [application.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-1 ./application.yml][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-1 ./application.yml][09] applicationInfo :: ApplicationInfoPropertySource
+[P4B-1 ./application.yml] holds[00] value=fromExternalYml :: configurationProperties (창구)
+[P4B-1 ./application.yml] holds[05] value=fromExternalYml :: Config resource 'file [application.yml]' via location 'optional:file:./'
+[P4B-1 ./application.yml] holds[06] value=fromPackagedProfileYml :: Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+[P4B-1 ./application.yml] holds[07] value=fromPackagedYml :: Config resource 'class path resource [application.yml]' via location 'optional:classpath:/'
+[P4B-1 ./application.yml] getProperty=fromExternalYml winner=Config resource 'file [application.yml]' via location 'optional:file:./'
+
+2026-10-08T10:50:45.328+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24496 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop/build/proplab-cwd)
+2026-10-08T10:50:45.328+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-10-08T10:50:45.332+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.017 seconds (process running for 0.537)
+[P4B-2 ./config/application.yml][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P4B-2 ./config/application.yml][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P4B-2 ./config/application.yml][02] systemProperties :: PropertiesPropertySource
+[P4B-2 ./config/application.yml][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P4B-2 ./config/application.yml][04] random :: RandomValuePropertySource
+[P4B-2 ./config/application.yml][05] Config resource 'file [config/application.yml]' via location 'optional:file:./config/' :: OriginTrackedMapPropertySource
+[P4B-2 ./config/application.yml][06] Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-2 ./config/application.yml][07] Config resource 'class path resource [application.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-2 ./config/application.yml][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-2 ./config/application.yml][09] applicationInfo :: ApplicationInfoPropertySource
+[P4B-2 ./config/application.yml] holds[00] value=fromExternalConfigDirYml :: configurationProperties (창구)
+[P4B-2 ./config/application.yml] holds[05] value=fromExternalConfigDirYml :: Config resource 'file [config/application.yml]' via location 'optional:file:./config/'
+[P4B-2 ./config/application.yml] holds[06] value=fromPackagedProfileYml :: Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+[P4B-2 ./config/application.yml] holds[07] value=fromPackagedYml :: Config resource 'class path resource [application.yml]' via location 'optional:classpath:/'
+[P4B-2 ./config/application.yml] getProperty=fromExternalConfigDirYml winner=Config resource 'file [config/application.yml]' via location 'optional:file:./config/'
+
+2026-10-08T10:50:45.345+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24496 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop/build/proplab-cwd)
+2026-10-08T10:50:45.345+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-10-08T10:50:45.348+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.014 seconds (process running for 0.554)
+[P4B-3 ./application.yml + ./application-dev.yml][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][02] systemProperties :: PropertiesPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][04] random :: RandomValuePropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][05] Config resource 'file [application-dev.yml]' via location 'optional:file:./' :: OriginTrackedMapPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][06] Config resource 'file [application.yml]' via location 'optional:file:./' :: OriginTrackedMapPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][07] Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][08] Config resource 'class path resource [application.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][09] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml][10] applicationInfo :: ApplicationInfoPropertySource
+[P4B-3 ./application.yml + ./application-dev.yml] holds[00] value=fromExternalProfileYml :: configurationProperties (창구)
+[P4B-3 ./application.yml + ./application-dev.yml] holds[05] value=fromExternalProfileYml :: Config resource 'file [application-dev.yml]' via location 'optional:file:./'
+[P4B-3 ./application.yml + ./application-dev.yml] holds[06] value=fromExternalYml :: Config resource 'file [application.yml]' via location 'optional:file:./'
+[P4B-3 ./application.yml + ./application-dev.yml] holds[07] value=fromPackagedProfileYml :: Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+[P4B-3 ./application.yml + ./application-dev.yml] holds[08] value=fromPackagedYml :: Config resource 'class path resource [application.yml]' via location 'optional:classpath:/'
+[P4B-3 ./application.yml + ./application-dev.yml] getProperty=fromExternalProfileYml winner=Config resource 'file [application-dev.yml]' via location 'optional:file:./'
+
+2026-10-08T10:50:45.361+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24496 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop/build/proplab-cwd)
+2026-10-08T10:50:45.361+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-10-08T10:50:45.364+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.014 seconds (process running for 0.57)
+[P4B-4 location two groups (comma)][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P4B-4 location two groups (comma)][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P4B-4 location two groups (comma)][02] systemProperties :: PropertiesPropertySource
+[P4B-4 location two groups (comma)][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P4B-4 location two groups (comma)][04] random :: RandomValuePropertySource
+[P4B-4 location two groups (comma)][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/application.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/' :: OriginTrackedMapPropertySource
+[P4B-4 location two groups (comma)][06] Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-4 location two groups (comma)][07] Config resource 'class path resource [application.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-4 location two groups (comma)][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-4 location two groups (comma)][09] applicationInfo :: ApplicationInfoPropertySource
+[P4B-4 location two groups (comma)][10] defaultProperties :: DefaultPropertiesPropertySource
+[P4B-4 location two groups (comma)] holds[00] value=fromExternalYml :: configurationProperties (창구)
+[P4B-4 location two groups (comma)] holds[05] value=fromExternalYml :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/application.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/'
+[P4B-4 location two groups (comma)] holds[06] value=fromPackagedProfileYml :: Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+[P4B-4 location two groups (comma)] holds[07] value=fromPackagedYml :: Config resource 'class path resource [application.yml]' via location 'optional:classpath:/'
+[P4B-4 location two groups (comma)] getProperty=fromExternalYml winner=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/application.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/'
+
+2026-10-08T10:50:45.373+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24496 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop/build/proplab-cwd)
+2026-10-08T10:50:45.373+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : The following 1 profile is active: "dev"
+2026-10-08T10:50:45.376+09:00  INFO 24496 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.01 seconds (process running for 0.582)
+[P4B-5 location one group (semicolon)][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P4B-5 location one group (semicolon)][01] commandLineArgs :: SimpleCommandLinePropertySource
+[P4B-5 location one group (semicolon)][02] systemProperties :: PropertiesPropertySource
+[P4B-5 location one group (semicolon)][03] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P4B-5 location one group (semicolon)][04] random :: RandomValuePropertySource
+[P4B-5 location one group (semicolon)][05] Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-5 location one group (semicolon)][06] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/application.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/' :: OriginTrackedMapPropertySource
+[P4B-5 location one group (semicolon)][07] Config resource 'class path resource [application.yml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-5 location one group (semicolon)][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P4B-5 location one group (semicolon)][09] applicationInfo :: ApplicationInfoPropertySource
+[P4B-5 location one group (semicolon)][10] defaultProperties :: DefaultPropertiesPropertySource
+[P4B-5 location one group (semicolon)] holds[00] value=fromPackagedProfileYml :: configurationProperties (창구)
+[P4B-5 location one group (semicolon)] holds[05] value=fromPackagedProfileYml :: Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+[P4B-5 location one group (semicolon)] holds[06] value=fromExternalYml :: Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/application.yml]' via location 'optional:file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p4b-ext-462192382511083/'
+[P4B-5 location one group (semicolon)] holds[07] value=fromPackagedYml :: Config resource 'class path resource [application.yml]' via location 'optional:classpath:/'
+[P4B-5 location one group (semicolon)] getProperty=fromPackagedProfileYml winner=Config resource 'class path resource [application-dev.yml]' via location 'optional:classpath:/'
+
+

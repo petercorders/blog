@@ -1,0 +1,254 @@
+# experiment: P12 — 테스트 소스 우선순위: @DynamicPropertySource · @TestPropertySource(properties, locations) · @SpringBootTest(properties) 를 하나씩 뺀 7개 클래스. 전용 Test 태스크 propTestLab 이 진짜 -D(systemProperty prop.lab.value=fromSystemProperty)와 OS env(PROP_LAB_VALUE=fromOsEnv)를 넣는다
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:51:04+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline propTestLab --console=plain
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :compileKotlin UP-TO-DATE
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :jar UP-TO-DATE
+> Task :compileTestKotlin UP-TO-DATE
+> Task :compileTestJava NO-SOURCE
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+
+> Task :propTestLab
+
+PropTestLabT1All STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:05.350+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT1All           : Starting PropTestLabT1All using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:05.351+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT1All           : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:05.552+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT1All           : Started PropTestLabT1All in 0.319 seconds (process running for 0.793)
+
+PropTestLabT1All > dump() STANDARD_ERROR
+    Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+    WARNING: A Java agent has been loaded dynamically (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.18.11/82212e5b3633e7a65fca8bec525762cfb6c9bae4/byte-buddy-agent-1.18.11.jar)
+    WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+    WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+    WARNING: Dynamic loading of agents will be disallowed by default in a future release
+
+PropTestLabT1All > dump() STANDARD_OUT
+    [P12 T1 all] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T1 all][00] Dynamic Test Properties :: DynamicValuesPropertySource holds=fromDynamicPropertySource
+    [P12 T1 all][01] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromDynamicPropertySource
+    [P12 T1 all][02] Inlined Test Properties :: MapPropertySource holds=fromTestPropertySourceProperties
+    [P12 T1 all][03] class path resource [com/petercoders/blog/prop/proptestlab.properties] :: ResourcePropertySource holds=fromTestPropertySourceLocations
+    [P12 T1 all][04] servletConfigInitParams :: StubPropertySource
+    [P12 T1 all][05] servletContextInitParams :: ServletContextPropertySource
+    [P12 T1 all][06] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T1 all][07] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T1 all][08] random :: RandomValuePropertySource
+    [P12 T1 all][09] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T1 all][10] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T1 all] getProperty=fromDynamicPropertySource
+
+PropTestLabT1All > dump() PASSED
+
+PropTestLabT2NoDynamic STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:05.973+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT2NoDynamic     : Starting PropTestLabT2NoDynamic using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:05.973+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT2NoDynamic     : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:05.977+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT2NoDynamic     : Started PropTestLabT2NoDynamic in 0.019 seconds (process running for 1.219)
+
+PropTestLabT2NoDynamic > dump() STANDARD_OUT
+    [P12 T2 -dynamic] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T2 -dynamic][00] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromTestPropertySourceProperties
+    [P12 T2 -dynamic][01] Inlined Test Properties :: MapPropertySource holds=fromTestPropertySourceProperties
+    [P12 T2 -dynamic][02] class path resource [com/petercoders/blog/prop/proptestlab.properties] :: ResourcePropertySource holds=fromTestPropertySourceLocations
+    [P12 T2 -dynamic][03] servletConfigInitParams :: StubPropertySource
+    [P12 T2 -dynamic][04] servletContextInitParams :: ServletContextPropertySource
+    [P12 T2 -dynamic][05] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T2 -dynamic][06] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T2 -dynamic][07] random :: RandomValuePropertySource
+    [P12 T2 -dynamic][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T2 -dynamic][09] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T2 -dynamic] getProperty=fromTestPropertySourceProperties
+
+PropTestLabT2NoDynamic > dump() PASSED
+
+PropTestLabT3SbtAndLocations STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:05.995+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.prop.PropTestLabT3SbtAndLocations  : Starting PropTestLabT3SbtAndLocations using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:05.995+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.prop.PropTestLabT3SbtAndLocations  : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:05.997+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.prop.PropTestLabT3SbtAndLocations  : Started PropTestLabT3SbtAndLocations in 0.012 seconds (process running for 1.239)
+
+PropTestLabT3SbtAndLocations > dump() STANDARD_OUT
+    [P12 T3 sbt+locations] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T3 sbt+locations][00] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromSpringBootTestProperties
+    [P12 T3 sbt+locations][01] Inlined Test Properties :: MapPropertySource holds=fromSpringBootTestProperties
+    [P12 T3 sbt+locations][02] class path resource [com/petercoders/blog/prop/proptestlab.properties] :: ResourcePropertySource holds=fromTestPropertySourceLocations
+    [P12 T3 sbt+locations][03] servletConfigInitParams :: StubPropertySource
+    [P12 T3 sbt+locations][04] servletContextInitParams :: ServletContextPropertySource
+    [P12 T3 sbt+locations][05] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T3 sbt+locations][06] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T3 sbt+locations][07] random :: RandomValuePropertySource
+    [P12 T3 sbt+locations][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T3 sbt+locations][09] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T3 sbt+locations] getProperty=fromSpringBootTestProperties
+
+PropTestLabT3SbtAndLocations > dump() PASSED
+
+PropTestLabT4SbtAndTpsProperties STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:06.013+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.p.PropTestLabT4SbtAndTpsProperties : Starting PropTestLabT4SbtAndTpsProperties using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:06.013+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.p.PropTestLabT4SbtAndTpsProperties : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:06.017+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.p.PropTestLabT4SbtAndTpsProperties : Started PropTestLabT4SbtAndTpsProperties in 0.014 seconds (process running for 1.258)
+
+PropTestLabT4SbtAndTpsProperties > dump() STANDARD_OUT
+    [P12 T4 sbt+tps-properties] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T4 sbt+tps-properties][00] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromTestPropertySourceProperties
+    [P12 T4 sbt+tps-properties][01] Inlined Test Properties :: MapPropertySource holds=fromTestPropertySourceProperties
+    [P12 T4 sbt+tps-properties][02] servletConfigInitParams :: StubPropertySource
+    [P12 T4 sbt+tps-properties][03] servletContextInitParams :: ServletContextPropertySource
+    [P12 T4 sbt+tps-properties][04] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T4 sbt+tps-properties][05] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T4 sbt+tps-properties][06] random :: RandomValuePropertySource
+    [P12 T4 sbt+tps-properties][07] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T4 sbt+tps-properties][08] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T4 sbt+tps-properties] getProperty=fromTestPropertySourceProperties
+
+PropTestLabT4SbtAndTpsProperties > dump() PASSED
+
+PropTestLabT5SbtOnly STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:06.032+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT5SbtOnly       : Starting PropTestLabT5SbtOnly using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:06.032+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT5SbtOnly       : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:06.035+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT5SbtOnly       : Started PropTestLabT5SbtOnly in 0.011 seconds (process running for 1.277)
+
+PropTestLabT5SbtOnly > dump() STANDARD_OUT
+    [P12 T5 sbt-only] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T5 sbt-only][00] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromSpringBootTestProperties
+    [P12 T5 sbt-only][01] Inlined Test Properties :: MapPropertySource holds=fromSpringBootTestProperties
+    [P12 T5 sbt-only][02] servletConfigInitParams :: StubPropertySource
+    [P12 T5 sbt-only][03] servletContextInitParams :: ServletContextPropertySource
+    [P12 T5 sbt-only][04] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T5 sbt-only][05] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T5 sbt-only][06] random :: RandomValuePropertySource
+    [P12 T5 sbt-only][07] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T5 sbt-only][08] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T5 sbt-only] getProperty=fromSpringBootTestProperties
+
+PropTestLabT5SbtOnly > dump() PASSED
+
+PropTestLabT6LocationsOnly STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:06.048+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.prop.PropTestLabT6LocationsOnly    : Starting PropTestLabT6LocationsOnly using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:06.048+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.prop.PropTestLabT6LocationsOnly    : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:06.051+09:00  INFO 24914 --- [blog] [    Test worker] c.p.b.prop.PropTestLabT6LocationsOnly    : Started PropTestLabT6LocationsOnly in 0.011 seconds (process running for 1.292)
+
+PropTestLabT6LocationsOnly > dump() STANDARD_OUT
+    [P12 T6 locations-only] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T6 locations-only][00] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromTestPropertySourceLocations
+    [P12 T6 locations-only][01] Inlined Test Properties :: MapPropertySource
+    [P12 T6 locations-only][02] class path resource [com/petercoders/blog/prop/proptestlab.properties] :: ResourcePropertySource holds=fromTestPropertySourceLocations
+    [P12 T6 locations-only][03] servletConfigInitParams :: StubPropertySource
+    [P12 T6 locations-only][04] servletContextInitParams :: ServletContextPropertySource
+    [P12 T6 locations-only][05] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T6 locations-only][06] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T6 locations-only][07] random :: RandomValuePropertySource
+    [P12 T6 locations-only][08] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T6 locations-only][09] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T6 locations-only] getProperty=fromTestPropertySourceLocations
+
+PropTestLabT6LocationsOnly > dump() PASSED
+
+PropTestLabT7None STANDARD_OUT
+
+      .   ____          _            __ _ _
+     /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+     \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+      '  |____| .__|_| |_|_| |_\__, | / / / /
+     =========|_|==============|___/=/_/_/_/
+
+     :: Spring Boot ::                (v4.1.1)
+
+    2026-10-08T10:51:06.065+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT7None          : Starting PropTestLabT7None using Java 25.0.4.1 with PID 24914 (started by kibong_home in /private/tmp/gradle-prop)
+    2026-10-08T10:51:06.066+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT7None          : No active profile set, falling back to 1 default profile: "default"
+    2026-10-08T10:51:06.068+09:00  INFO 24914 --- [blog] [    Test worker] c.p.blog.prop.PropTestLabT7None          : Started PropTestLabT7None in 0.011 seconds (process running for 1.309)
+
+PropTestLabT7None > dump() STANDARD_OUT
+    [P12 T7 none] -D prop.lab.value=fromSystemProperty OS PROP_LAB_VALUE=fromOsEnv
+    [P12 T7 none][00] configurationProperties :: ConfigurationPropertySourcesPropertySource holds=fromSystemProperty
+    [P12 T7 none][01] Inlined Test Properties :: MapPropertySource
+    [P12 T7 none][02] servletConfigInitParams :: StubPropertySource
+    [P12 T7 none][03] servletContextInitParams :: ServletContextPropertySource
+    [P12 T7 none][04] systemProperties :: PropertiesPropertySource holds=fromSystemProperty
+    [P12 T7 none][05] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource holds=fromOsEnv
+    [P12 T7 none][06] random :: RandomValuePropertySource
+    [P12 T7 none][07] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+    [P12 T7 none][08] applicationInfo :: ApplicationInfoPropertySource
+    [P12 T7 none] getProperty=fromSystemProperty
+
+PropTestLabT7None > dump() PASSED
+
+[Incubating] Problems report is available at: file:///private/tmp/gradle-prop/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+7 actionable tasks: 1 executed, 6 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html

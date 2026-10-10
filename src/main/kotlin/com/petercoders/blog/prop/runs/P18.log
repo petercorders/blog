@@ -1,0 +1,37 @@
+# experiment: P18 — Kubernetes Service 변수 모양 REDIS_PRIMARY_PORT=tcp://10.0.0.11:6379 하나(진짜 OS env) 와 @ConfigurationProperties("redis.primary") port: Int?
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:51:02+0900
+# command: cd /tmp/gradle-prop && REDIS_PRIMARY_PORT=tcp://10.0.0.11:6379 ./gradlew --offline -q propLab --args='P18'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:51:02.894 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+[P18] OS REDIS_PRIMARY_PORT=tcp://10.0.0.11:6379
+2026-10-08T10:51:03.078+09:00  INFO 24847 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24847 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:03.079+09:00  INFO 24847 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:03.227+09:00  WARN 24847 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'redis.primary-com.petercoders.blog.prop.RedisPrimaryProps': Could not bind properties to 'RedisPrimaryProps' : prefix=redis.primary, ignoreInvalidFields=false, ignoreUnknownFields=true
+2026-10-08T10:51:03.237+09:00 ERROR 24847 --- [blog] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to bind properties under 'redis.primary.port' to java.lang.Integer:
+
+    Property: redis.primary.port
+    Value: "tcp://10.0.0.11:6379"
+    Origin: System Environment Property "REDIS_PRIMARY_PORT"
+    Reason: failed to convert java.lang.String to java.lang.Integer (caused by java.lang.NumberFormatException: For input string: "tcp://10.0.0.11:6379")
+
+Action:
+
+Update your application's configuration
+
+[P18] failure[0] org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'redis.primary-com.petercoders.blog.prop.RedisPrimaryProps': Could not bind properties to 'RedisPrimaryProps' : prefix=redis.primary, ignoreInvalidFields=false, ignoreUnknownFields=true
+[P18] failure[1] org.springframework.boot.context.properties.bind.BindException: Failed to bind properties under 'redis.primary.port' to java.lang.Integer
+[P18] failure[2] org.springframework.core.convert.ConversionFailedException: Failed to convert from type [java.lang.String] to type [java.lang.Integer] for value [tcp://10.0.0.11:6379]
+[P18] failure[3] java.lang.NumberFormatException: For input string: "tcp://10.0.0.11:6379"
+

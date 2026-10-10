@@ -1,0 +1,153 @@
+# experiment: 버전 주장 1차 근거 대조 — Spring Boot·Spring Cloud 태그 소스(raw.githubusercontent.com/<org>/<repo>/<tag>/<path>), Maven Central, GitHub issue API
+# java -version: 해당 없음(소스 대조, JVM 미사용)
+# date: 2026-10-08T10:52:53+0900
+# command: zsh vc.sh (스크립트 본문은 아래 첨부)
+# ---- vc.sh ----
+# | #!/bin/zsh
+# | B=https://raw.githubusercontent.com/spring-projects/spring-boot
+# | g(){ # tag path pattern
+# |   echo "## $1 $2 :: grep -nE '$3'"
+# |   curl -sS "$B/$1/$2" | grep -nE "$3" | head -${4:-8}
+# | }
+# | g v4.1.1 gradle.properties '^(version|springFrameworkVersion|kotlinVersion)='
+# | g v4.1.1 platform/spring-boot-dependencies/build.gradle 'library\("Spring Security", '
+# | g v2.3.12.RELEASE spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigFileApplicationListener.java 'applicationConfig: \['
+# | g v2.4.0 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/StandardConfigDataLoader.java "Config resource '%s' via location '%s'"
+# | g v2.7.0 spring-boot-project/spring-boot-actuator-autoconfigure/src/main/java/org/springframework/boot/actuate/autoconfigure/env/EnvironmentEndpointProperties.java 'keysToSanitize;|showValues'
+# | g v3.0.0 spring-boot-project/spring-boot-actuator-autoconfigure/src/main/java/org/springframework/boot/actuate/autoconfigure/env/EnvironmentEndpointProperties.java 'private Show showValues'
+# | g v4.1.1 module/spring-boot-actuator-autoconfigure/src/main/java/org/springframework/boot/actuate/autoconfigure/env/EnvironmentEndpointProperties.java 'private Show showValues'
+# | for t in v2.4.0 v2.4.1 v2.4.2 v2.7.0 v3.0.0; do g $t spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'; done
+# | g v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+# | for t in v2.7.0 v3.0.0; do echo "## $t spring-boot additional metadata: use-legacy-processing count = $(curl -sS $B/$t/spring-boot-project/spring-boot/src/main/resources/META-INF/additional-spring-configuration-metadata.json | grep -c 'spring.config.use-legacy-processing')"; done
+# | echo "## v4.1.1 core/spring-boot additional metadata: use-legacy-processing count = $(curl -sS $B/v4.1.1/core/spring-boot/src/main/resources/META-INF/additional-spring-configuration-metadata.json | grep -c 'spring.config.use-legacy-processing')"
+# | g v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SystemEnvironmentPropertyMapper.java 'addIfMissing\(mapped|isLegacyAncestorOf\(ConfigurationPropertyName'
+# | g v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/bind/DefaultBindConstructorProvider.java 'deduceKotlinBindConstructor|isKotlinType\(type\)'
+# | g v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationPropertiesBindingPostProcessor.java 'hasBoundValueObject|VALUE_OBJECT'
+# | g v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationProperties.java 'boolean ignoreUnknownFields\(\) default|boolean ignoreInvalidFields\(\) default'
+# | g v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertyMigration.java 'determineCompatibleType|currentType == null|incompatible target type' 
+# | g v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertiesMigrationListener.java 'instanceof ApplicationPreparedEvent|instanceof ApplicationReadyEvent'
+# | g v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertiesMigrationReporter.java '"migrate-"'
+# | echo "## spring-cloud-commons v5.0.3 / v5.1.0-M1 parent, spring-cloud-build spring-boot.version"
+# | curl -sS https://raw.githubusercontent.com/spring-cloud/spring-cloud-commons/v5.0.3/pom.xml | grep -n -A3 '<parent>' | head -4
+# | curl -sS https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/v5.0.3/pom.xml | grep -n '<spring-boot.version>'
+# | curl -sS https://raw.githubusercontent.com/spring-cloud/spring-cloud-commons/v5.1.0-M1/pom.xml | grep -n -A3 '<parent>' | head -4
+# | curl -sS https://raw.githubusercontent.com/spring-cloud/spring-cloud-build/v5.1.0-M1/pom.xml | grep -n '<spring-boot.version>'
+# | echo "## spring-cloud-commons v5.0.3 RefreshEventListener"
+# | curl -sS https://raw.githubusercontent.com/spring-cloud/spring-cloud-commons/v5.0.3/spring-cloud-context/src/main/java/org/springframework/cloud/endpoint/event/RefreshEventListener.java | grep -n 'Refresh keys changed'
+# | echo "## Maven Central spring-boot-properties-migrator 4.1.1 pom: $(curl -sS -o /dev/null -w '%{http_code}' https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-properties-migrator/4.1.1/spring-boot-properties-migrator-4.1.1.pom)"
+# | echo "## GitHub issues (gh api)"
+# | for n in 45741 46184; do gh api repos/spring-projects/spring-boot/issues/$n --jq '"spring-boot #\(.number) [\(.state)] milestone=\(.milestone.title // "-") labels=\([.labels[].name]|join(",")) title=\(.title)"'; done
+# | gh api repos/spring-projects/spring-framework/issues/36102 --jq '"spring-framework #\(.number) [\(.state)] labels=\([.labels[].name]|join(",")) title=\(.title)"'
+# | gh api repos/spring-projects/spring-boot/issues/46184/comments --paginate --jq '.[] | select(.user.login=="philwebb") | .body' | grep -o "I'm going to back out that optimization in 3.5 and we'll perhaps have another go at implementing it in 4.0."
+# ---- output ----
+## v4.1.1 gradle.properties :: grep -nE '^(version|springFrameworkVersion|kotlinVersion)='
+1:version=4.1.1
+18:kotlinVersion=2.3.21
+25:springFrameworkVersion=7.0.9
+## v4.1.1 platform/spring-boot-dependencies/build.gradle :: grep -nE 'library\("Spring Security", '
+2714:	library("Spring Security", "7.1.1") {
+## v2.3.12.RELEASE spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigFileApplicationListener.java :: grep -nE 'applicationConfig: \['
+533:					String name = "applicationConfig: [" + getLocationName(location, resource) + "]";
+## v2.4.0 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/StandardConfigDataLoader.java :: grep -nE 'Config resource '%s' via location '%s''
+43:		String name = String.format("Config resource '%s' via location '%s'", reference.getResourceLocation(),
+## v2.7.0 spring-boot-project/spring-boot-actuator-autoconfigure/src/main/java/org/springframework/boot/actuate/autoconfigure/env/EnvironmentEndpointProperties.java :: grep -nE 'keysToSanitize;|showValues'
+35:	private String[] keysToSanitize;
+44:		return this.keysToSanitize;
+48:		this.keysToSanitize = keysToSanitize;
+## v3.0.0 spring-boot-project/spring-boot-actuator-autoconfigure/src/main/java/org/springframework/boot/actuate/autoconfigure/env/EnvironmentEndpointProperties.java :: grep -nE 'private Show showValues'
+38:	private Show showValues = Show.NEVER;
+## v4.1.1 module/spring-boot-actuator-autoconfigure/src/main/java/org/springframework/boot/actuate/autoconfigure/env/EnvironmentEndpointProperties.java :: grep -nE 'private Show showValues'
+38:	private Show showValues = Show.NEVER;
+## v2.4.0 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java :: grep -nE 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+38:	private static final Map<ConfigurationPropertyName, ConfigurationPropertyName> WARNING;
+94:	static void throwOrWarn(Log logger, ConfigDataEnvironmentContributor contributor) {
+100:					logger.warn(getMessage(property, replacement, contributor.getResource()));
+## v2.4.1 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java :: grep -nE 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+38:	private static final Map<ConfigurationPropertyName, ConfigurationPropertyName> WARNING;
+94:	static void throwOrWarn(Log logger, ConfigDataEnvironmentContributor contributor) {
+100:					logger.warn(getMessage(property, replacement, contributor.getResource()));
+## v2.4.2 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java :: grep -nE 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+41:	private static final Map<ConfigurationPropertyName, ConfigurationPropertyName> WARNINGS;
+49:	private static final Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;
+108:	static void throwOrWarn(Log logger, ConfigDataEnvironmentContributor contributor) {
+114:					logger.warn(getMessage(property, false, replacement, contributor.getResource()));
+121:						throw new InvalidConfigDataPropertyException(property, true, null, contributor.getResource());
+## v2.7.0 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java :: grep -nE 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+41:	private static final Map<ConfigurationPropertyName, ConfigurationPropertyName> WARNINGS;
+51:	private static final Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;
+111:	static void throwOrWarn(Log logger, ConfigDataEnvironmentContributor contributor) {
+117:					logger.warn(getMessage(property, false, replacement, contributor.getResource()));
+125:						throw new InvalidConfigDataPropertyException(property, true, null, contributor.getResource());
+## v3.0.0 spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java :: grep -nE 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+39:	private static final Map<ConfigurationPropertyName, ConfigurationPropertyName> ERRORS;
+49:	private static final Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;
+106:	static void throwIfPropertyFound(ConfigDataEnvironmentContributor contributor) {
+112:					throw new InvalidConfigDataPropertyException(property, false, replacement,
+121:						throw new InvalidConfigDataPropertyException(property, true, null, contributor.getResource());
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java :: grep -nE 'Map<ConfigurationPropertyName, ConfigurationPropertyName> (WARNING|WARNINGS|ERRORS);|Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;|static void (throwOrWarn|throwIfPropertyFound)|throw new InvalidConfigDataPropertyException|logger.warn'
+41:	private static final Map<ConfigurationPropertyName, ConfigurationPropertyName> ERRORS;
+51:	private static final Set<ConfigurationPropertyName> PROFILE_SPECIFIC_ERRORS;
+108:	static void throwIfPropertyFound(ConfigDataEnvironmentContributor contributor) {
+114:					throw new InvalidConfigDataPropertyException(property, false, replacement,
+123:						throw new InvalidConfigDataPropertyException(property, true, null, contributor.getResource());
+## v2.7.0 spring-boot additional metadata: use-legacy-processing count = 1
+## v3.0.0 spring-boot additional metadata: use-legacy-processing count = 0
+## v4.1.1 core/spring-boot additional metadata: use-legacy-processing count = 0
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SystemEnvironmentPropertyMapper.java :: grep -nE 'addIfMissing\(mapped|isLegacyAncestorOf\(ConfigurationPropertyName'
+49:		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.SYSTEM_ENVIRONMENT, true));
+50:		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.LEGACY_SYSTEM_ENVIRONMENT, true));
+51:		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.SYSTEM_ENVIRONMENT, false));
+52:		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.LEGACY_SYSTEM_ENVIRONMENT, false));
+99:	private boolean isLegacyAncestorOf(ConfigurationPropertyName name, ConfigurationPropertyName candidate) {
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/bind/DefaultBindConstructorProvider.java :: grep -nE 'deduceKotlinBindConstructor|isKotlinType\(type\)'
+114:			if (bind == null && !hasAutowiredConstructor && isKotlinType(type)) {
+115:				bind = deduceKotlinBindConstructor(type);
+201:			return KotlinDetector.isKotlinPresent() && KotlinDetector.isKotlinType(type);
+204:		private static @Nullable Constructor<?> deduceKotlinBindConstructor(Class<?> type) {
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationPropertiesBindingPostProcessor.java :: grep -nE 'hasBoundValueObject|VALUE_OBJECT'
+83:		if (!hasBoundValueObject(beanName)) {
+89:	private boolean hasBoundValueObject(String beanName) {
+90:		return BindMethod.VALUE_OBJECT.equals(BindMethodAttribute.get(this.registry, beanName));
+97:		Assert.state(bean.asBindTarget().getBindMethod() != BindMethod.VALUE_OBJECT,
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationProperties.java :: grep -nE 'boolean ignoreUnknownFields\(\) default|boolean ignoreInvalidFields\(\) default'
+78:	boolean ignoreInvalidFields() default false;
+85:	boolean ignoreUnknownFields() default true;
+## v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertyMigration.java :: grep -nE 'determineCompatibleType|currentType == null|incompatible target type'
+68:		this.compatibleType = determineCompatibleType(metadata, replacementMetadata);
+84:	private static boolean determineCompatibleType(ConfigurationMetadataProperty metadata,
+88:		if (currentType == null || replacementType == null) {
+148:				return String.format("Reason: Replacement key '%s' uses an incompatible target type",
+## v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertiesMigrationListener.java :: grep -nE 'instanceof ApplicationPreparedEvent|instanceof ApplicationReadyEvent'
+54:		if (event instanceof ApplicationPreparedEvent preparedEvent) {
+57:		if (event instanceof ApplicationReadyEvent || event instanceof ApplicationFailedEvent) {
+## v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertiesMigrationReporter.java :: grep -nE '"migrate-"'
+197:			String target = "migrate-" + name;
+## spring-cloud-commons v5.0.3 / v5.1.0-M1 parent, spring-cloud-build spring-boot.version
+13:	<parent>
+14-		<groupId>org.springframework.cloud</groupId>
+15-		<artifactId>spring-cloud-build</artifactId>
+16-		<version>5.0.3</version>
+31:		<spring-boot.version>4.0.8</spring-boot.version>
+13:	<parent>
+14-		<groupId>org.springframework.cloud</groupId>
+15-		<artifactId>spring-cloud-build</artifactId>
+16-		<version>5.1.0-M1</version>
+35:		<spring-boot.version>4.2.0-M2</spring-boot.version>
+## spring-cloud-commons v5.0.3 RefreshEventListener
+73:			log.info("Refresh keys changed: " + keys);
+## Maven Central spring-boot-properties-migrator 4.1.1 pom: 200
+## GitHub issues (gh api)
+spring-boot #45741 [closed] milestone=3.5.1 labels=type: regression title=Binding no longer works with sytem environment properties that are not upper case
+spring-boot #46184 [closed] milestone=3.5.4 labels=type: regression title=Environment variables using legacy dash format can no longer be bound
+spring-framework #36102 [closed] labels=status: invalid title=AOT Cache and constraint null
+I'm going to back out that optimization in 3.5 and we'll perhaps have another go at implementing it in 4.0.
+## (추가 2026-10-08T10:55:06+0900) spring.redis → spring.data.redis: RedisProperties prefix 와 v3.0.0 deprecated 항목
+# command: curl -sS $B/<tag>/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/data/redis/RedisProperties.java | grep -n '@ConfigurationProperties'
+v2.7.0: 35:@ConfigurationProperties(prefix = "spring.redis")
+v3.0.0: 35:@ConfigurationProperties(prefix = "spring.data.redis")
+# command: v3.0.0 spring-boot-autoconfigure additional-spring-configuration-metadata.json 에서 name == spring.redis.host 항목
+{"name": "spring.redis.host", "type": "java.lang.String", "deprecation": {"replacement": "spring.data.redis.host", "level": "error"}}
+## (추가) v4.1.1 module/spring-boot-data-redis/src/main/resources/META-INF/additional-spring-configuration-metadata.json 의 spring.redis.host 항목과 spring.redis.* 항목 수
+[{'name': 'spring.redis.host', 'type': 'java.lang.String', 'deprecation': {'replacement': 'spring.data.redis.host', 'level': 'error', 'since': '3.0.0'}}]
+spring.redis.* entries = 33
+# 주: P15c 의 앱 클래스패스에는 spring-boot-data-redis 가 없어 migrator 가 spring.redis.host 를 보고하지 않았다(P15.log [P15c] metadata spring.redis.host: <none>).

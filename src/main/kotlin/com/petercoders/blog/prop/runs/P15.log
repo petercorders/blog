@@ -1,0 +1,152 @@
+# experiment: P15 — [P15a] @Validated+@NotBlank 값 없음 / [P15b] 오타 키 prop.*.my-targt-value: 기본(ignoreUnknownFields=true) 대 ignoreUnknownFields=false / [P15c] metadata 의 server.error.include-message deprecation·replacement, properties-migrator 리포트와 런타임 이관 여부(yml 대 @PropertySource), 대조군 spring.resources.add-mappings
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:51:09+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLabExtra --args='P15'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:51:10.190 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+[P15] migrator on classpath=true validator on classpath=true
+2026-10-08T10:51:10.391+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 25039 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:10.392+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:10.595+09:00  WARN 25039 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.val-com.petercoders.blog.prop.ValProps': Could not bind properties to 'ValProps' : prefix=prop.val, ignoreInvalidFields=false, ignoreUnknownFields=true
+2026-10-08T10:51:10.604+09:00 ERROR 25039 --- [blog] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Binding to target com.petercoders.blog.prop.ValProps failed:
+
+    Property: prop.val.name
+    Value: "null"
+    Reason: 공백일 수 없습니다
+
+
+Action:
+
+Update your application's configuration
+
+[P15a no value] failure[0] org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.val-com.petercoders.blog.prop.ValProps': Could not bind properties to 'ValProps' : prefix=prop.val, ignoreInvalidFields=false, ignoreUnknownFields=true
+[P15a no value] failure[1] org.springframework.boot.context.properties.bind.BindException: Failed to bind properties under 'prop.val' to com.petercoders.blog.prop.ValProps
+[P15a no value] failure[2] org.springframework.boot.context.properties.bind.validation.BindValidationException: Binding validation errors on prop.val
+2026-10-08T10:51:10.614+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 25039 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:10.614+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:10.639+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.031 seconds (process running for 0.543)
+[P15a] started name=ok
+
+[P15b] @ConfigurationProperties.ignoreUnknownFields default=true
+2026-10-08T10:51:10.654+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 25039 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:10.654+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:10.691+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.048 seconds (process running for 0.595)
+[P15b default] started RelaxProps.myTargetValue=<null>
+2026-10-08T10:51:10.700+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 25039 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:10.700+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:10.713+09:00  WARN 25039 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.strict-com.petercoders.blog.prop.StrictProps': Could not bind properties to 'StrictProps' : prefix=prop.strict, ignoreInvalidFields=false, ignoreUnknownFields=false
+2026-10-08T10:51:10.715+09:00 ERROR 25039 --- [blog] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Binding to target [Bindable@4d21c56e type = com.petercoders.blog.prop.StrictProps, value = 'provided', annotations = array<Annotation>[@org.springframework.boot.context.properties.ConfigurationProperties(ignoreInvalidFields=false, ignoreUnknownFields=false, prefix="prop.strict", value="prop.strict")], bindMethod = JAVA_BEAN] failed:
+
+    Property: prop.strict.my-targt-value
+    Value: "typo"
+    Origin: URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15b-462217673896166/application.yml] - 5:21
+    Reason: The elements [prop.strict.my-targt-value] were left unbound.
+
+Action:
+
+Update your application's configuration
+
+[P15b ignoreUnknownFields=false (StrictProps)] failure[0] org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.strict-com.petercoders.blog.prop.StrictProps': Could not bind properties to 'StrictProps' : prefix=prop.strict, ignoreInvalidFields=false, ignoreUnknownFields=false
+[P15b ignoreUnknownFields=false (StrictProps)] failure[1] org.springframework.boot.context.properties.bind.BindException: Failed to bind properties under 'prop.strict' to com.petercoders.blog.prop.StrictProps
+[P15b ignoreUnknownFields=false (StrictProps)] failure[2] org.springframework.boot.context.properties.bind.UnboundConfigurationPropertiesException: The elements [prop.strict.my-targt-value] were left unbound.
+
+[P15c] metadata server.error.include-message @ org.springframework.boot/spring-boot-web-server/4.1.1/d1eb8e523013ac3939ae59adc5335a3de704d11b/spring-boot-web-server-4.1.1.jar!/META-INF/spring-configuration-metadata.json :: { "name": "server.error.include-message", "description": "When to include the \"message\" attribute.", "defaultValue": "never", "deprecated": true, "deprecation": { "level": "error", "replacement": "spring.web.error.include-message", "since": "4.0.0" } }
+[P15c] metadata server.error.include-message @ org.springframework.boot/spring-boot-web-server/4.1.1/d1eb8e523013ac3939ae59adc5335a3de704d11b/spring-boot-web-server-4.1.1.jar!/META-INF/additional-spring-configuration-metadata.json :: { "name": "server.error.include-message", "description": "When to include the \"message\" attribute.", "defaultValue": "never", "deprecation": { "level": "error", "replacement": "spring.web.error.include-message", "since": "4.0.0" } }
+[P15c] metadata spring.web.error.include-message @ org.springframework.boot/spring-boot-autoconfigure/4.1.1/53c1c604301b4183faa480a5b9f2fd86a2f043c3/spring-boot-autoconfigure-4.1.1.jar!/META-INF/spring-configuration-metadata.json :: { "name": "spring.web.error.include-message", "type": "org.springframework.boot.autoconfigure.web.ErrorProperties$IncludeAttribute", "description": "When to include \"message\" attribute.", "sourceType": "org.springframework.boot.autoconfigure.web.ErrorProperties", "defaultValue": "never" }
+[P15c] metadata management.endpoints.enabled-by-default @ org.springframework.boot/spring-boot-actuator-autoconfigure/4.1.1/858f3be62af25ba19a8d87003bb9e929187fc5a5/spring-boot-actuator-autoconfigure-4.1.1.jar!/META-INF/spring-configuration-metadata.json :: { "name": "management.endpoints.enabled-by-default", "type": "java.lang.Boolean", "description": "Whether to enable or disable all endpoints by default.", "deprecated": true, "deprecation": { "replacement": "management.endpoints.access.default", "since": "3.4.0" } }
+[P15c] metadata management.endpoints.enabled-by-default @ org.springframework.boot/spring-boot-actuator-autoconfigure/4.1.1/858f3be62af25ba19a8d87003bb9e929187fc5a5/spring-boot-actuator-autoconfigure-4.1.1.jar!/META-INF/additional-spring-configuration-metadata.json :: { "name": "management.endpoints.enabled-by-default", "type": "java.lang.Boolean", "description": "Whether to enable or disable all endpoints by default.", "deprecation": { "replacement": "management.endpoints.access.default", "since": "3.4.0" } }
+[P15c] metadata management.endpoints.access.default @ org.springframework.boot/spring-boot-actuator-autoconfigure/4.1.1/858f3be62af25ba19a8d87003bb9e929187fc5a5/spring-boot-actuator-autoconfigure-4.1.1.jar!/META-INF/spring-configuration-metadata.json :: { "name": "management.endpoints.access.default", "type": "org.springframework.boot.actuate.endpoint.Access", "description": "Default access level for all endpoints." }
+[P15c] metadata management.endpoints.access.default @ org.springframework.boot/spring-boot-actuator-autoconfigure/4.1.1/858f3be62af25ba19a8d87003bb9e929187fc5a5/spring-boot-actuator-autoconfigure-4.1.1.jar!/META-INF/additional-spring-configuration-metadata.json :: { "name": "management.endpoints.access.default", "type": "org.springframework.boot.actuate.endpoint.Access", "description": "Default access level for all endpoints." }
+[P15c] metadata spring.redis.host: <none>
+[P15c] metadata spring.data.redis.host: <none>
+[P15c] metadata spring.resources.add-mappings @ org.springframework.boot/spring-boot-autoconfigure/4.1.1/53c1c604301b4183faa480a5b9f2fd86a2f043c3/spring-boot-autoconfigure-4.1.1.jar!/META-INF/spring-configuration-metadata.json :: { "name": "spring.resources.add-mappings", "type": "java.lang.Boolean", "deprecated": true, "deprecation": { "level": "error", "replacement": "spring.web.resources.add-mappings", "since": "2.4.0" } }
+[P15c] metadata spring.resources.add-mappings @ org.springframework.boot/spring-boot-autoconfigure/4.1.1/53c1c604301b4183faa480a5b9f2fd86a2f043c3/spring-boot-autoconfigure-4.1.1.jar!/META-INF/additional-spring-configuration-metadata.json :: { "name": "spring.resources.add-mappings", "type": "java.lang.Boolean", "deprecation": { "replacement": "spring.web.resources.add-mappings", "level": "error", "since": "2.4.0" } }
+[P15c] metadata spring.web.resources.add-mappings @ org.springframework.boot/spring-boot-autoconfigure/4.1.1/53c1c604301b4183faa480a5b9f2fd86a2f043c3/spring-boot-autoconfigure-4.1.1.jar!/META-INF/spring-configuration-metadata.json :: { "name": "spring.web.resources.add-mappings", "type": "java.lang.Boolean", "description": "Whether to enable default resource handling.", "sourceType": "org.springframework.boot.autoconfigure.web.WebProperties$Resources", "defaultValue": true }
+2026-10-08T10:51:10.745+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 25039 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:10.746+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:10.755+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.017 seconds (process running for 0.659)
+2026-10-08T10:51:10.756+09:00  WARN 25039 --- [blog] [           main] o.s.b.c.p.m.PropertiesMigrationListener  : 
+The use of configuration keys that have been renamed was found in the environment:
+
+Property source 'Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/'':
+	Key: spring.resources.add-mappings
+		Line: 8
+		Replacement: spring.web.resources.add-mappings
+
+
+Each configuration key has been temporarily mapped to its replacement for your convenience. To silence this warning, please update your configuration to use the new keys.
+
+2026-10-08T10:51:10.756+09:00 ERROR 25039 --- [blog] [           main] o.s.b.c.p.m.PropertiesMigrationListener  : 
+The use of configuration keys that are no longer supported was found in the environment:
+
+Property source 'Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/'':
+	Key: server.error.include-message
+		Line: 3
+		Reason: Replacement key 'spring.web.error.include-message' uses an incompatible target type
+
+
+Please refer to the release notes or reference guide for potential alternatives.
+
+[P15c yml][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P15c yml][01] systemProperties :: PropertiesPropertySource
+[P15c yml][02] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P15c yml][03] random :: RandomValuePropertySource
+[P15c yml][04] migrate-Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/' :: OriginTrackedMapPropertySource
+[P15c yml][05] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/' :: OriginTrackedMapPropertySource
+[P15c yml][06] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P15c yml][07] applicationInfo :: ApplicationInfoPropertySource
+[P15c yml][08] defaultProperties :: DefaultPropertiesPropertySource
+[P15c yml] server.error.include-message=always winner=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/'
+[P15c yml] spring.web.error.include-message=null winner=<none>
+[P15c yml] spring.redis.host=redis.example winner=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/'
+[P15c yml] spring.data.redis.host=null winner=<none>
+[P15c yml] spring.resources.add-mappings=false winner=Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/'
+[P15c yml] spring.web.resources.add-mappings=false winner=migrate-Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-462217770029333/'
+
+2026-10-08T10:51:10.763+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 25039 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:10.763+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+[P15c @PropertySource:refresh][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P15c @PropertySource:refresh][01] systemProperties :: PropertiesPropertySource
+[P15c @PropertySource:refresh][02] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P15c @PropertySource:refresh][03] random :: RandomValuePropertySource
+[P15c @PropertySource:refresh][04] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P15c @PropertySource:refresh][05] applicationInfo :: ApplicationInfoPropertySource
+[P15c @PropertySource:refresh][06] URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-ps-462217789916125/ps.properties] :: ResourcePropertySource
+[P15c @PropertySource:refresh][07] defaultProperties :: DefaultPropertiesPropertySource
+[P15c @PropertySource:refresh] holds[00] value=always :: configurationProperties (창구)
+[P15c @PropertySource:refresh] holds[06] value=always :: URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-ps-462217789916125/ps.properties]
+2026-10-08T10:51:10.796+09:00  INFO 25039 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.038 seconds (process running for 0.7)
+[P15c @PropertySource][00] configurationProperties (창구) :: ConfigurationPropertySourcesPropertySource
+[P15c @PropertySource][01] systemProperties :: PropertiesPropertySource
+[P15c @PropertySource][02] systemEnvironment :: OriginAwareSystemEnvironmentPropertySource
+[P15c @PropertySource][03] random :: RandomValuePropertySource
+[P15c @PropertySource][04] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/' :: OriginTrackedMapPropertySource
+[P15c @PropertySource][05] applicationInfo :: ApplicationInfoPropertySource
+[P15c @PropertySource][06] URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-ps-462217789916125/ps.properties] :: ResourcePropertySource
+[P15c @PropertySource][07] defaultProperties :: DefaultPropertiesPropertySource
+[P15c @PropertySource] server.error.include-message=always winner=URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-ps-462217789916125/ps.properties]
+[P15c @PropertySource] spring.web.error.include-message=null winner=<none>
+[P15c @PropertySource] spring.redis.host=redis.example winner=URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-ps-462217789916125/ps.properties]
+[P15c @PropertySource] spring.data.redis.host=null winner=<none>
+[P15c @PropertySource] spring.resources.add-mappings=false winner=URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p15c-ps-462217789916125/ps.properties]
+[P15c @PropertySource] spring.web.resources.add-mappings=null winner=<none>
+

@@ -1,0 +1,120 @@
+# experiment: P13 — actuator /env · /configprops 실제 HTTP(curl). server.port=0, exposure env·configprops, Security 기본(HTTP Basic lab:lab). show-values never(기본) / when-authorized / always, always 에서 기동 뒤 addFirst(P8 시나리오) 후 env 대 configprops
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-08T10:51:06+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLabActuator --args='P13'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+10:51:06.857 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+2026-10-08T10:51:07.057+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24956 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:07.058+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:07.723+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 0 (http)
+2026-10-08T10:51:07.730+09:00  INFO 24956 --- [blog] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-08T10:51:07.730+09:00  INFO 24956 --- [blog] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-10-08T10:51:07.748+09:00  INFO 24956 --- [blog] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 638 ms
+2026-10-08T10:51:08.003+09:00  INFO 24956 --- [blog] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-10-08T10:51:08.054+09:00  INFO 24956 --- [blog] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-10-08T10:51:08.108+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 53372 (http) with context path '/'
+2026-10-08T10:51:08.111+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 1.205 seconds (process running for 1.367)
+[P13-never(default)] local.server.port=53372
+[P13-never(default)] $ curl -s -S -o /dev/null -w unauthenticated http=%{http_code} http://localhost:53372/actuator/env/prop.relax.my-target-value
+2026-10-08T10:51:08.192+09:00  INFO 24956 --- [blog] [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-08T10:51:08.192+09:00  INFO 24956 --- [blog] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-08T10:51:08.193+09:00  INFO 24956 --- [blog] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[P13-never(default)] unauthenticated http=401
+[P13-never(default)] $ curl -s -S -u lab:lab http://localhost:53372/actuator/env/prop.relax.my-target-value
+[P13-never(default)] env/{key} body={"activeProfiles":[],"defaultProfiles":["default"],"property":{"source":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","value":"******"},"propertySources":[{"name":"server.ports"},{"name":"servletConfigInitParams"},{"name":"servletContextInitParams"},{"name":"systemProperties"},{"name":"systemEnvironment"},{"name":"random"},{"name":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","property":{"origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22","value":"******"}},{"name":"Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'"},{"name":"applicationInfo"},{"name":"defaultProperties"},{"name":"Management Server"}]}
+[P13-never(default)] $ curl -s -S -u lab:lab http://localhost:53372/actuator/configprops/prop.relax
+[P13-never(default)] configprops/{prefix} body={"contexts":{"blog":{"beans":{"prop.relax-com.petercoders.blog.prop.RelaxProps":{"inputs":{"myTargetValue":{"value":"******","origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22"}},"prefix":"prop.relax","properties":{"myTargetValue":"******"}}}}}}
+[P13-never(default)] $ curl -s -S -u lab:lab http://localhost:53372/actuator/env
+[P13-never(default)] env (full body not logged) propertySources.name in order:
+[P13-never(default)]   [00] server.ports
+[P13-never(default)]   [01] servletContextInitParams
+[P13-never(default)]   [02] systemProperties
+[P13-never(default)]   [03] systemEnvironment
+[P13-never(default)]   [04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'
+[P13-never(default)]   [05] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'
+[P13-never(default)]   [06] applicationInfo
+[P13-never(default)]   [07] defaultProperties
+[P13-never(default)]   [08] Management Server
+[P13-never(default)] env contains configurationProperties source=false
+2026-10-08T10:51:08.566+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-08T10:51:08.570+09:00  INFO 24956 --- [blog] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+
+2026-10-08T10:51:08.585+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24956 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:08.585+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:08.663+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 0 (http)
+2026-10-08T10:51:08.663+09:00  INFO 24956 --- [blog] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-08T10:51:08.663+09:00  INFO 24956 --- [blog] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-10-08T10:51:08.668+09:00  INFO 24956 --- [blog] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 71 ms
+2026-10-08T10:51:08.720+09:00  INFO 24956 --- [blog] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-10-08T10:51:08.726+09:00  INFO 24956 --- [blog] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-10-08T10:51:08.735+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 53378 (http) with context path '/'
+2026-10-08T10:51:08.736+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.159 seconds (process running for 1.991)
+[P13-when-authorized] local.server.port=53378
+[P13-when-authorized] $ curl -s -S -o /dev/null -w unauthenticated http=%{http_code} http://localhost:53378/actuator/env/prop.relax.my-target-value
+2026-10-08T10:51:08.747+09:00  INFO 24956 --- [blog] [o-auto-2-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-08T10:51:08.747+09:00  INFO 24956 --- [blog] [o-auto-2-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-08T10:51:08.748+09:00  INFO 24956 --- [blog] [o-auto-2-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[P13-when-authorized] unauthenticated http=401
+[P13-when-authorized] $ curl -s -S -u lab:lab http://localhost:53378/actuator/env/prop.relax.my-target-value
+[P13-when-authorized] env/{key} body={"activeProfiles":[],"defaultProfiles":["default"],"property":{"source":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","value":"before"},"propertySources":[{"name":"server.ports"},{"name":"servletConfigInitParams"},{"name":"servletContextInitParams"},{"name":"systemProperties"},{"name":"systemEnvironment"},{"name":"random"},{"name":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","property":{"origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22","value":"before"}},{"name":"Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'"},{"name":"applicationInfo"},{"name":"defaultProperties"},{"name":"Management Server"}]}
+[P13-when-authorized] $ curl -s -S -u lab:lab http://localhost:53378/actuator/configprops/prop.relax
+[P13-when-authorized] configprops/{prefix} body={"contexts":{"blog":{"beans":{"prop.relax-com.petercoders.blog.prop.RelaxProps":{"inputs":{"myTargetValue":{"value":"before","origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22"}},"prefix":"prop.relax","properties":{"myTargetValue":"before"}}}}}}
+[P13-when-authorized] $ curl -s -S -u lab:lab http://localhost:53378/actuator/env
+[P13-when-authorized] env (full body not logged) propertySources.name in order:
+[P13-when-authorized]   [00] server.ports
+[P13-when-authorized]   [01] servletContextInitParams
+[P13-when-authorized]   [02] systemProperties
+[P13-when-authorized]   [03] systemEnvironment
+[P13-when-authorized]   [04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'
+[P13-when-authorized]   [05] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'
+[P13-when-authorized]   [06] applicationInfo
+[P13-when-authorized]   [07] defaultProperties
+[P13-when-authorized]   [08] Management Server
+[P13-when-authorized] env contains configurationProperties source=false
+2026-10-08T10:51:09.026+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-08T10:51:09.028+09:00  INFO 24956 --- [blog] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+
+2026-10-08T10:51:09.036+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 24956 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-08T10:51:09.037+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-08T10:51:09.095+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 0 (http)
+2026-10-08T10:51:09.096+09:00  INFO 24956 --- [blog] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-08T10:51:09.096+09:00  INFO 24956 --- [blog] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-10-08T10:51:09.099+09:00  INFO 24956 --- [blog] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 56 ms
+2026-10-08T10:51:09.138+09:00  INFO 24956 --- [blog] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-10-08T10:51:09.142+09:00  INFO 24956 --- [blog] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-10-08T10:51:09.149+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 53385 (http) with context path '/'
+2026-10-08T10:51:09.150+09:00  INFO 24956 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.119 seconds (process running for 2.405)
+[P13-always] local.server.port=53385
+[P13-always] $ curl -s -S -o /dev/null -w unauthenticated http=%{http_code} http://localhost:53385/actuator/env/prop.relax.my-target-value
+2026-10-08T10:51:09.162+09:00  INFO 24956 --- [blog] [o-auto-3-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-08T10:51:09.162+09:00  INFO 24956 --- [blog] [o-auto-3-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-08T10:51:09.162+09:00  INFO 24956 --- [blog] [o-auto-3-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+[P13-always] unauthenticated http=401
+[P13-always] $ curl -s -S -u lab:lab http://localhost:53385/actuator/env/prop.relax.my-target-value
+[P13-always] env/{key} body={"activeProfiles":[],"defaultProfiles":["default"],"property":{"source":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","value":"before"},"propertySources":[{"name":"server.ports"},{"name":"servletConfigInitParams"},{"name":"servletContextInitParams"},{"name":"systemProperties"},{"name":"systemEnvironment"},{"name":"random"},{"name":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","property":{"origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22","value":"before"}},{"name":"Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'"},{"name":"applicationInfo"},{"name":"defaultProperties"},{"name":"Management Server"}]}
+[P13-always] $ curl -s -S -u lab:lab http://localhost:53385/actuator/configprops/prop.relax
+[P13-always] configprops/{prefix} body={"contexts":{"blog":{"beans":{"prop.relax-com.petercoders.blog.prop.RelaxProps":{"inputs":{"myTargetValue":{"value":"before","origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22"}},"prefix":"prop.relax","properties":{"myTargetValue":"before"}}}}}}
+[P13-always] $ curl -s -S -u lab:lab http://localhost:53385/actuator/env
+[P13-always] env (full body not logged) propertySources.name in order:
+[P13-always]   [00] server.ports
+[P13-always]   [01] servletContextInitParams
+[P13-always]   [02] systemProperties
+[P13-always]   [03] systemEnvironment
+[P13-always]   [04] Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'
+[P13-always]   [05] Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'
+[P13-always]   [06] applicationInfo
+[P13-always]   [07] defaultProperties
+[P13-always]   [08] Management Server
+[P13-always] env contains configurationProperties source=false
+[P13-always] after addFirst(p13-override: prop.relax.my-target-value=after)
+[P13-always] $ curl -s -S -u lab:lab http://localhost:53385/actuator/env/prop.relax.my-target-value
+[P13-always] env/{key} body={"activeProfiles":[],"defaultProfiles":["default"],"property":{"source":"p13-override","value":"after"},"propertySources":[{"name":"p13-override","property":{"value":"after"}},{"name":"server.ports"},{"name":"servletConfigInitParams"},{"name":"servletContextInitParams"},{"name":"systemProperties"},{"name":"systemEnvironment"},{"name":"random"},{"name":"Config resource 'file [/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml]' via location 'file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/'","property":{"origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22","value":"before"}},{"name":"Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'"},{"name":"applicationInfo"},{"name":"defaultProperties"},{"name":"Management Server"}]}
+[P13-always] $ curl -s -S -u lab:lab http://localhost:53385/actuator/configprops/prop.relax
+[P13-always] configprops/{prefix} body={"contexts":{"blog":{"beans":{"prop.relax-com.petercoders.blog.prop.RelaxProps":{"inputs":{"myTargetValue":{"value":"before","origin":"URL [file:/var/folders/cg/_z7ch85n0rg6j97_xj2mt2y80000gn/T/proplab-p13-462213897639125/application.yml] - 3:22"}},"prefix":"prop.relax","properties":{"myTargetValue":"before"}}}}}}
+2026-10-08T10:51:09.571+09:00  INFO 24956 --- [blog] [           main] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-08T10:51:09.575+09:00  INFO 24956 --- [blog] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+
+

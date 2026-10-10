@@ -1,0 +1,57 @@
+# experiment: R1 — 1차 문서 원문 대조(Boot external-config 4.1.1 URL, Framework 테스트 문서 dynamic property 우선순위, actuator env 4.1.1 예시, Kubernetes Service 변수 예시). curl 원문을 HTML→텍스트로 바꿔 축자 문장을 정규식으로 찾는다
+# java -version: 해당 없음(문서 대조, JVM 미사용)
+# date: 2026-10-08T10:52:23+0900
+# command: python3 r1.py  (스크립트 본문은 아래 첨부)
+# ---- r1.py ----
+# | import re, html, subprocess, sys
+# | def fetch(url):
+# |     r = subprocess.run(['curl','-sSL','-w','\n__HTTP__%{http_code} %{url_effective}', url], capture_output=True, text=True)
+# |     body, _, tail = r.stdout.rpartition('\n__HTTP__')
+# |     return body, tail
+# | def text(h):
+# |     h = re.sub(r'<script.*?</script>|<style.*?</style>', '', h, flags=re.S)
+# |     return html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', h)))
+# | def first(t, pat, before=0, after=0):
+# |     m = re.search(pat, t)
+# |     return t[max(0, m.start()-before):m.end()+after] if m else '<not found>'
+# | r = subprocess.run(['curl','-sS','-o','/dev/null','-w','%{http_code} -> %{redirect_url}','https://docs.spring.io/spring-boot/4.1.1/reference/features/external-config.html'], capture_output=True, text=True)
+# | print('[R1] 4.1.1 URL redirect:', r.stdout)
+# | h, tail = fetch('https://docs.spring.io/spring-boot/4.1.1/reference/features/external-config.html')
+# | print('[R1] final:', tail)
+# | print('[R1] meta:', re.findall(r'<meta name="(?:version|versioned-url|latest-version)" content="[^"]*">', h))
+# | t = text(h)
+# | print('[R1] order list:', first(t, r'Sources are considered in the following order:.*?Devtools global settings properties in the \$HOME/\.config/spring-boot directory when devtools is active\.'))
+# | print('[R1] too late:', first(t, r'Please note that such property sources are not added to the Environment until the application context is being refreshed\. This is too late to configure certain properties such as logging\.\* and spring\.main\.\* which are read before refresh begins\.'))
+# | print('[R1] config data order:', first(t, r'Config data files are considered in the following order:.*?outside of your packaged jar \( application-\{profile\}\.properties and YAML variants\)\.'))
+# | print('[R1] properties precedence:', first(t, r'If you have configuration files with both \.properties and YAML format in the same location, \.properties takes precedence\.'))
+# | h, tail = fetch('https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/ctx-management/dynamic-property-sources.html')
+# | print('[R1-fw] final:', tail, re.findall(r'<meta name="version" content="[^"]*">', h))
+# | print('[R1-fw] precedence:', first(text(h), r'Dynamic properties have higher precedence than[^.]*\.'))
+# | h, tail = fetch('https://docs.spring.io/spring-boot/4.1.1/api/rest/actuator/env.html')
+# | t = text(h)
+# | print('[R1-env] final:', tail, re.findall(r'<meta name="version" content="[^"]*">', h))
+# | print('[R1-env] configurationProperties in page:', 'configurationProperties' in t)
+# | print('[R1-env] example propertySources names:', re.findall(r'\{ "name" : "([^"]+)"', t)[:12])
+# | print('[R1-env] example unmasked value sample:', first(t, r'"java\.specification\.version" : \{ "value" : "[^"]*" \}'))
+# | h, tail = fetch('https://kubernetes.io/docs/concepts/services-networking/service/')
+# | t = text(h)
+# | print('[R1-k8s] final:', tail)
+# | print('[R1-k8s] example:', first(t, r'For example, the Service redis-primary.*?REDIS_PRIMARY_PORT_6379_TCP_ADDR = 10\.0\.0\.11'))
+# | print('[R1-k8s] enableServiceLinks count:', t.count('enableServiceLinks'))
+# ---- output ----
+[R1] 4.1.1 URL redirect: 301 -> https://docs.spring.io/spring-boot/4.1/reference/features/external-config.html
+[R1] final: 200 https://docs.spring.io/spring-boot/reference/features/external-config.html
+[R1] meta: ['<meta name="version" content="4.1.1">', '<meta name="versioned-url" content="https://docs.spring.io/spring-boot/4.1/reference/features/external-config.html">', '<meta name="latest-version" content="true">']
+[R1] order list: Sources are considered in the following order: Default properties (specified by setting SpringApplication.setDefaultProperties(Map) ). @PropertySource annotations on your @Configuration classes. Please note that such property sources are not added to the Environment until the application context is being refreshed. This is too late to configure certain properties such as logging.* and spring.main.* which are read before refresh begins. Config data (such as application.properties files). A RandomValuePropertySource that has properties only in random.* . OS environment variables. Java System properties ( System.getProperties() ). JNDI attributes from java:comp/env . ServletContext init parameters. ServletConfig init parameters. Properties from SPRING_APPLICATION_JSON (inline JSON embedded in an environment variable or system property). Command line arguments. properties attribute on your tests. Available on @SpringBootTest and the test annotations for testing a particular slice of your application . @DynamicPropertySource annotations in your tests. @TestPropertySource annotations on your tests. Devtools global settings properties in the $HOME/.config/spring-boot directory when devtools is active.
+[R1] too late: Please note that such property sources are not added to the Environment until the application context is being refreshed. This is too late to configure certain properties such as logging.* and spring.main.* which are read before refresh begins.
+[R1] config data order: Config data files are considered in the following order: Application properties packaged inside your jar ( application.properties and YAML variants). Profile-specific application properties packaged inside your jar ( application-{profile}.properties and YAML variants). Application properties outside of your packaged jar ( application.properties and YAML variants). Profile-specific application properties outside of your packaged jar ( application-{profile}.properties and YAML variants).
+[R1] properties precedence: If you have configuration files with both .properties and YAML format in the same location, .properties takes precedence.
+[R1-fw] final: 200 https://docs.spring.io/spring-framework/reference/testing/testcontext-framework/ctx-management/dynamic-property-sources.html ['<meta name="version" content="7.0.9">']
+[R1-fw] precedence: Dynamic properties have higher precedence than those loaded from @TestPropertySource , the operating system’s environment, Java system properties, or property sources added by the application declaratively by using @PropertySource or programmatically.
+[R1-env] final: 200 https://docs.spring.io/spring-boot/api/rest/actuator/env.html ['<meta name="version" content="4.1.1">']
+[R1-env] configurationProperties in page: False
+[R1-env] example propertySources names: ['servletContextInitParams', 'systemProperties', 'systemEnvironment', "Config resource 'class path resource [org/springframework/boot/actuate/docs/env/application.properties]' via location 'classpath:/org/springframework/boot/actuate/docs/env/'", 'applicationInfo']
+[R1-env] example unmasked value sample: "java.specification.version" : { "value" : "25" }
+[R1-k8s] final: 200 https://kubernetes.io/docs/concepts/services-networking/service/
+[R1-k8s] example: For example, the Service redis-primary which exposes TCP port 6379 and has been allocated cluster IP address 10.0.0.11, produces the following environment variables: REDIS_PRIMARY_SERVICE_HOST = 10.0.0.11 REDIS_PRIMARY_SERVICE_PORT = 6379 REDIS_PRIMARY_PORT = tcp://10.0.0.11:6379 REDIS_PRIMARY_PORT_6379_TCP = tcp://10.0.0.11:6379 REDIS_PRIMARY_PORT_6379_TCP_PROTO = tcp REDIS_PRIMARY_PORT_6379_TCP_PORT = 6379 REDIS_PRIMARY_PORT_6379_TCP_ADDR = 10.0.0.11
+[R1-k8s] enableServiceLinks count: 0

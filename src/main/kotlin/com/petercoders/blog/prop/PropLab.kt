@@ -13,7 +13,7 @@ import org.springframework.core.env.SystemEnvironmentPropertySource
 import java.io.File
 import kotlin.system.exitProcess
 
-// SPRING-INTERNALS 4편 실험 러너.
+// SPRING-INTERNALS 4편 실험 러너. 마커 목록과 태스크는 README.md 의 실험 표를 본다.
 //   ./gradlew --offline -q propLab --args='P1'
 // 공용 src/main/resources/application.yaml 은 건드리지 않는다.
 // 실험용 yml 은 전부 java.io.tmpdir/proplab-<nanos>/ 에 프로브가 직접 쓰고
@@ -42,24 +42,63 @@ open class SplitConfig {
 }
 
 // ---------- 공용 도구 ----------
+// 아래 도구는 PropLabPlus.kt·PropLabExtra.kt 도 쓴다(같은 패키지, internal).
 
-private fun freshDir(tag: String): File {
+/** 로그 머리에 찍는 실행 환경 한 줄(E1). 로그에 없는 버전은 본문에 쓰지 않는다. */
+internal fun envLine(): String =
+    "env: java.runtime.version=${System.getProperty("java.runtime.version")}" +
+        " java.vendor=${System.getProperty("java.vendor")}" +
+        " java.vm.name=${System.getProperty("java.vm.name")}" +
+        " java.home=${System.getProperty("java.home")}" +
+        " / kotlin=${KotlinVersion.CURRENT}" +
+        " spring-boot=${org.springframework.boot.SpringBootVersion.getVersion()}" +
+        " spring-framework=${org.springframework.core.SpringVersion.getVersion()}" +
+        " spring-security=${runCatching { org.springframework.security.core.SpringSecurityCoreVersion.getVersion() }.getOrDefault("<absent>")}" +
+        " / user.dir=${System.getProperty("user.dir")}"
+
+internal fun freshDir(tag: String): File {
     val dir = File(System.getProperty("java.io.tmpdir"), "proplab-$tag-${System.nanoTime()}")
     dir.mkdirs()
     return dir
 }
 
-private fun dump(marker: String, env: ConfigurableEnvironment) {
+/** PropertySource 목록 전체. 이름은 자르지 않는다(옛 로그는 52자에서 잘려 있었다). */
+internal fun dump(marker: String, env: ConfigurableEnvironment) {
     env.propertySources.forEachIndexed { i, ps ->
-        println("$marker[%02d] %-52s :: %s".format(i, ps.name.take(160), ps.javaClass.simpleName))
+        val tag = if (ps.name == "configurationProperties") " (창구)" else ""
+        println("$marker[%02d] %s%s :: %s".format(i, ps.name, tag, ps.javaClass.simpleName))
     }
 }
 
-/** key 를 실제로 들고 있는 첫 소스 이름. 조회가 멈추는 자리다. */
-private fun winner(env: ConfigurableEnvironment, key: String): String =
-    env.propertySources.firstOrNull { it.containsProperty(key) }?.name ?: "<none>"
+/**
+ * key 를 실제로 들고 있는 첫 소스 이름. 조회가 멈추는 자리다.
+ * 맨 앞 configurationProperties 는 뒤 소스를 감싼 창구라 항상 먼저 걸린다. 그래서 건너뛰고 실제 소스를 찍는다.
+ */
+internal fun winner(env: ConfigurableEnvironment, key: String): String =
+    env.propertySources.firstOrNull { it.name != "configurationProperties" && it.containsProperty(key) }?.name ?: "<none>"
 
-private fun boot(
+/** key 를 가진 소스를 목록 순서대로 전부. configurationProperties 줄에는 (창구)를 붙인다. */
+internal fun holds(marker: String, env: ConfigurableEnvironment, key: String) {
+    env.propertySources.forEachIndexed { i, ps ->
+        if (ps.containsProperty(key)) {
+            val tag = if (ps.name == "configurationProperties") " (창구)" else ""
+            println("$marker holds[%02d] value=%s :: %s%s".format(i, ps.getProperty(key), ps.name, tag))
+        }
+    }
+}
+
+/** 기동 실패를 잡아 예외 클래스와 메시지 첫 줄, cause 사슬을 찍는다. */
+internal fun failure(marker: String, t: Throwable) {
+    var c: Throwable? = t
+    var depth = 0
+    while (c != null && depth < 8) {
+        println("$marker failure[$depth] ${c.javaClass.name}: ${c.message?.lineSequence()?.firstOrNull()}")
+        c = if (c.cause === c) null else c.cause
+        depth++
+    }
+}
+
+internal fun boot(
     source: Class<*>,
     args: Array<String> = emptyArray(),
     props: Map<String, Any> = emptyMap(),
@@ -86,7 +125,7 @@ private fun boot(
     builder.run(*args).use(block)
 }
 
-private fun writeYml(dir: File, name: String, body: String): File =
+internal fun writeYml(dir: File, name: String, body: String): File =
     File(dir, name).apply { writeText(body.trimIndent() + "\n") }
 
 // ---------- P1: 이 앱의 PropertySource 목록 실물 ----------
@@ -110,10 +149,12 @@ private fun runP2() {
     boot(PropLabConfig::class.java, props = loc) { ctx ->
         dump("[P2-off]", ctx.environment as ConfigurableEnvironment)
         println("[P2-off] value=${ctx.environment.getProperty("prop.lab.value")} from=${winner(ctx.environment as ConfigurableEnvironment, "prop.lab.value")}")
+        holds("[P2-off]", ctx.environment as ConfigurableEnvironment, "prop.lab.value")
     }
     boot(PropLabConfig::class.java, props = loc, profiles = arrayOf("dev")) { ctx ->
         dump("[P2-dev]", ctx.environment as ConfigurableEnvironment)
         println("[P2-dev] value=${ctx.environment.getProperty("prop.lab.value")} from=${winner(ctx.environment as ConfigurableEnvironment, "prop.lab.value")}")
+        holds("[P2-dev]", ctx.environment as ConfigurableEnvironment, "prop.lab.value")
     }
 }
 
@@ -137,6 +178,7 @@ private fun runP3() {
     boot(PropLabConfig::class.java, props = loc) { ctx ->
         dump("[P3]", ctx.environment as ConfigurableEnvironment)
         println("[P3] value=${ctx.environment.getProperty("prop.lab.value")} from=${winner(ctx.environment as ConfigurableEnvironment, "prop.lab.value")}")
+        holds("[P3]", ctx.environment as ConfigurableEnvironment, "prop.lab.value")
     }
 }
 
@@ -228,19 +270,24 @@ private fun runP6() {
 // ---------- P7: @Value 와 @ConfigurationProperties 의 갈림 ----------
 
 private fun runP7() {
-    listOf("prop.relax.my-target-value", "prop.relax.myTargetValue").forEach { key ->
-        val dir = freshDir("p7")
-        writeYml(dir, "application.yml", "\"$key\": written-as-$key")
-        boot(
-            SplitConfig::class.java,
-            props = mapOf("spring.config.additional-location" to "file:${dir.absolutePath}/"),
-        ) { ctx ->
-            val holder = ctx.getBean(ValueHolder::class.java)
-            val props = ctx.getBean(RelaxProps::class.java)
-            println("[P7] file-key=$key")
-            println("[P7]   @Value(my-target-value)=${holder.dashed}")
-            println("[P7]   @Value(myTargetValue)  =${holder.camel}")
-            println("[P7]   @ConfigurationProperties=${props.myTargetValue ?: "<null>"}")
+    // [P14 재설계] PropLabConfig/SplitConfig 에는 auto-config 가 없어 PropertySourcesPlaceholderConfigurer(PSPC) Bean 이 없다.
+    // 그래서 PSPC 없음(SplitConfig)과 있음(SplitPspcConfig, PropLabPlus.kt) 두 조건으로 같은 파일을 읽는다.
+    listOf("no-PSPC" to SplitConfig::class.java, "PSPC" to SplitPspcConfig::class.java).forEach { (cond, cfg) ->
+        listOf("prop.relax.my-target-value", "prop.relax.myTargetValue").forEach { key ->
+            val dir = freshDir("p7")
+            writeYml(dir, "application.yml", "\"$key\": written-as-$key")
+            boot(
+                cfg,
+                props = mapOf("spring.config.additional-location" to "file:${dir.absolutePath}/"),
+            ) { ctx ->
+                val holder = ctx.getBean(ValueHolder::class.java)
+                val props = ctx.getBean(RelaxProps::class.java)
+                println("[P7] condition=$cond config=${cfg.simpleName} pspcBeans=${ctx.getBeanNamesForType(org.springframework.context.support.PropertySourcesPlaceholderConfigurer::class.java).toList()}")
+                println("[P7] file-key=$key")
+                println("[P7]   @Value(my-target-value)=${holder.dashed}")
+                println("[P7]   @Value(myTargetValue)  =${holder.camel}")
+                println("[P7]   @ConfigurationProperties=${props.myTargetValue ?: "<null>"}")
+            }
         }
     }
 }
@@ -266,15 +313,29 @@ private fun runP8() {
 }
 
 fun main(args: Array<String>) {
+    println(envLine())
     val only = args.firstOrNull()?.uppercase()
+    val rest = args.drop(1).toTypedArray()
     fun step(tag: String, f: () -> Unit) { if (only == null || only == tag) { f(); println() } }
     step("P1") { runP1() }
     step("P2") { runP2() }
     step("P3") { runP3() }
-    step("P4") { runP4() }
+    if (only == "P4LEGACY") { runP4(); exitProcess(0) }      // 옛 P4(인공 소스 둘 섞임). runs/P4-legacy.log 로 보존만 한다
+    step("P4") { runP4Clean(rest) }                       // P4' (PropLabPlus.kt)
+    step("P4B") { runP4b() }                              // propLabCwd 태스크로만 돈다(workingDir)
     step("P5") { runP5() }
     step("P6") { runP6() }
     step("P7") { runP7() }
     step("P8") { runP8() }
+    step("P9") { runP9() }
+    step("P10") { runP10() }
+    step("P11") { runP11() }
+    step("P11OS") { runP11Os() }
+    step("P13") { runP13() }                              // propLabActuator 태스크(main + propLabExtra)로만 돈다
+    step("P14") { runP14() }
+    step("P14B") { runP14b() }
+    step("P15") { runP15() }                              // propLabExtra 태스크(main + propLabExtra)로만 돈다
+    step("P17") { runP17() }
+    step("P18") { runP18() }
     exitProcess(0)
 }

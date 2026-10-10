@@ -1,64 +1,101 @@
-# prop — 설정값은 파일이 아니라 순서에서 나온다 (실험 코드)
+# prop — 설정값은 파일이 아니라 순서·이름·시점이 정한다 (실험 코드)
 
-이 디렉터리는 velog 글 [설정값은 파일이 아니라 순서에서 나온다](https://velog.io/@petercoders)(4편, 게시 후 링크로 교체)의 실측 코드다. 글 본문에는 결정적 출력 몇 줄만 실었고, 전체 코드와 로그는 여기에 있다.
+이 디렉터리는 velog 글 [설정값은 파일이 아니라 순서·이름·시점이 정한다](https://velog.io/@petercoders)(SPRING-INTERNALS 4편, 게시 후 링크로 교체)의 실측 코드다. 글 본문에는 결정적 출력 몇 줄만 실었고, 전체 코드와 로그는 여기에 있다.
 
 ## 실행 환경
 
-| 항목 | 값 |
-|---|---|
-| CPU | Apple M5 Pro, 15코어 |
-| 캐시라인 | `hw.cachelinesize=128` |
-| OS | macOS (Darwin) |
-| JVM (`/usr/bin/java`) | OpenJDK 26.0.2.1 (2026-08-18, build 26.0.2.1+1-7) |
-| Gradle toolchain JDK | `JavaLanguageVersion.of(25)` — 별도 캐시된 JDK, Boot 부트 배너에는 "Java 25.0.4.1"(Microsoft build)로 표시됨 |
-| Kotlin | 2.3.21 |
-| Spring Boot | 4.1.1 (Spring Framework 7.0.9) |
-| Gradle 실행 모드 | `--offline -q` |
+아래 값은 전부 `runs/P1.log`(E1) 머리와 `env:` 줄에 찍힌 값이다. 로그에 없는 값은 적지 않는다.
 
-절대 수치(실행 시간, 로그 용량 등)는 이 기기에 종속된다. 다른 기기로 옮길 수 있는 것은 소스 목록의 상대 순서·승자 판정 같은 비율·순서 관계뿐이다.
+| 항목 | 값 | 근거 |
+|---|---|---|
+| 기기 | Apple M5 Pro, `hw.ncpu=15`, macOS 26.6.2 | `P1.log` `# machine` |
+| 앱을 실행한 JVM | OpenJDK 25.0.4.1+1-LTS, `java.vendor=Microsoft` (Gradle toolchain `JavaLanguageVersion.of(25)`) | `P1.log` `env:` 줄, `# java -version` |
+| 셸 기본 `java` | OpenJDK 26.0.2.1 (build 26.0.2.1+1-7). 앱 실행에는 쓰지 않는다 | `P1.log` `# java -version` |
+| Kotlin | 2.3.21 | `env:` 줄 `kotlin=` |
+| Spring Boot | 4.1.1 | `env:` 줄 `spring-boot=` |
+| Spring Framework | 7.0.9 | `env:` 줄 `spring-framework=` |
+| Spring Security | 7.1.1 (main 클래스패스에 있다. 4편 실험은 P13에서만 쓴다) | `env:` 줄 `spring-security=` |
+
+절대 수치(기동 시간 등)는 이 기기에 종속된다. 이 폴더의 결론은 소스 목록의 상대 순서와 승자, 기동 성공·실패뿐이라 기기와 무관하다.
 
 ## 실험 목록
 
-| 마커 | 무엇을 보나 | 글의 절 |
-|---|---|---|
-| P1 | 이 앱의 `PropertySource` 목록 전체 덤프, 0번/맨끝 칸, 서블릿 소스 존재 여부 | 목록의 0번 자리 |
-| P2 | 프로파일 비활성/활성 시 새로 끼어드는 소스의 자리 비교 | ConfigData가 목록에 끼어드는 자리 |
-| P3 | `spring.config.import`로 당겨온 문서와 그것을 선언한 문서의 상대 위치 | ConfigData가 목록에 끼어드는 자리 |
-| P4 | 커맨드라인·환경변수·시스템프로퍼티·프로파일파일·import파일·defaultProperties 등 여러 소스에 같은 키를 두었을 때의 승자 | 같은 키를 일곱 곳에 둔 결과 |
-| P5 | 파일 프로퍼티에서 kebab/camel/snake/upper 네 표기의 relaxed binding 성공 여부 | 같은 키라는 판정의 기준 |
-| P6 | 환경 변수에서 같은 네 표기 + 레거시 후보 3종의 relaxed binding 성공 여부 | 같은 키라는 판정의 기준 |
-| P7 | `@Value`와 `@ConfigurationProperties`가 같은 파일을 읽을 때 갈리는 지점 (미실행) | `@Value`와 `@ConfigurationProperties`가 갈리는 자리 |
-| P8 | 기동 후 소스를 바꿨을 때 `Environment` 조회와 `@ConfigurationProperties` 빈 필드의 차이 (미실행) | `@Value`와 `@ConfigurationProperties`가 갈리는 자리 |
+'글의 절'은 원고(`4-PROPERTY-RESOLUTION-POST.md`)의 절 제목 그대로다. ①·②·③ 은 문제별 절(① 덮을 값은 실행 시점에 넣고, 기본값은 맨 아래 칸에 둔다 / ② 환경 변수와 @Value는 정해진 표기에서만 같은 키가 된다 / ③ 바인딩은 Bean을 만들 때 한 번뿐이다)이고, `›` 뒤가 하위 절이다. 괄호는 그 절에서 이 실험이 맡은 부분이다. '코드'의 파일은 이 디렉터리 기준이고, P12 만 `src/test/` 아래에 있다.
+
+| 마커 | 무엇을 보나 | 결과 한 줄 | 글의 절 | 코드 | 로그 |
+|---|---|---|---|---|---|
+| E1·P1 | 이 앱의 `PropertySource` 목록 전체(이름 전체)와 실행 환경 | 6칸, 0번은 `configurationProperties`(값 없는 창구), servlet 소스 없음 | 도입(실험 환경 문단)<br>설정값 하나는 PropertySource 목록의 첫 일치가 정한다 | `PropLab.kt` `runP1`·`envLine` | `P1.log` |
+| P2 | 프로파일 off/dev 에서 끼어드는 소스 자리 | dev 를 켜면 `application-dev.yml` 이 `application.yml` 바로 위에 끼어 이긴다 | ① › 설정 파일끼리는 Profile, import, 위치, 문서 순서가 정한다<br>① › @PropertySource와 defaultProperties는 목록 맨 아래 두 칸이다(덤프 끝 `defaultProperties`) | `PropLab.kt` `runP2` | `P2.log` |
+| P3 | `spring.config.import` 문서와 선언한 문서의 상대 위치 | import 파일이 선언한 파일 바로 위에 붙어 이긴다 | ① › 설정 파일끼리는 Profile, import, 위치, 문서 순서가 정한다<br>① › @PropertySource와 defaultProperties는 목록 맨 아래 두 칸이다(덤프 끝 `defaultProperties`) | `PropLab.kt` `runP3` | `P3.log` |
+| P4' | 진짜 커맨드라인·`-D`·OS env·프로파일 파일·configtree·import·`application.yml`·`@PropertySource`·defaultProperties 서열, 세 시점 덤프, initializer `addFirst`, P16b | 커맨드라인 > `-D` > OS env > 프로파일 파일 > import 두 개(목록에 뒤에 쓴 configtree 가 앞에 쓴 external.yml 위) > `application.yml` > `@PropertySource` > defaultProperties. `@PropertySource` 는 prepared 이벤트엔 없고 refresh 중에 defaultProperties 바로 위로 붙는다. initializer `addFirst` 는 `configurationProperties` 보다도 앞(00)에 선다. `@PropertySource` 안의 `spring.profiles.active=dev` 는 프로파일을 켜지 못한다 | ① › 커맨드라인, -D, 환경 변수는 모든 설정 파일을 이긴다(서열, initializer `addFirst`)<br>① › 설정 파일끼리는 Profile, import, 위치, 문서 순서가 정한다(import 두 개의 순서)<br>① › @PropertySource와 defaultProperties는 목록 맨 아래 두 칸이다(세 시점 덤프, P16b) | `PropLabPlus.kt` `runP4Clean`(옛 P4 는 `PropLab.kt` `runP4`) | `P4.log` (옛 P4 는 `P4-legacy.log`) |
+| P4b | jar 밖(`file:./`, `./config/`) 대 jar 안(classpath) | 밖 `application.yml` 이 안 `application-dev.yml` 을 이긴다. location 을 세미콜론 한 그룹으로 주면 뒤집힌다 | ① › 설정 파일끼리는 Profile, import, 위치, 문서 순서가 정한다 | `PropLabPlus.kt` `runP4b` | `P4b.log` |
+| P5 | 파일 키 네 표기 | 넷 다 붙는다 | ② › 대문자 접두사에 소문자 snake를 붙인 환경 변수는 조용히 null이 된다(파일 쪽 대조) | `PropLab.kt` `runP5` | `P5.log` |
+| P6 | 환경 변수 네 표기 + 후보 | `PROP_RELAX_my_target_value` 만 null | ② › 대문자 접두사에 소문자 snake를 붙인 환경 변수는 조용히 null이 된다<br>② › 환경 변수 이름은 점을 밑줄로 바꾸고 대시는 지우고 대문자로 쓴다(Atlassian 표기 문단) | `PropLab.kt` `runP6` | `P6.log` |
+| P7 | 같은 파일 키를 `@Value`(kebab·camel)와 `@ConfigurationProperties` 가 읽을 때, PSPC 유무 | 파일 키가 kebab 이면 `@Value(camel)` 만 못 찾는다. PSPC 유무와 무관 | ② › @Value 키는 소문자 kebab-case로 쓴다 | `PropLab.kt` `runP7` | `P7.log` |
+| P8 | 기동 뒤 `addFirst` 했을 때 `Environment` 와 Bean 필드 | `Environment` 는 after, Bean 은 before | ③ › Environment는 바뀌어도 Bean 필드는 그대로다 | `PropLab.kt` `runP8` | `P8.log` |
+| P9·P9b | 두 프로파일 순서, 멀티 문서, 프로파일 파일 안 활성화, 옛 키 `spring.profiles` | 프로파일 파일은 뒤에 쓴 프로파일이, 멀티 문서는 아래 문서가 이긴다. 프로파일 파일 안 `spring.profiles.active` 와 옛 키 `spring.profiles` 는 `InvalidConfigDataPropertyException` 으로 기동 실패 | ① › 설정 파일끼리는 Profile, import, 위치, 문서 순서가 정한다(P9)<br>코드에서 고쳐야 하는 것 › Profile은 group으로 묶고 파일 이름에 넣지 않는다(P9b) | `PropLabPlus.kt` `runP9` | `P9.log` |
+| P10·P10c | location 콤마 순서, `spring.config.location` 대체, 같은 위치 `.properties`·`.yml`, import 파일 없음 | 뒤 경로가 이긴다. `spring.config.location` 은 classpath `application.yaml` 을 목록에서 뺀다. `.properties` 가 이긴다. `optional:` 없는 import 는 `ConfigDataResourceNotFoundException` | ① › 설정 파일끼리는 Profile, import, 위치, 문서 순서가 정한다 | `PropLabPlus.kt` `runP10` | `P10.log` |
+| P11 | 리스트·Map·네 번째 후보·리스트 원소 레거시 표기·`numberOfElements` | `prop_envx_my_target_value`·`PROP_ENVX_ITEMS_0_SERVER_ADDRESS` 모두 4.1.1 에서 붙는다. `PROP_ENVX_my_target_value` 만 null. 원소 수는 `PROP_RELAX_my-target-value`·`myTargetValue`·`MYTARGETVALUE`=3, `PROP_RELAX_my_target_value`·`MY_TARGET_VALUE`=5, canonical name=3 | ② › 환경 변수 이름은 점을 밑줄로 바꾸고 대시는 지우고 대문자로 쓴다(권장 표기 넷, 레거시 리스트 표기)<br>② › 대문자 접두사에 소문자 snake를 붙인 환경 변수는 조용히 null이 된다(원소 수, 소문자 후보) | `PropLabPlus.kt` `runP11`·`runP11Os` | `P11.log`, `P11-os.log` |
+| P12 | 테스트 소스 우선순위 | `@DynamicPropertySource` > `@TestPropertySource(properties)` > `@SpringBootTest(properties)` > `@TestPropertySource(locations)` > servlet > `-D` > OS env | ① › 테스트 프로퍼티는 운영 소스 위에 얹힌다 | `src/test/kotlin/com/petercoders/blog/prop/PropTestLab.kt`, `src/test/resources/com/petercoders/blog/prop/proptestlab.properties` | `P12.log` |
+| P13 | actuator `/env`·`/configprops` 실제 HTTP | 기본 never 는 `******`. `/env` 의 propertySources 에 `configurationProperties` 가 없다. 기동 뒤 `addFirst` 하면 `/env` 는 after, `/configprops` 는 before | 배포한 다음 운영에서 확인하는 것 › /actuator/env는 소스 순서와 승자를 그대로 보여 준다<br>배포한 다음 운영에서 확인하는 것 › env는 입력이고 configprops는 적용된 값이다 | `PropLabExtra.kt` `runP13` | `P13.log` |
+| P14·P14b | `@Value` 와 진짜 OS env, 기본값 없는 `@Value` 의 PSPC 유무 | OS env 하나로 `@Value(kebab)`·`@Value(camel)` 둘 다 붙는다(camel 은 `systemEnvironment` 소스 자체 치환). 기본값 없는 `@Value(camel)` + kebab 파일 키는 PSPC 없으면 `${...}` 문자열이 그대로 들어가고, PSPC 있으면 `PlaceholderResolutionException` 으로 기동 실패 | ② › @Value 키는 소문자 kebab-case로 쓴다 | `PropLabPlus.kt` `runP14`·`runP14b` | `P14.log`, `P14b.log` |
+| P15 | `@Validated`(P15a), 오타 키(P15b), properties-migrator 와 4.1.1 메타데이터(P15c) | 빈 `@NotBlank` 는 기동 실패. 오타 키는 기본 조용히 null, `ignoreUnknownFields=false` 면 기동 실패. `server.error.include-message` 는 migrator 가 "incompatible target type" ERROR 보고만 하고 이관하지 않는다(대조군 `spring.resources.add-mappings` 는 이관). `@PropertySource` 의 옛 키는 보고·이관 둘 다 없다. `management.endpoints.enabled-by-default` 는 메타데이터에 deprecated(since 3.4.0), replacement `management.endpoints.access.default` | 코드에서 고쳐야 하는 것 › 설정 클래스는 @ConfigurationProperties와 @Validated로 묶는다(P15a)<br>코드에서 고쳐야 하는 것 › 오타와 옛 키는 기동 시점에 걸러 낸다(P15b·P15c)<br>배포한 다음 운영에서 확인하는 것 › /actuator/env는 소스 순서와 승자를 그대로 보여 준다(`enabled-by-default` 메타데이터) | `PropLabExtra.kt` `runP15` | `P15.log` |
+| P17 | `@ConfigurationProperties` 의 BindMethod | `data class RelaxProps(var myTargetValue: String? = null)` 는 `VALUE_OBJECT`(constructor binding), 인자 없는 생성자 + `var` 클래스는 `JAVA_BEAN` | ③ 바인딩은 Bean을 만들 때 한 번뿐이다(constructor binding 정의)<br>③ › Environment는 바뀌어도 Bean 필드는 그대로다<br>③ › 재기동 없이 바꾸려면 refresh 경로를 따로 붙인다 | `PropLabPlus.kt` `runP17` | `P17.log` |
+| P18 | Kubernetes Service 변수 `REDIS_PRIMARY_PORT=tcp://10.0.0.11:6379` 와 prefix `redis.primary` | `redis.primary.port`(Int) 바인딩 실패로 기동 실패. Origin 은 `System Environment Property "REDIS_PRIMARY_PORT"` | ② › 환경 변수 이름은 점을 밑줄로 바꾸고 대시는 지우고 대문자로 쓴다(Kubernetes Service 변수) | `PropLabPlus.kt` `runP18` | `P18.log`, `P18-k8s7.log` |
+| R1 | 1차 문서 원문 대조(Boot external-config, Framework 테스트 문서, actuator env 예시, Kubernetes Service) | Boot 문서는 `@TestPropertySource` 를 `@DynamicPropertySource` 위에 적지만 P12 실측과 Framework 7.0.9 문서는 dynamic 이 이긴다 | 검증 메모(원고 끝 접힌 블록) | 로그 머리에 첨부한 `r1.py` | `R1-docs.log` |
+| V | 버전 주장 태그 대조 | Spring Boot·Cloud 태그 소스, Maven Central, GitHub issue | 검증 메모(원고 끝 접힌 블록) | 로그 머리에 첨부한 `vc.sh` | `version-checks.log` |
 
 ## 빌드·실행
 
-파일은 `PropLab.kt` 하나이고, `main(args)`가 `args[0]`(`P1`~`P8`)로 해당 `runPn()`만 실행한다.
+코드는 `PropLab.kt`(공용 도구·P1~P8·진입점), `PropLabPlus.kt`(P4'·P4b·P9~P11·P14·P17·P18), `PropLabExtra.kt`(P13·P15), `src/test/kotlin/com/petercoders/blog/prop/PropTestLab.kt`(P12)와 그 `@TestPropertySource(locations)` 파일 `src/test/resources/com/petercoders/blog/prop/proptestlab.properties` 다. `PropLab.kt` 의 진입점이 `PropLabPlus.kt`·`PropLabExtra.kt` 의 프로브를 부르므로 세 파일은 함께 있어야 컴파일된다. `main(args)` 가 `args[0]` 마커 하나만 돈다. 태스크는 다섯이다.
+
+- `propLab`: main runtimeClasspath. `-PpropJvm='-D...'` 를 주면 실행 JVM 에 진짜 `-D` 로 넘긴다.
+- `propLabCwd`: `propLab` 과 같은 클래스패스에 `workingDir=build/proplab-cwd` (P4b 의 `file:./`).
+- `propLabActuator`·`propLabExtra`: main runtimeClasspath + `propLabExtra` configuration(actuator·validation·properties-migrator). 이 셋은 main 클래스패스에 넣지 않는다.
+- `propTestLab`: `PropTestLab*` 만 도는 전용 Test 태스크. `systemProperty prop.lab.value=fromSystemProperty`, `environment PROP_LAB_VALUE=fromOsEnv` 를 넣는다(공용 test 설정은 그대로).
 
 ```bash
-cd /Users/kibong_home/Desktop/development/blog
-./gradlew --offline -q propLab --args='P1'
-./gradlew --offline -q propLab --args='P2'
-./gradlew --offline -q propLab --args='P3'
-PROP_LAB_VALUE=fromOsEnv ./gradlew --offline -q propLab --args='P4'
-./gradlew --offline -q propLab --args='P5'
-./gradlew --offline -q propLab --args='P6'
-./gradlew --offline -q propLab --args='P7'   # 아직 미실행
-./gradlew --offline -q propLab --args='P8'   # 아직 미실행
+./gradlew --offline -q propLab --args='P1'        # P2 P3 P5 P6 P7 P8 P9 P10 P11 P14B P17 도 같은 꼴
+PROP_LAB_VALUE=fromOsEnv ./gradlew --offline -q propLab -PpropJvm='-Dprop.lab.value=fromSystemProperty' \
+  --args='P4 --prop.lab.value=fromCommandLine --spring.profiles.active=dev'
+./gradlew --offline -q propLabCwd --args='P4B'
+PROP_ENVX_ITEMS_0_SERVER_ADDRESS=osLegacyAddr ./gradlew --offline -q propLab --args='P11OS'
+PROP_RELAX_MYTARGETVALUE=fromEnv ./gradlew --offline -q propLab --args='P14'
+REDIS_PRIMARY_PORT=tcp://10.0.0.11:6379 ./gradlew --offline -q propLab --args='P18'
+./gradlew --offline propTestLab --console=plain
+./gradlew --offline -q propLabActuator --args='P13'
+./gradlew --offline -q propLabExtra --args='P15'
 ```
 
-공용 `src/main/resources/application.yaml`은 어떤 프로브도 건드리지 않는다. 실험용 yml은 각 프로브가 `java.io.tmpdir` 아래 매 실행 새 디렉터리에 직접 쓰고, `spring.config.additional-location`으로 읽어 들인다.
+각 로그 머리의 `# command` 가 실제로 돌린 명령 전체다. 2026-10-08 재실측은 다른 글의 실험과 동시에 돌았기 때문에 저장소를 `/tmp/gradle-prop` 으로 rsync 한 사본에서 돌렸다(로그의 `user.dir` 이 그 경로다). 공용 `src/main/resources/application.yaml` 은 어떤 프로브도 건드리지 않는다. 실험용 yml 은 프로브가 `java.io.tmpdir` 아래 매번 새 디렉터리에 직접 쓴다.
 
 ## `runs/` 로그 색인
 
 | 파일 | 내용 |
 |---|---|
-| `runs/P1.log` | P1 전체 출력 |
-| `runs/p2.log` | P2 전체 출력 |
-| `runs/p3.log` | P3 전체 출력 |
-| `runs/P4.log` | P4 전체 출력 |
-| `runs/P5.log` | P5 전체 출력 |
-| `runs/P6.log` | P6 전체 출력 |
+| `P1.log` | E1 실행 환경 + P1 |
+| `P2.log` · `P3.log` · `P8.log` | E2 재실행(이름 전체, 머리 포함) |
+| `P4.log` | P4' 클린 서열, 세 시점 덤프, initializer `addFirst`, P16b |
+| `P4-legacy.log` | 옛 P4(인공 소스 둘 섞임). 보존만 한다 |
+| `P4b.log` | jar 밖 대 jar 안 |
+| `P5.log` · `P6.log` | 2026-09-28 실행분(재실행 안 함) |
+| `P7.log` | PSPC 유무 두 조건 |
+| `P9.log` · `P10.log` | 프로파일·location |
+| `P11.log` · `P11-os.log` | 환경 변수 표기(주입 소스 / 진짜 OS env) |
+| `P12.log` | 테스트 소스 우선순위 |
+| `P13.log` | actuator HTTP. 전체 `/env` 본문은 이 기기의 OS 환경 변수 이름을 담아 남기지 않고 소스 이름만 뽑았다 |
+| `P14.log` · `P14b.log` | `@Value` 와 OS env, PSPC |
+| `P15.log` | `@Validated` · 오타 키 · migrator |
+| `P17.log` | BindMethod |
+| `P18.log` · `P18-k8s7.log` | Kubernetes Service 변수(하나 / 문서 예시 7개) |
+| `R1-docs.log` | 문서 원문 대조 |
+| `version-checks.log` | 버전 주장 태그 대조 |
 
-`p2.log`/`p3.log`만 소문자인 것은 서로 다른 실행 라운드에서 tee 출력을 그대로 남긴 결과다. 게시 전에 대소문자 표기를 통일할 것. `runs/P7.log`, `runs/P8.log`는 아직 없다 — 실행되면 이 표와 위 실험 목록 표를 함께 갱신한다.
+## 이번에 재지 않은 것
 
-git add/commit/push는 이 저장소 관례상 사용자가 직접 한다.
+- Spring Cloud refresh(`@RefreshScope`, `/actuator/refresh`): Spring Cloud Commons 5.0.3 은 spring-cloud-build 5.0.3(Boot 4.0.8 기준), 5.1.0-M1 은 Boot 4.2.0-M2 기준이라 Boot 4.1.x 기준 GA 가 없다(`version-checks.log`). 본문은 문서 기준, 미실측으로 쓴다.
+- `SPRING_APPLICATION_JSON` 의 자리.
+- 환경 변수 소스를 비열거형으로 등록해 두 경로(후보 대조, 이름 열거)를 갈라 보는 실험.
+- `EnvironmentPostProcessor` 가 `addFirst` 한 소스의 자리.
+
+git add/commit/push 는 이 저장소 관례상 사용자가 직접 한다.
