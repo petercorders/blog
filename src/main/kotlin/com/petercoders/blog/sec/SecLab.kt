@@ -1,14 +1,13 @@
-// SPRING-INTERNALS 2편(메서드 시큐리티도 프록시 위에 산다) — 실험 러너.
-// 절 번호는 기획 문서(planning/2-method-security-proxy-outline.md)의 "절마다 넣을 실험" 표를 따른다.
-// 이 파일은 현재 [S5] 절만 구현한다: SpEL 이 호출당 몇 번 평가되는지를
-// @Component("evalCounter") 카운터로 직접 센다 — 로그 문자열이 아니라 카운터 값으로 판정한다.
+// SPRING-INTERNALS 2편(Spring Method Security: @PreAuthorize를 붙이기 전에 확인할 것) — 실험 러너.
+// 인자로 받은 마커(S1~S16) 하나가 아래 main()의 when 분기 하나에 대응한다. 마커 → 본문 절 대응은 README.md.
+// 판정은 로그 문자열이 아니라 예외 클래스, sec_log 행 수, 카운터 값으로만 한다.
 //
 // 실행: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S5'
+//       (S8g·S8d·S10(2) 는 secLabExtra 태스크: context-propagation·spring-security-access·kotlinx-coroutines 를
+//        이 태스크 classpath 에만 붙인다. build.gradle.kts 의 secLabExtra 구성 참고)
 //
-// 웹 스타터는 넣지 않는다(spring.main.web-application-type=none). @PreAuthorize/@PostFilter
-// 의 SpEL 평가 자체는 인가 통과 여부와 무관하지만, 메서드 인터셉터가 SpEL을 평가하려면
-// SecurityContextHolder 에 Authentication 이 있어야 하므로 TestingAuthenticationToken 을
-// 직접 채워 넣는다(1편의 allow-circular-references 처럼, 여기서는 인증 공급만 대신한다).
+// 웹 스타터는 3편 실험 때문에 의존에 들어 있지만 이 러너는 spring.main.web-application-type=none 이다.
+// HTTP 없이 인가만 재므로 SecurityContextHolder 에 TestingAuthenticationToken 을 직접 채워 넣는다.
 package com.petercoders.blog.sec
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -116,6 +115,7 @@ private fun runS5(ctx: ConfigurableApplicationContext) {
 }
 
 fun main(args: Array<String>) {
+    printRuntimeHeader()
     val section = args.getOrNull(0) ?: "S5"
     val ctx = boot()
     authenticate()
@@ -128,8 +128,38 @@ fun main(args: Array<String>) {
             "S4b" -> runS4b()
             "S5" -> runS5(ctx)
             "S6" -> runS6(ctx)
+            "S1b" -> runS1b(ctx)
+            "S3b" -> runS3b()
+            "S3c" -> runS3c(ctx)
+            "S4c" -> runS4c()
+            "S4d" -> {
+                println("## [S4d] @EnableMethodSecurity(offset = N) — 별도 패키지 앱 둘(sec 패키지와 격리)")
+                com.petercoders.blog.secx.offset.common.runOffset("offset1000", com.petercoders.blog.secx.offset.k1000.Offset1000App::class.java)
+                println()
+                com.petercoders.blog.secx.offset.common.runOffset("offsetMAX", com.petercoders.blog.secx.offset.kmax.OffsetMaxApp::class.java)
+            }
+            "S4e" -> runS4e()
+            "S4f" -> runS4f(ctx)
+            "S5b" -> runS5b(ctx)
+            "S5c" -> runS5c(ctx)
+            "S5d" -> runS5d()
+            "S7" -> runS7()
+            "S8" -> runS8()
+            "S8c" -> runS8c()
+            "S8d" -> runS8d(ctx)
+            "S8e" -> runS8e()
+            "S8g" -> runS8g()
+            "S9" -> runS9(args.getOrNull(1) ?: error("S9 needs <classesDir>"))
+            "S9b" -> runS9b(ctx)
+            "S10" -> com.petercoders.blog.secx.global.runS10()
+            "S12" -> runS12()
+            "S14" -> runS14()
+            "S15" -> runS15()
+            "S16" -> runS16()
+            "S8s" -> runS8s(ctx)
+            "S16b" -> runS16b(ctx)
             else -> {
-                System.err.println("unknown section: $section (only S1, S2, S3, S4, S4b, S5, S6 are implemented in this file)")
+                System.err.println("unknown section: $section")
                 exitProcess(1)
             }
         }

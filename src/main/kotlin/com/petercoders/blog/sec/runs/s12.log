@@ -1,0 +1,68 @@
+# experiment: [S12] finalbean 프로필: stereotype 없는 Kotlin 클래스(final)를 @Bean 으로 등록하고 메서드에 @PreAuthorize — 기동 예외 클래스와 메시지 첫 줄
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S12'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:36 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S12] @Bean 으로 등록한 final Kotlin 클래스 + 메서드 @PreAuthorize — 기동되나
+FinalSecuredService is final = true
+2026-10-08T03:36:36.551+09:00  WARN 206 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'finalSecuredService' defined in class path resource [com/petercoders/blog/sec/FinalBeanConfig.class]: Could not generate CGLIB subclass of class com.petercoders.blog.sec.FinalSecuredService: Common causes of this problem include using a final class or a non-visible class
+2026-10-08T03:36:36.557+09:00 ERROR 206 --- [blog] [           main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'finalSecuredService' defined in class path resource [com/petercoders/blog/sec/FinalBeanConfig.class]: Could not generate CGLIB subclass of class com.petercoders.blog.sec.FinalSecuredService: Common causes of this problem include using a final class or a non-visible class
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:609) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1225) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1191) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1121) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:994) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:621) ~[spring-context-7.0.9.jar:7.0.9]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321) ~[spring-boot-4.1.1.jar:4.1.1]
+	at org.springframework.boot.builder.SpringApplicationBuilder.run(SpringApplicationBuilder.java:154) ~[spring-boot-4.1.1.jar:4.1.1]
+	at com.petercoders.blog.sec.SecLabSupportKt.bootSec(SecLabSupport.kt:33) ~[main/:na]
+	at com.petercoders.blog.sec.SecLabSupportKt.bootSec$default(SecLabSupport.kt:22) ~[main/:na]
+	at com.petercoders.blog.sec.SecProbesS12to16Kt.runS12(SecProbesS12to16.kt:50) ~[main/:na]
+	at com.petercoders.blog.sec.SecLabKt.main(SecLab.kt:154) ~[main/:na]
+Caused by: org.springframework.aop.framework.AopConfigException: Could not generate CGLIB subclass of class com.petercoders.blog.sec.FinalSecuredService: Common causes of this problem include using a final class or a non-visible class
+	at org.springframework.aop.framework.CglibAopProxy.buildProxy(CglibAopProxy.java:236) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy.getProxy(CglibAopProxy.java:166) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ProxyFactory.getProxy(ProxyFactory.java:110) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.buildProxy(AbstractAutoProxyCreator.java:493) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.createProxy(AbstractAutoProxyCreator.java:431) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.wrapIfNecessary(AbstractAutoProxyCreator.java:337) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.postProcessAfterInitialization(AbstractAutoProxyCreator.java:289) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsAfterInitialization(AbstractAutowireCapableBeanFactory.java:442) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1818) ~[spring-beans-7.0.9.jar:7.0.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:603) ~[spring-beans-7.0.9.jar:7.0.9]
+	... 18 common frames omitted
+Caused by: java.lang.IllegalArgumentException: Cannot subclass final class com.petercoders.blog.sec.FinalSecuredService
+	at org.springframework.cglib.proxy.Enhancer.generateClass(Enhancer.java:653) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.DefaultGeneratorStrategy.generate(DefaultGeneratorStrategy.java:26) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.ClassLoaderAwareGeneratorStrategy.lambda$new$0(ClassLoaderAwareGeneratorStrategy.java:41) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.ClassLoaderAwareGeneratorStrategy.generate(ClassLoaderAwareGeneratorStrategy.java:76) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.AbstractClassGenerator.generate(AbstractClassGenerator.java:370) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.proxy.Enhancer.generate(Enhancer.java:575) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.AbstractClassGenerator$ClassLoaderData.lambda$new$0(AbstractClassGenerator.java:107) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.internal.LoadingCache.lambda$createEntry$0(LoadingCache.java:52) ~[spring-core-7.0.9.jar:7.0.9]
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328) ~[na:na]
+	at org.springframework.cglib.core.internal.LoadingCache.createEntry(LoadingCache.java:57) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.internal.LoadingCache.get(LoadingCache.java:34) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.AbstractClassGenerator$ClassLoaderData.get(AbstractClassGenerator.java:129) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.core.AbstractClassGenerator.create(AbstractClassGenerator.java:321) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.proxy.Enhancer.createHelper(Enhancer.java:562) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.cglib.proxy.Enhancer.createClass(Enhancer.java:407) ~[spring-core-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.ObjenesisCglibAopProxy.createProxyClassAndInstance(ObjenesisCglibAopProxy.java:62) ~[spring-aop-7.0.9.jar:7.0.9]
+	at org.springframework.aop.framework.CglibAopProxy.buildProxy(CglibAopProxy.java:227) ~[spring-aop-7.0.9.jar:7.0.9]
+	... 27 common frames omitted
+
+startup failed: org.springframework.beans.factory.BeanCreationException
+  message first line: Error creating bean with name 'finalSecuredService' defined in class path resource [com/petercoders/blog/sec/FinalBeanConfig.class]: Could not generate CGLIB subclass of class com.petercoders.blog.sec.FinalSecuredService: Common causes of this problem include using a final class or a non-visible class
+  cause[1]: org.springframework.aop.framework.AopConfigException: Could not generate CGLIB subclass of class com.petercoders.blog.sec.FinalSecuredService: Common causes of this problem include using a final class or a non-visible class
+  cause[2]: java.lang.IllegalArgumentException: Cannot subclass final class com.petercoders.blog.sec.FinalSecuredService
+# exit=0

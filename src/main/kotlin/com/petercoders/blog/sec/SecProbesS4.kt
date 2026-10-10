@@ -1,4 +1,4 @@
-// SPRING-INTERNALS 3편(절 3) — [S4]/[S4b] 실행기.
+// SPRING-INTERNALS 2편 — [S4]/[S4b] 실행기.
 // [S4] 기본 order(@PostAuthorize=500 바깥, @Transactional=LOWEST_PRECEDENCE 안쪽)에서
 //      OrderProbe.withdraw() 를 거부되도록 불러 sec_log 행이 남는지 잰다.
 // [S4b] TxOuterConfig(@EnableTransactionManagement(order=0)) 프로파일 txouter 로

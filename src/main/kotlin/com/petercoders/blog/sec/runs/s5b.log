@@ -1,0 +1,13 @@
+# experiment: [S5b] @PostFilter("filterObject != 'e1'") + Kotlin listOf(e0,e1,e2) 필드 그대로 반환 — 예외 여부, 반환 크기, 반환 === 입력, 입력 크기 (Security 7.1.1). 6.3 이하는 실행하지 않음(소스 태그 대조)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S5b'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:32 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S5b] @PostFilter + Kotlin listOf() 필드 반환 (Security 7.1.1)
+input class = java.util.Arrays$ArrayList, input size before = 3
+exception = none
+returned = [e0, e2], returned size = 2, returned class = java.util.ArrayList
+returned === input : false
+input size after = 3
+# exit=0

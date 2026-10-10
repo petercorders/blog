@@ -1,0 +1,27 @@
+# experiment: [S4d] @EnableMethodSecurity(offset = 1000 / Int.MAX_VALUE) — Advisor order 와 OffsetOrderProbe 거부 시 rows (별도 패키지 앱, sec 패키지와 격리)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S4d'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:31 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S4d] @EnableMethodSecurity(offset = N) — 별도 패키지 앱 둘(sec 패키지와 격리)
+[offset1000] advisor orders:
+  authorizeReturnObjectAdvisor = 450
+  org.springframework.transaction.config.internalTransactionAdvisor = 2147483647
+  postAuthorizeAuthorizationAdvisor = 1500
+  postFilterAuthorizationAdvisor = 1600
+  preAuthorizeAuthorizationAdvisor = 1200
+  preFilterAuthorizationAdvisor = 1100
+[offset1000] OffsetOrderProbe chain: AdvisorWrapper(1500) -> BeanFactoryTransactionAttributeSourceAdvisor(2147483647)
+[offset1000] withdraw("s4d-offset1000", ownerId="bob") as alice -> thrown=org.springframework.security.authorization.AuthorizationDeniedException rows=1
+
+[offsetMAX] advisor orders:
+  authorizeReturnObjectAdvisor = 450
+  org.springframework.transaction.config.internalTransactionAdvisor = 2147483647
+  postAuthorizeAuthorizationAdvisor = -2147483149
+  postFilterAuthorizationAdvisor = -2147483049
+  preAuthorizeAuthorizationAdvisor = -2147483449
+  preFilterAuthorizationAdvisor = -2147483549
+[offsetMAX] OffsetOrderProbe chain: AdvisorWrapper(-2147483149) -> BeanFactoryTransactionAttributeSourceAdvisor(2147483647)
+[offsetMAX] withdraw("s4d-offsetMAX", ownerId="bob") as alice -> thrown=org.springframework.security.authorization.AuthorizationDeniedException rows=1
+# exit=0

@@ -1,4 +1,4 @@
-// SPRING-INTERNALS 3편(절 3) — [S3] 시큐리티 어드바이저 vs 트랜잭션 어드바이저, 어느 쪽이 바깥인가.
+// SPRING-INTERNALS 2편 — [S3] 시큐리티 어드바이저 vs 트랜잭션 어드바이저, 어느 쪽이 바깥인가.
 // 1) Ordered.getOrder() 를 어드바이저 빈에서 직접 읽는다(문서 숫자를 옮겨 적지 않는다).
 // 2) 진입 순서를 "결과"로 판정한다: @PreAuthorize 의 SpEL 안에서 EvalCounter.markTx 를 불러
 //    그 시점의 TransactionSynchronizationManager.isActualTransactionActive() 를 기록한다.

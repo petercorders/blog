@@ -1,0 +1,23 @@
+# experiment: [S16] s16 프로필: 같은 시그니처의 두 인터페이스에 @PreAuthorize(hasRole('ADMIN'))·@PreAuthorize(hasRole('USER')), 한 @Service 가 둘 다 구현 — 기동 여부와 첫 호출 예외(AnnotationConfigurationException 기대)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S16'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:37 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S16] 두 인터페이스에 서로 다른 @PreAuthorize, 한 클래스가 둘 다 구현
+startup ok
+first call op() threw org.springframework.core.annotation.AnnotationConfigurationException
+  message first line: Please ensure there is one unique annotation of type [interface org.springframework.security.access.prepost.PreAuthorize] attributed to public java.lang.String com.petercoders.blog.sec.S16Impl.op(java.lang.String). Found 2 competing annotations: [@org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')"), @org.springframework.security.access.prepost.PreAuthorize("hasRole('USER')")]
+# exit=0
+
+# ======================================================================
+# experiment: [S16b] 본문 요지 코드 @AdminOnly(@PreAuthorize("hasRole('ADMIN')")를 단 meta-annotation) — USER 거부, ADMIN 통과 기대
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S16b'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:45 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S16b] @PreAuthorize("hasRole('ADMIN')")를 단 meta-annotation @AdminOnly
+ROLE_USER  -> thrown=org.springframework.security.authorization.AuthorizationDeniedException rows=0
+ROLE_ADMIN -> thrown=- rows=1
+# exit=0

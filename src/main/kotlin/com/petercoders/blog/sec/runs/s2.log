@@ -2,6 +2,7 @@
 // java -version: openjdk version "26.0.2.1" 2026-08-18 / OpenJDK Runtime Environment (build 26.0.2.1+1-7) / OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
 // 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
 //       (gradle java toolchain 25 실사용: openjdk 25.0.4.1 2026-08-18 LTS, Microsoft build)
+//       (2026-10-08 추가, 출력 아님) 툴체인 JVM의 java -version 전문: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing). 같은 secLab 태스크로 돈 새 마커 로그(s1b.log 등)의 "# runtime: java.runtime.version=25.0.4.1+1-LTS" 줄이 실행 JVM을 직접 찍은 값이다. 위 26.0.2.1 줄은 셸 기본 /usr/bin/java 다.
 // 명령: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S2' | tee src/main/kotlin/com/petercoders/blog/sec/runs/s2.log
 //
 // 참고: 최초 두 번의 시도는 환경 문제로 실패했다(태그가 붙은 대로 기록):

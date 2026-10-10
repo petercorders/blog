@@ -1,0 +1,15 @@
+# experiment: [S14] retry 프로필(@EnableResilientMethods): @Retryable(maxRetries = 2, delay = 10) + @Transactional + @PostAuthorize(bob 소유라 거부), 기본 order — 체인 순서, 본문 실행 횟수, sec_log rows
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S14'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:36 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S14] @Retryable(maxRetries = 2) + @Transactional + @PostAuthorize(거부) — 기본 order
+internalAutoProxyCreator = org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator
+RetryProbe chain (3):
+  [0] DefaultPointcutAdvisor order=2147483647 advice=RetryAnnotationInterceptor
+  [1] AdvisorWrapper bean=postAuthorizeAuthorizationAdvisor order=500 advice=DeferringMethodInterceptor
+  [2] BeanFactoryTransactionAttributeSourceAdvisor bean=org.springframework.transaction.config.internalTransactionAdvisor order=2147483647 advice=TransactionInterceptor
+withdraw("s14", ownerId="bob") as alice -> thrown=org.springframework.security.authorization.AuthorizationDeniedException
+body invocations = 3, sec_log rows where tag='s14' = 3
+# exit=0

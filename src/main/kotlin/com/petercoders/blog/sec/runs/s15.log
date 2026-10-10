@@ -1,0 +1,20 @@
+# experiment: [S15] (1) 기본 컨텍스트(web none)·(1b) 서블릿 웹 컨텍스트(server.port=0)의 AuthorizationEventPublisher Bean (2) events 프로필(SpringAuthorizationEventPublisher Bean + AuthorizationEvent 리스너): Pre 거부·Post 거부·@PostFilter 제거·통과 각 1회 이벤트 수(1/1/0/0 기대) (3) setShouldPublishResult { true } 뒤 통과 이벤트 클래스·isGranted
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S15'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:37 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S15] 거부 이벤트 — AuthorizationEventPublisher Bean 유무
+
+(1) default context: AuthorizationEventPublisher beans = []
+(1b) servlet web context(server.port=0): AuthorizationEventPublisher beans = [], SecurityFilterChain beans = [defaultSecurityFilterChain]
+
+(2) events context: AuthorizationEventPublisher beans = [authorizationEventPublisher]
+    @PreAuthorize deny (DenialProbe.denied, hasRole('NOPE')) -> thrown=AuthorizationDeniedException events=1 [AuthorizationDeniedEvent(isGranted=false)]
+    @PostAuthorize deny (OrderProbe.withdraw bob) -> thrown=AuthorizationDeniedException events=1 [AuthorizationDeniedEvent(isGranted=false)]
+    @PostFilter removes 1 of 2 (EventFilterProbe.withDrop) -> thrown=- events=0 []
+    @PreAuthorize pass (SecureProbe.secured as ADMIN) -> thrown=- events=0 []
+
+(3) after setShouldPublishResult { true }:
+    @PreAuthorize pass -> events=1 [AuthorizationDeniedEvent(isGranted=true)]
+# exit=0

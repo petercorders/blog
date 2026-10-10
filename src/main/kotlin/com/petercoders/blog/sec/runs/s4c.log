@@ -1,0 +1,18 @@
+# experiment: [S4c] txmid(@EnableTransactionManagement(order = 300)) — (1) Pre 평가 시점 Transaction 없음(false 기대) (2) withdraw 거부 rows 0 기대 (3) 체인 재확인
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S4c'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:31 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S4c] txmid(@EnableTransactionManagement(order = 300)) — Pre는 밖, Post는 안인가
+order preAuthorizeAuthorizationAdvisor = 200
+order org.springframework.transaction.config.internalTransactionAdvisor = 300
+order authorizeReturnObjectAdvisor = 450
+order postAuthorizeAuthorizationAdvisor = 500
+[markTx] tag=preauthorize isActualTransactionActive=false
+(1) markTx(@PreAuthorize SpEL 평가 시점) isActualTransactionActive = false
+(2) withdraw("s4c", "bob") as alice -> thrown=org.springframework.security.authorization.AuthorizationDeniedException, sec_log rows=0
+(3) OrderProbe chain (2):
+  [0] BeanFactoryTransactionAttributeSourceAdvisor bean=org.springframework.transaction.config.internalTransactionAdvisor order=300 advice=TransactionInterceptor
+  [1] AdvisorWrapper bean=postAuthorizeAuthorizationAdvisor order=500 advice=DeferringMethodInterceptor
+# exit=0

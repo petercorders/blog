@@ -1,0 +1,15 @@
+# experiment: [S13] @WithMockUser(roles = ["USER"]) 무권한 테스트 두 개 — secured()(외부 → Proxy) / selfInvoke()(this. 자기 호출)에 assertThrows<AccessDeniedException>. 기대: secured 통과, selfInvoke 실패
+# java -version (Gradle Test 태스크도 툴체인 25): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && SEC_S13=1 ./gradlew --offline test --tests 'com.petercoders.blog.sec.SecS13Test'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:39 KST)
+# (SEC_S13 이 없으면 두 테스트 모두 skipped 로 끝난다: 같은 명령을 SEC_S13 없이 돌린 결과 tests=2 skipped=2 failures=0)
+# 아래는 build/test-results/test/TEST-com.petercoders.blog.sec.SecS13Test.xml 의 요약(테스트 이름·결과·실패 메시지 원문)과 Gradle 출력 끝 줄이다.
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft
+testsuite com.petercoders.blog.sec.SecS13Test: tests=2 failures=1 errors=0 skipped=0
+  FAILED  selfInvoke - USER 는 거부된다()  org.opentest4j.AssertionFailedError: Expected org.springframework.security.access.AccessDeniedException to be thrown, but nothing was thrown.
+  PASSED  secured - USER 는 거부된다()
+--- gradle (끝 부분)
+> Task :testClasses UP-TO-DATE
+> Task :test FAILED
+2 tests completed, 1 failed
+BUILD FAILED in 2s

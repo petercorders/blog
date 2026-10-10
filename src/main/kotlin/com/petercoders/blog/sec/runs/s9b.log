@@ -1,0 +1,11 @@
+# experiment: [S9b] Kotlin(Boot Gradle 플러그인 -java-parameters + kotlin-reflect) — 파라미터를 orderId 로 바꾸고 SpEL 은 #id 그대로. alice(ROLE_USER): byOrderId(alice) 거부, negated(blocked) 통과 rows 1, byId(alice) 통과 기대
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S9b'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:35 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S9b] Kotlin 파라미터 이름 불일치 — alice(ROLE_USER) 로 호출
+byOrderId(orderId="alice") [#id == authentication.name] -> thrown=org.springframework.security.authorization.AuthorizationDeniedException rows=0
+negated(orderId="blocked") [#id != 'blocked']           -> thrown=- rows=1
+byId(id="alice") [#id == authentication.name]           -> thrown=- rows=1
+# exit=0

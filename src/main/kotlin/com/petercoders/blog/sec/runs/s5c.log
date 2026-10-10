@@ -1,0 +1,13 @@
+# experiment: [S5c] @PostFilter + 크기 10 가변 리스트 필드(k0,d1,k2,...) 그대로 반환, 'k'만 통과 — 반환 크기, 반환 === 공유 참조, 공유 크기, SpEL 평가 횟수
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S5c'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:32 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S5c] @PostFilter + 가변 리스트 필드 반환, 10개 중 절반 통과
+shared size before = 10
+returned size = 5
+returned === shared : true
+shared size after = 5
+spel evals = 10
+# exit=0

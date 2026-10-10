@@ -1,0 +1,35 @@
+# experiment: [S5d] @PostFilter 식 안에서 @docAcl.canRead(filterObject, authentication.name)로 JdbcTemplate 조회를 부를 때 DB 쪽 SQL 실행 횟수(H2 SET QUERY_STATISTICS TRUE → INFORMATION_SCHEMA.QUERY_STATISTICS.EXECUTION_COUNT). 대조군은 같은 결과를 where 절(join) 한 번으로 읽는 메서드. 문서 0·3·10개, alice는 짝수 번만 읽을 수 있다
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S5d'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 09:28 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S5d] @PostFilter 식 안의 @bean 조회 — DB 쪽 실행 횟수(H2 QUERY_STATISTICS)
+H2 version = 2.4.240
+
+[n=0] doc rows = 0, alice readable = 0
+  @PostFilter listAll() -> returned 0 []
+    executions=1  select id from doc order by id
+    total DB executions = 1
+  where 절 listReadable(alice) -> returned 0 []
+    executions=1  select d.id from doc d join doc_acl a on a.doc_id = d.id where a.username = ? order by d.id
+    total DB executions = 1
+
+[n=3] doc rows = 3, alice readable = 2
+  @PostFilter listAll() -> returned 2 [d0, d2]
+    executions=3  select count(*) from doc_acl where doc_id = ? and username = ?
+    executions=1  select id from doc order by id
+    total DB executions = 4
+  where 절 listReadable(alice) -> returned 2 [d0, d2]
+    executions=1  select d.id from doc d join doc_acl a on a.doc_id = d.id where a.username = ? order by d.id
+    total DB executions = 1
+
+[n=10] doc rows = 10, alice readable = 5
+  @PostFilter listAll() -> returned 5 [d0, d2, d4, d6, d8]
+    executions=10  select count(*) from doc_acl where doc_id = ? and username = ?
+    executions=1  select id from doc order by id
+    total DB executions = 11
+  where 절 listReadable(alice) -> returned 5 [d0, d2, d4, d6, d8]
+    executions=1  select d.id from doc d join doc_acl a on a.doc_id = d.id where a.username = ? order by d.id
+    total DB executions = 1
+# exit=0

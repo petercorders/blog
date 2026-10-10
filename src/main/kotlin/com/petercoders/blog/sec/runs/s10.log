@@ -1,0 +1,28 @@
+# experiment: [S10](1) @EnableGlobalMethodSecurity(prePostEnabled = true)만 붙인 별도 앱(secx.global) — secLab 태스크(spring-security-access 없음)에서 기동
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S10'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:36 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S10] @EnableGlobalMethodSecurity(prePostEnabled = true) on Boot 4.1.1 — spring-security-access on classpath = false
+startup failed: org.springframework.beans.factory.BeanDefinitionStoreException
+  message first line: Failed to process import candidates for configuration class [com.petercoders.blog.secx.global.GlobalLabApp]: @EnableGlobalMethodSecurity requires the spring-security-access dependency on the classpath. Please add spring-security-access, or migrate to @EnableMethodSecurity which does not require it.
+  cause[1]: java.lang.IllegalStateException: @EnableGlobalMethodSecurity requires the spring-security-access dependency on the classpath. Please add spring-security-access, or migrate to @EnableMethodSecurity which does not require it.
+# exit=0
+
+# ======================================================================
+# experiment: [S10](2) 같은 앱을 secLabExtra 태스크(spring-security-access 7.1.1 포함)에서 기동 — Advisor 목록·order, GlobalOrderProbe 거부 시 rows
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew -q secLabExtra --args='S10'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:36 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S10] @EnableGlobalMethodSecurity(prePostEnabled = true) on Boot 4.1.1 — spring-security-access on classpath = true
+startup ok
+| advisor bean | class | order |
+|---|---|---|
+| metaDataSourceAdvisor | org.springframework.security.access.intercept.aopalliance.MethodSecurityMetadataSourceAdvisor | 2147483647 |
+| org.springframework.transaction.config.internalTransactionAdvisor | org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor | 2147483647 |
+GlobalOrderProbe chain: MethodSecurityMetadataSourceAdvisor(2147483647) -> BeanFactoryTransactionAttributeSourceAdvisor(2147483647)
+withdraw("s10", ownerId="bob") as alice -> thrown=org.springframework.security.access.AccessDeniedException rows=1
+# exit=0

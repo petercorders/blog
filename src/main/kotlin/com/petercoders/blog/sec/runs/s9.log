@@ -1,0 +1,15 @@
+# experiment: [S9] -parameters 없이 javac 로 컴파일한 Java 클래스(S9Target: byId(String id), byIdWithP(@P("id") String id))를 URLClassLoader 로 올려 Bean 으로 등록, alice(ROLE_USER) 가 id="alice" 로 호출
+# java -version (javac·JavaExec 모두 Gradle 툴체인 25): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# compile: $J25/bin/javac -cp spring-security-core-7.1.1.jar -d build/s9classes src/main/kotlin/com/petercoders/blog/sec/s9src/com/petercoders/blog/secx/s9/S9Target.java   (-parameters 없음, javac 25.0.4.1)
+# javap -v 결과에서 MethodParameters 속성 줄 수 = 0  (RuntimeVisibleParameterAnnotations 줄 수 = 1, @P 가 붙은 byIdWithP 쪽)
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S9 build/s9classes'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:35 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S9] -parameters 없이 javac 로 컴파일한 Java 클래스 — alice(ROLE_USER) 로 id="alice" 호출
+S9Target loaded by URLClassLoader from file:/tmp/gradle-sec/build/s9classes/
+reflection: byId parameter[0].isNamePresent=false name=arg0
+reflection: byIdWithP parameter[0].isNamePresent=false name=arg0
+bean class = com.petercoders.blog.secx.s9.S9Target$$SpringCGLIB$$0
+byId("alice") -> threw org.springframework.security.authorization.AuthorizationDeniedException
+byIdWithP("alice") -> returned body-ran
+# exit=0

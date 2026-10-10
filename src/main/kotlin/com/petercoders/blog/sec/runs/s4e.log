@@ -1,0 +1,17 @@
+# experiment: [S4e] 바깥 @Transactional OuterService.run 이 OrderProbe.withdraw(bob) 의 AccessDeniedException 을 잡아 삼킨다 — 기본 order(예외 없음·rows 1 기대) vs txouter(UnexpectedRollbackException·rows 0 기대)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S4e'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:32 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S4e] 바깥 @Transactional 이 withdraw 의 AccessDeniedException 을 catch 로 삼킨다 — 기본 order vs txouter(order = 0)
+[default] internalTransactionAdvisor order = 2147483647
+[default] OuterService.run 안에서 잡은 예외 = AuthorizationDeniedException
+[default] 바깥으로 나온 예외 = -
+[default] sec_log rows where tag='s4e-default' = 1
+
+[txouter] internalTransactionAdvisor order = 0
+[txouter] OuterService.run 안에서 잡은 예외 = AuthorizationDeniedException
+[txouter] 바깥으로 나온 예외 = org.springframework.transaction.UnexpectedRollbackException
+[txouter] sec_log rows where tag='s4e-txouter' = 0
+# exit=0

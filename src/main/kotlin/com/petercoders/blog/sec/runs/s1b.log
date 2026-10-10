@@ -1,0 +1,29 @@
+# experiment: [S1b] Bean마다 실제 Advisor 체인(AllAdvicesProbe: 다섯 애노테이션 + @Transactional, OrderProbe, SecureProbe, TxOrderProbe)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S1b'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:31 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S1b] Bean마다 실제 Advisor 체인 — (ctx.getBean(X::class.java) as Advised).advisors
+
+AllAdvicesProbe chain (6):
+  [0] AdvisorWrapper bean=preFilterAuthorizationAdvisor order=100 advice=DeferringMethodInterceptor
+  [1] AdvisorWrapper bean=preAuthorizeAuthorizationAdvisor order=200 advice=DeferringMethodInterceptor
+  [2] AdvisorWrapper bean=authorizeReturnObjectAdvisor order=450 advice=AuthorizeReturnObjectMethodInterceptor
+  [3] AdvisorWrapper bean=postAuthorizeAuthorizationAdvisor order=500 advice=DeferringMethodInterceptor
+  [4] AdvisorWrapper bean=postFilterAuthorizationAdvisor order=600 advice=DeferringMethodInterceptor
+  [5] BeanFactoryTransactionAttributeSourceAdvisor bean=org.springframework.transaction.config.internalTransactionAdvisor order=2147483647 advice=TransactionInterceptor
+
+OrderProbe chain (2):
+  [0] AdvisorWrapper bean=postAuthorizeAuthorizationAdvisor order=500 advice=DeferringMethodInterceptor
+  [1] BeanFactoryTransactionAttributeSourceAdvisor bean=org.springframework.transaction.config.internalTransactionAdvisor order=2147483647 advice=TransactionInterceptor
+
+SecureProbe chain (1):
+  [0] AdvisorWrapper bean=preAuthorizeAuthorizationAdvisor order=200 advice=DeferringMethodInterceptor
+
+TxOrderProbe chain (2):
+  [0] AdvisorWrapper bean=preAuthorizeAuthorizationAdvisor order=200 advice=DeferringMethodInterceptor
+  [1] BeanFactoryTransactionAttributeSourceAdvisor bean=org.springframework.transaction.config.internalTransactionAdvisor order=2147483647 advice=TransactionInterceptor
+
+AllAdvicesProbe: advisors=6, distinct orders=6, duplicated order present=false
+# exit=0

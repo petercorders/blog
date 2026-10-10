@@ -1,0 +1,137 @@
+# experiment: [S8a·S8b·S8f] @Async 와 SecurityContext — Boot 기본 applicationTaskExecutor vs DelegatingSecurityContextAsyncTaskExecutor. 호출 스레드 alice ROLE_ADMIN
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S8'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:33 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S8] @Async 와 SecurityContext — (a)(f) Boot 기본 실행자, (b) DelegatingSecurityContextAsyncTaskExecutor
+
+[default] applicationTaskExecutor = org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+[default] contextPropagatingTaskDecorator bean present = false
+[default] caller thread=main authentication=alice
+[default] whoAmI -> thread=task-1 isVirtual=false authentication=null
+[default] S8a callSecured: get() threw ExecutionException; getCause()=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException; cause is AccessDeniedException=false; cause is AuthenticationException=true; cause.message="An Authentication object was not found in the SecurityContext"
+    join() threw CompletionException; getCause()=AuthenticationCredentialsNotFoundException
+[default] S8a rows=0
+[default] S8f AsyncSecured chain[0]=AsyncAnnotationAdvisor, chain=[AsyncAnnotationAdvisor, AdvisorWrapper]
+[default] S8f securedAsync(Future): get() threw ExecutionException; getCause()=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException; cause is AccessDeniedException=false; cause is AuthenticationException=true; cause.message="An Authentication object was not found in the SecurityContext"
+    join() threw CompletionException; getCause()=AuthenticationCredentialsNotFoundException
+[default] S8f securedAsync rows=0
+[default] S8f securedAsyncVoid: caller saw thrown=-; rows=0; AsyncUncaughtExceptionHandler count=1 class=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException thread=task-4
+
+[delegating] applicationTaskExecutor = org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor
+[delegating] contextPropagatingTaskDecorator bean present = false
+[delegating] caller thread=main authentication=alice
+[delegating] whoAmI -> thread=deleg-1 isVirtual=false authentication=alice
+[delegating] S8a callSecured: get() -> ok
+[delegating] S8a rows=1
+[delegating] S8f AsyncSecured chain[0]=AsyncAnnotationAdvisor, chain=[AsyncAnnotationAdvisor, AdvisorWrapper]
+[delegating] S8f securedAsync(Future): get() -> ok
+[delegating] S8f securedAsync rows=1
+[delegating] S8f securedAsyncVoid: caller saw thrown=-; rows=1; AsyncUncaughtExceptionHandler count=0 class=null thread=null
+# exit=0
+
+# ======================================================================
+# experiment: [S8c] spring.threads.virtual.enabled=true, 전파 설정 없음(context-propagation 없음) — S8a/S8f 반복
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S8c'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:33 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S8c] spring.threads.virtual.enabled=true, 전파 설정 없음 — S8a/S8f 반복
+[virtual] applicationTaskExecutor = org.springframework.core.task.SimpleAsyncTaskExecutor
+[virtual] contextPropagatingTaskDecorator bean present = false
+[virtual] caller thread=main authentication=alice
+[virtual] whoAmI -> thread=task-1 isVirtual=true authentication=null
+[virtual] S8a callSecured: get() threw ExecutionException; getCause()=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException; cause is AccessDeniedException=false; cause is AuthenticationException=true; cause.message="An Authentication object was not found in the SecurityContext"
+    join() threw CompletionException; getCause()=AuthenticationCredentialsNotFoundException
+[virtual] S8a rows=0
+[virtual] S8f AsyncSecured chain[0]=AsyncAnnotationAdvisor, chain=[AsyncAnnotationAdvisor, AdvisorWrapper]
+[virtual] S8f securedAsync(Future): get() threw ExecutionException; getCause()=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException; cause is AccessDeniedException=false; cause is AuthenticationException=true; cause.message="An Authentication object was not found in the SecurityContext"
+    join() threw CompletionException; getCause()=AuthenticationCredentialsNotFoundException
+[virtual] S8f securedAsync rows=0
+[virtual] S8f securedAsyncVoid: caller saw thrown=-; rows=0; AsyncUncaughtExceptionHandler count=1 class=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException thread=task-4
+# exit=0
+
+# ======================================================================
+# experiment: [S8e] MODE_INHERITABLETHREADLOCAL + ThreadPoolTaskExecutor(core=1,max=1). 요청 스레드 req-alice 가 먼저 일을 넣어 워커가 생기고, 다음 요청 req-bob 이 같은 워커에 일을 넣는다(요청마다 새 SecurityContext 객체)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S8e'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:33 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S8e] SecurityContextHolder MODE_INHERITABLETHREADLOCAL + ThreadPoolTaskExecutor(core=1, max=1)
+strategy = InheritableThreadLocalSecurityContextHolderStrategy
+request-thread user=alice -> worker=inh-1 sees authentication=alice
+request-thread user=bob -> worker=inh-1 sees authentication=alice
+# exit=0
+
+# ======================================================================
+# experiment: [S8g] secLabExtra 태스크(io.micrometer:context-propagation 포함): 대조(프로퍼티 없음) / spring.task.execution.propagate-context=true 플랫폼 스레드 / 같은 설정 + spring.threads.virtual.enabled=true
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew -q secLabExtra --args='S8g'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:34 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S8g] context-propagation on classpath = true
+
+[lib-only(propagate-context unset)] applicationTaskExecutor = org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+[lib-only(propagate-context unset)] contextPropagatingTaskDecorator bean present = false
+[lib-only(propagate-context unset)] caller thread=main authentication=alice
+[lib-only(propagate-context unset)] whoAmI -> thread=task-1 isVirtual=false authentication=null
+[lib-only(propagate-context unset)] S8a callSecured: get() threw ExecutionException; getCause()=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException; cause is AccessDeniedException=false; cause is AuthenticationException=true; cause.message="An Authentication object was not found in the SecurityContext"
+    join() threw CompletionException; getCause()=AuthenticationCredentialsNotFoundException
+[lib-only(propagate-context unset)] S8a rows=0
+[lib-only(propagate-context unset)] S8f AsyncSecured chain[0]=AsyncAnnotationAdvisor, chain=[AsyncAnnotationAdvisor, AdvisorWrapper]
+[lib-only(propagate-context unset)] S8f securedAsync(Future): get() threw ExecutionException; getCause()=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException; cause is AccessDeniedException=false; cause is AuthenticationException=true; cause.message="An Authentication object was not found in the SecurityContext"
+    join() threw CompletionException; getCause()=AuthenticationCredentialsNotFoundException
+[lib-only(propagate-context unset)] S8f securedAsync rows=0
+[lib-only(propagate-context unset)] S8f securedAsyncVoid: caller saw thrown=-; rows=0; AsyncUncaughtExceptionHandler count=1 class=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException thread=task-4
+
+[propagate-context platform] applicationTaskExecutor = org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+[propagate-context platform] contextPropagatingTaskDecorator bean present = true
+[propagate-context platform] caller thread=main authentication=alice
+[propagate-context platform] whoAmI -> thread=task-1 isVirtual=false authentication=alice
+[propagate-context platform] S8a callSecured: get() -> ok
+[propagate-context platform] S8a rows=1
+[propagate-context platform] S8f AsyncSecured chain[0]=AsyncAnnotationAdvisor, chain=[AsyncAnnotationAdvisor, AdvisorWrapper]
+[propagate-context platform] S8f securedAsync(Future): get() -> ok
+[propagate-context platform] S8f securedAsync rows=1
+[propagate-context platform] S8f securedAsyncVoid: caller saw thrown=-; rows=1; AsyncUncaughtExceptionHandler count=0 class=null thread=null
+
+[propagate-context virtual] applicationTaskExecutor = org.springframework.core.task.SimpleAsyncTaskExecutor
+[propagate-context virtual] contextPropagatingTaskDecorator bean present = true
+[propagate-context virtual] caller thread=main authentication=alice
+[propagate-context virtual] whoAmI -> thread=task-1 isVirtual=true authentication=alice
+[propagate-context virtual] S8a callSecured: get() -> ok
+[propagate-context virtual] S8a rows=1
+[propagate-context virtual] S8f AsyncSecured chain[0]=AsyncAnnotationAdvisor, chain=[AsyncAnnotationAdvisor, AdvisorWrapper]
+[propagate-context virtual] S8f securedAsync(Future): get() -> ok
+[propagate-context virtual] S8f securedAsync rows=1
+[propagate-context virtual] S8f securedAsyncVoid: caller saw thrown=-; rows=1; AsyncUncaughtExceptionHandler count=0 class=null thread=null
+# exit=0
+
+# ======================================================================
+# experiment: [S8d] secLabExtra 태스크(kotlinx-coroutines-core 1.10.2): runBlocking 같은 스레드 vs withContext(Dispatchers.Default) 에서 SecureProbe.secured(호출자 alice ROLE_ADMIN)
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew -q secLabExtra --args='S8d'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:34 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S8d] runBlocking 안에서 Dispatchers.Default 로 넘긴 뒤 SecureProbe.secured 호출(호출자 alice ROLE_ADMIN)
+same thread(main) -> thrown=- rows=1
+Dispatchers.Default(DefaultDispatcher-worker-1) authentication=null -> thrown=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException rows=0
+# exit=0
+
+# ======================================================================
+# experiment: [S8s] 본문 요지 코드 runAsSystem(시스템 Authentication 세팅 → try { 호출 } finally { clearContext() }) — 사용자 없는 스레드에서 그냥 부르기 vs runAsSystem
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S8s'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:45 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S8s] 사용자가 없는 스레드(@Scheduled 대역)에서 SecureProbe.secured — 그냥 부르기 vs runAsSystem
+no identity -> thrown=org.springframework.security.authentication.AuthenticationCredentialsNotFoundException rows=0
+runAsSystem -> thrown=- rows=1
+after runAsSystem: SecurityContext authentication=null
+# exit=0

@@ -1,0 +1,11 @@
+# experiment: [S7] txouter(order = 0) + @Transactional + @PostAuthorize + @HandleAuthorizationDenied(AccountMaskingHandler) — 거부(bob 소유)인데 가려진 값 반환, rows 1 기대
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S7'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-08 03:33 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S7] txouter(order = 0) + @Transactional + @PostAuthorize + @HandleAuthorizationDenied — 거부된 쓰기가 남는가
+internalTransactionAdvisor order = 0
+withdrawMasked("s7", ownerId="bob") as alice -> Account(ownerId=masked)
+sec_log rows where tag='s7' = 1
+# exit=0
