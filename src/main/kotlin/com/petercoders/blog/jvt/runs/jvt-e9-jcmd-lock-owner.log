@@ -1,0 +1,18 @@
+# experiment: jvt-e9-jcmd-lock-owner (jcmd 덤프가 Virtual Thread 의 락 소유자를 찍는가)
+# java: openjdk version "26.0.2.1" 2026-08-18 / openjdk version "25.0.4.1" 2026-08-18 LTS
+# command: java LockDump.java & ; jcmd <pid> Thread.dump_to_file -overwrite td.txt
+
+--- JDK 26 plain dump, waiter ---
+#35 "waiter" virtual WAITING 2026-09-30T15:00:41.814756Z
+    at java.base/java.lang.VirtualThread.park(VirtualThread.java:763)
+    - parking to wait for <java.util.concurrent.locks.ReentrantLock$NonfairSync@583e07f1>, owner #32
+    at java.base/java.lang.System$1.parkVirtualThread(System.java:2296)
+
+--- JDK 25 plain dump, waiter ---
+#29 "waiter" virtual WAITING 2026-09-30T15:02:00.954339Z
+    at java.base/java.lang.VirtualThread.park(VirtualThread.java:745)
+    - parking to wait for <java.util.concurrent.locks.ReentrantLock$NonfairSync@8109e2a>, owner #26
+    at java.base/java.lang.System$1.parkVirtualThread(System.java:2285)
+
+--- ThreadDumper.java 에 'parking to wait for' 출력이 들어온 릴리스 (OpenJDK GA 태그) ---
+jdk-21-ga: 0  jdk-22-ga: 0  jdk-23-ga: 0  jdk-24-ga: 0  jdk-25-ga: 1

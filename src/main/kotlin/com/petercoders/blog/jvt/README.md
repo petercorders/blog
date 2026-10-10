@@ -24,18 +24,20 @@
 
 | id | 실행 여부 | 소스 | 무엇을 보나 | 본문 절 |
 |---|---|---|---|---|
-| jvt-e1-javap-chain | 실행 | 인라인(`javap` 조회, 소스 파일 없음) | `parkNanos → yieldContinuation → Continuation.yield → yield0 → doYield` 바이트코드 호출 사슬, JDK19/26 `StackChunk` 필드 차이(`argsize`→`bottom`) | 블로킹해도 OS 스레드가 멈추지 않는 이유 |
-| jvt-e3-dump-carrier-key | 실행 | 인라인 `VtDumpCarrier.java`(9줄) | 마운트 중(RUNNABLE)인 가상 스레드에만 `jcmd -format=json` 덤프의 `"carrier"` 키가 붙는 것 | 운영 중인 서버에서 가상 스레드 스택을 읽는 법 |
+| jvt-e1-javap-chain | 실행 | 인라인(`javap` 조회, 소스 파일 없음) | `parkNanos → yieldContinuation → Continuation.yield → yield0 → doYield` 바이트코드 호출 사슬, JDK19/26 `StackChunk` 필드 차이(`argsize`→`bottom`) | ② Stack이 Heap으로 가면 Heap을 다시 잡아야 한다 |
+| jvt-e3-dump-carrier-key | 실행 | 인라인 `VtDumpCarrier.java`(9줄) | 마운트 중(RUNNABLE)인 가상 스레드에만 `jcmd -format=json` 덤프의 `"carrier"` 키가 붙는 것 | 켠 다음 운영에서 보는 것 |
 | jvt-e4-maxpoolsize-clamps-parallelism | 실행 | `jkc/VtWorkers.java`(재사용) | `jdk.virtualThreadScheduler.maxPoolSize`가 `parallelism`을 깎는 것 — 실제 병렬도는 `min(parallelism, maxPoolSize)` | 튜닝할 수 있는 값은 프로퍼티 셋뿐이다 |
-| jvt-e5-vt-interrupt-latency | 실행 | 인라인 `VtInterrupt.java`(17줄) | `interrupt()`가 sleep(즉시)·폴링 루프(다음 체크)·순수 스핀(안 먹힘) 세 가상 스레드에 다르게 먹히는 것 | 타임아웃과 취소가 실제로 끊는 지점 |
-| jvt-e6-two-eras-compile | 실행 | 인라인 `Jdk19Scope.java`(13줄)·`Jdk26Scope.java`(14줄) | JDK 19 인큐베이터(`ShutdownOnFailure`/`Future`) vs JDK 26 확정 프리뷰(`Joiner`/`Subtask`/`FailedException`) 바이트코드·실행 비교 | 병렬 호출을 묶는 API는 아직 프리뷰다 |
-| jvt-e7-scopedvalue-inherit | `runs/jvt-e7-scopedvalue-inherit.log` | `SvInherit.java` | `ScopedValue` + `StructuredTaskScope.fork` 상속 vs `ThreadLocal` 비상속 | ThreadLocal 캐시가 의미를 잃는 자리 |
-| jvt-e8-carrier-count-3runs | `runs/jvt-e8-carrier-count-3runs.log` | `../jkc/VtWorkers.java` | 기본 실행을 3회 반복해 캐리어 수의 비결정성(15·8·15)을 본다 | 캐리어 수를 정하는 것은 코어 수다 |
-| (재사용) e2 | `jkc/runs/e2.log` | `jkc/`에 소스 없음(스크래치) | 가상 스레드 100개 `jcmd` 덤프의 `yieldContinuation`/`yield0` 프레임 부재 확인 | 운영 중인 서버에서 가상 스레드 스택을 읽는 법 |
-| (재사용) e3-java | `jkc/runs/e3-java.log` | `jkc/VtWorkers.java` | 기본 스케줄러의 캐리어 수 편차(이 로그는 기본 1회 `carriers=13`. 3회 반복은 `runs/jvt-e8-carrier-count-3runs.log`) | 캐리어 수를 정하는 것은 코어 수다 |
-| (재사용) e4 | `jkc/runs/e4.log` | `jkc/Pinning.java` | JDK 19 pinning(직렬화, `tracePinnedThreads`, JFR) vs JDK 26 unmount(`jdk.VirtualThreadPinned` 0건) | synchronized 경고는 JDK 24에서 끝났다 |
-| (재사용) e6-java | `jkc/runs/e6-java.log` | `jkc/InterruptLoop.java` | 플랫폼 스레드에서 `interrupt()`가 spin/poll/sleep에 다르게 먹히는 것 | 타임아웃과 취소가 실제로 끊는 지점 |
-| (재사용) e7-java | `jkc/runs/e7-java.log` | `jkc/`에 소스 없음(스크래치) | `StructuredTaskScope`에서 자식 A 실패 → 자식 B 인터럽트 → `join()` 예외 타이밍 | 병렬 호출을 묶는 API는 아직 프리뷰다 |
+| jvt-e5-vt-interrupt-latency | 실행 | 인라인 `VtInterrupt.java`(17줄) | `interrupt()`가 sleep(즉시)·폴링 루프(다음 체크)·순수 스핀(안 먹힘) 세 가상 스레드에 다르게 먹히는 것 | 코드에서 고쳐야 하는 것 |
+| jvt-e6-two-eras-compile | 실행 | 인라인 `Jdk19Scope.java`(13줄)·`Jdk26Scope.java`(14줄) | JDK 19 인큐베이터(`ShutdownOnFailure`/`Future`) vs JDK 26 확정 프리뷰(`Joiner`/`Subtask`/`FailedException`) 바이트코드·실행 비교 | (해당 절 삭제 — StructuredTaskScope 는 아직 프리뷰라 이번 편에서 뺐다) |
+| jvt-e7-scopedvalue-inherit | `runs/jvt-e7-scopedvalue-inherit.log` | `SvInherit.java` | `ScopedValue` + `StructuredTaskScope.fork` 상속 vs `ThreadLocal` 비상속 | 코드에서 고쳐야 하는 것 |
+| jvt-e8-carrier-count-3runs | `runs/jvt-e8-carrier-count-3runs.log` | `../jkc/VtWorkers.java` | 기본 실행을 3회 반복해 캐리어 수의 비결정성(15·8·15)을 본다 | ③ back pressure를 다른 곳으로 옮겨야 한다 |
+| jvt-e10-jstack-mounted-vt | `runs/jvt-e10-jstack-mounted-vt.log` | `SpinVt.java` | jstack 은 mount 중인 Virtual Thread 만 carrier 아래에 찍는다(JDK 24+), unmount 된 것은 안 나온다 | 켠 다음 운영에서 보는 것 |
+| jvt-e9-jcmd-lock-owner | `runs/jvt-e9-jcmd-lock-owner.log` | `LockDump.java` | jcmd 덤프가 Virtual Thread 의 락 소유자(`owner #NN`)를 찍는가 — JDK 25 부터 찍힌다 | 켠 다음 운영에서 보는 것 |
+| (재사용) e2 | `jkc/runs/e2.log` | `jkc/`에 소스 없음(스크래치) | 가상 스레드 100개 `jcmd` 덤프의 `yieldContinuation`/`yield0` 프레임 부재 확인 | 켠 다음 운영에서 보는 것 |
+| (재사용) e3-java | `jkc/runs/e3-java.log` | `jkc/VtWorkers.java` | 기본 스케줄러의 캐리어 수 편차(이 로그는 기본 1회 `carriers=13`. 3회 반복은 `runs/jvt-e8-carrier-count-3runs.log`) | ③ back pressure를 다른 곳으로 옮겨야 한다 |
+| (재사용) e4 | `jkc/runs/e4.log` | `jkc/Pinning.java` | JDK 19 pinning(직렬화, `tracePinnedThreads`, JFR) vs JDK 26 unmount(`jdk.VirtualThreadPinned` 0건) | ① synchronized pinning은 JDK 24에서 끝났다 |
+| (재사용) e6-java | `jkc/runs/e6-java.log` | `jkc/InterruptLoop.java` | 플랫폼 스레드에서 `interrupt()`가 spin/poll/sleep에 다르게 먹히는 것 | 코드에서 고쳐야 하는 것 |
+| (재사용) e7-java | `jkc/runs/e7-java.log` | `jkc/`에 소스 없음(스크래치) | `StructuredTaskScope`에서 자식 A 실패 → 자식 B 인터럽트 → `join()` 예외 타이밍 | (해당 절 삭제 — StructuredTaskScope 는 아직 프리뷰라 이번 편에서 뺐다) |
 
 ## 빌드·실행 명령
 
@@ -55,6 +57,7 @@ J19="$(/usr/libexec/java_home -v 19)"
 | jvt-e6-two-eras-compile | `$J19/bin/javac --enable-preview --release 19 --add-modules jdk.incubator.concurrent -d out19 Jdk19Scope.java`; `$J26/bin/javac --enable-preview --release 26 -d out26 Jdk26Scope.java`; `$J19/bin/javap -c -p -cp out19 Jdk19Scope`; `$J26/bin/javap -c -p -cp out26 Jdk26Scope`; `$J19/bin/java --enable-preview --add-modules jdk.incubator.concurrent -cp out19 Jdk19Scope`; `$J26/bin/java --enable-preview -cp out26 Jdk26Scope` |
 | jvt-e7-scopedvalue-inherit | `J26=$(/usr/libexec/java_home -v 26); $J26/bin/java --enable-preview --source 26 SvInherit.java` |
 | jvt-e8-carrier-count-3runs | `cd ../jkc && for i in 1 2 3; do $J26/bin/java VtWorkers.java; done` |
+| jvt-e9-jcmd-lock-owner | `$J26/bin/java LockDump.java &` 뒤 `$J26/bin/jcmd <pid> Thread.dump_to_file -overwrite td.txt` |
 
 전문 소스는 본문(`1-JAVA-VIRTUAL-THREADS-POST.md`)의 해당 절에 인라인으로 있다(각 20줄 미만).
 
@@ -69,5 +72,6 @@ J19="$(/usr/libexec/java_home -v 19)"
 | `runs/jvt-e6-two-eras-compile.log` | JDK19/26 컴파일·`javap`·실행 전체 출력 |
 | `runs/jvt-e7-scopedvalue-inherit.log` | `SvInherit` 실행 — 자식의 `REQ`/`TL`, 스코프 밖 `isBound()` |
 | `runs/jvt-e8-carrier-count-3runs.log` | `VtWorkers` 기본 3회 + `parallelism=4` — 캐리어 수 15·8·15·4 |
+| `runs/jvt-e9-jcmd-lock-owner.log` | JDK 25·26 덤프의 `- parking to wait for <...>, owner #NN` + GA 태그 대조 |
 
 시리즈 2편의 재사용 로그(`e2.log`, `e3-java.log`, `e4.log`, `e6-java.log`, `e7-java.log`)는 `../jkc/runs/`에 있다.

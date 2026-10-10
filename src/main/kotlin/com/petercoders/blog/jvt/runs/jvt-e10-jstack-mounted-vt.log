@@ -1,0 +1,12 @@
+# experiment: jvt-e10-jstack-mounted-vt (jstack 이 Virtual Thread 를 찍는가 — mount 중 vs unmount)
+# java: /Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java -version → openjdk 26.0.2.1
+# command: java SpinVt.java & ; jstack <pid>   (spinner=CPU 루프로 mount 유지, sleeper=sleep 으로 unmount)
+
+--- jstack 에서 virtual 관련 줄 ---
+98:   Carrying virtual thread #32
+107:   Mounted virtual thread #32
+--- sleeper(unmount) 는 jstack 에 안 나온다 ---
+sleeper 언급 수: 0
+
+--- threads.cpp 에 'Mounted virtual thread' 출력이 들어온 릴리스 (OpenJDK GA 태그) ---
+jdk-21-ga: 0  jdk-23-ga: 0  jdk-24-ga: 1  jdk-25-ga: 1
