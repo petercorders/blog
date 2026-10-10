@@ -1,0 +1,24 @@
+# experiment: tip-p24-vt-limited — VT Dispatcher 위 limitedParallelism(10) 이 새 platform thread 없이 동시 실행을 10 으로 묶는가. Thread.sleep(100)×100 의 총 시간, 동시 실행 최대치, VT 위에서 돈 개수, peakPlatformThreads(resetPeakThreadCount 뒤), 끝난 직후 살아 있는 platform thread 이름별 수. 대조: IO.limitedParallelism(10), VT Dispatcher(상한 없음). 케이스마다 새 JVM, 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:38:36 KST
+# load: 6.77 5.96 5.53  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO IoVsLoom.kt -include-runtime -d ivl.jar && for r in 1 2 3; do for c in VTLP10 IOLP10 VT100; do java -cp ivl.jar:$CO IoVsLoomKt $c; done; done
+# 주: 아래 3회 직전의 1차 실행 3회(liveAfter 열 없음)도 VTLP10 1038/1050/1038 ms·max 10·peak 20/19/20, IOLP10 1040/1043/1039 ms·max 10·peak 19/20/19, VT100 111 ms×3·max 100·peak 23 이었다. carrier 수를 가르려고 liveAfter 열을 더해 다시 돌린 것이 아래다.
+=== run 1 ===
+VT.limitedParallelism(10)          100 x sleep(100):  1039 ms  maxConcurrent= 10  ranOnVirtual=100/100  peakPlatformThreads=20  liveAfter={carrier(ForkJoinPool-*-worker)=13, other=7}
+IO.limitedParallelism(10)          100 x sleep(100):  1045 ms  maxConcurrent= 10  ranOnVirtual=  0/100  peakPlatformThreads=20  liveAfter={DefaultDispatcher-worker=14, other=6}
+VT executor dispatcher             100 x sleep(100):   112 ms  maxConcurrent=100  ranOnVirtual=100/100  peakPlatformThreads=23  liveAfter={carrier(ForkJoinPool-*-worker)=16, other=7}
+=== run 2 ===
+VT.limitedParallelism(10)          100 x sleep(100):  1046 ms  maxConcurrent= 10  ranOnVirtual=100/100  peakPlatformThreads=20  liveAfter={carrier(ForkJoinPool-*-worker)=13, other=7}
+IO.limitedParallelism(10)          100 x sleep(100):  1042 ms  maxConcurrent= 10  ranOnVirtual=  0/100  peakPlatformThreads=19  liveAfter={DefaultDispatcher-worker=13, other=6}
+VT executor dispatcher             100 x sleep(100):   110 ms  maxConcurrent=100  ranOnVirtual=100/100  peakPlatformThreads=23  liveAfter={carrier(ForkJoinPool-*-worker)=16, other=7}
+=== run 3 ===
+VT.limitedParallelism(10)          100 x sleep(100):  1035 ms  maxConcurrent= 10  ranOnVirtual=100/100  peakPlatformThreads=20  liveAfter={carrier(ForkJoinPool-*-worker)=13, other=7}
+IO.limitedParallelism(10)          100 x sleep(100):  1039 ms  maxConcurrent= 10  ranOnVirtual=  0/100  peakPlatformThreads=19  liveAfter={DefaultDispatcher-worker=13, other=6}
+VT executor dispatcher             100 x sleep(100):   111 ms  maxConcurrent=100  ranOnVirtual=100/100  peakPlatformThreads=23  liveAfter={carrier(ForkJoinPool-*-worker)=16, other=7}

@@ -1,0 +1,83 @@
+# experiment: tip-p22-pin-below-threshold — FFM 으로 C qsort 호출, upcall 비교 함수 안 Thread.sleep 으로 Native frame pinning 을 만든다. short: VT 8개×(원소 6개, 비교마다 sleep 5ms), long: VT 1개×(원소 3개, 비교마다 sleep 25ms). (A) settings=default(threshold 20 ms) (B) settings=default + jdk.VirtualThreadPinned#threshold=0ms (C) JFR 녹화 없이 Micrometer VirtualThreadMetrics 만. 세 경우 모두 micrometer-java21 1.17.1 VirtualThreadMetrics(pinned threshold 20 ms 고정) 를 같은 JVM 에 붙인다. 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: micrometer-core/commons/observation 1.17.1 (gradle 캐시), HdrHistogram 2.2.2 (gradle 캐시), micrometer-java21 1.17.1 (Maven Central)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:42:13 KST
+# load: 7.33 7.37 6.29  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: java --enable-native-access=ALL-UNNAMED [-XX:StartFlightRecording=filename=pin-X.jfr,settings=default[,jdk.VirtualThreadPinned#threshold=0ms]] -cp <micrometer-core/commons/observation 1.17.1, HdrHistogram 2.2.2, micrometer-java21 1.17.1> PinBelowThreshold.java ; jfr summary pin-X.jfr | grep VirtualThreadPinned ; jfr print --json --events jdk.VirtualThreadPinned pin-X.jfr | jfrsum.py
+=== run 1 ===
+--- (A) settings=default ---
+qsort done in 98 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=3 totalTime=79.3 ms max=28.2 ms
+  jfr summary: jdk.VirtualThreadPinned                     3           186
+  jdk.VirtualThreadPinned events=3  <20ms=0  >=20ms=3  min=25.0ms max=28.2ms
+  pinnedReason: {'Native or VM frame on stack': 3}
+  blockingOperation: {'LockSupport.park': 3}
+  eventThread: {'vt-long': 3}
+  carrierThread present: 3/3
+  first event top frame: postPinnedEvent | keys: ['blockingOperation', 'carrierThread', 'duration', 'eventThread', 'pinnedReason', 'stackTrace', 'startTime']
+--- (B) settings=default,jdk.VirtualThreadPinned#threshold=0ms ---
+qsort done in 96 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=154 totalTime=789.3 ms max=29.8 ms
+  jfr summary: jdk.VirtualThreadPinned                   154         10452
+  jdk.VirtualThreadPinned events=154  <20ms=151  >=20ms=3  min=0.0ms max=29.8ms
+  pinnedReason: {'Freeze or preempt failed (2)': 2, 'Native or VM frame on stack': 135, 'Waited for initialization of java.lang.invoke.ConstantBootstraps by another thread': 5, 'VM call to jdk.internal.foreign.LayoutPath.<clinit> on stack': 1, 'Waited for initialization of jdk.internal.foreign.LayoutPath by another thread': 7, 'Waited for initialization of jdk.internal.foreign.Utils$1VarHandleCache by another thread': 4}
+  blockingOperation: {'Contended monitor enter': 15, 'Object.wait': 16, 'LockSupport.park': 123}
+  eventThread: {'vt-long': 4, 'vt-short-0': 18, 'vt-short-1': 19, 'vt-short-2': 20, 'vt-short-3': 18, 'vt-short-4': 18, 'vt-short-5': 18, 'vt-short-6': 19, 'vt-short-7': 20}
+  carrierThread present: 154/154
+  first event top frame: fromArray | keys: ['blockingOperation', 'carrierThread', 'duration', 'eventThread', 'pinnedReason', 'stackTrace', 'startTime']
+--- (C) JFR 녹화 없음 (Micrometer RecordingStream 만) ---
+qsort done in 96 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=3 totalTime=83.8 ms max=30.0 ms
+=== run 2 ===
+--- (A) settings=default ---
+qsort done in 97 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=3 totalTime=86.7 ms max=29.9 ms
+  jfr summary: jdk.VirtualThreadPinned                     3           186
+  jdk.VirtualThreadPinned events=3  <20ms=0  >=20ms=3  min=27.5ms max=29.9ms
+  pinnedReason: {'Native or VM frame on stack': 3}
+  blockingOperation: {'LockSupport.park': 3}
+  eventThread: {'vt-long': 3}
+  carrierThread present: 3/3
+  first event top frame: postPinnedEvent | keys: ['blockingOperation', 'carrierThread', 'duration', 'eventThread', 'pinnedReason', 'stackTrace', 'startTime']
+--- (B) settings=default,jdk.VirtualThreadPinned#threshold=0ms ---
+qsort done in 99 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=156 totalTime=816.5 ms max=28.7 ms
+  jfr summary: jdk.VirtualThreadPinned                   156         10561
+  jdk.VirtualThreadPinned events=156  <20ms=153  >=20ms=3  min=0.0ms max=28.7ms
+  pinnedReason: {'Native or VM frame on stack': 140, 'VM call to jdk.internal.foreign.LayoutPath.<clinit> on stack': 1, 'Waited for initialization of jdk.internal.foreign.LayoutPath by another thread': 7, 'VM call to jdk.internal.foreign.Utils$1VarHandleCache.<clinit> on stack': 1, 'Waited for initialization of jdk.internal.foreign.Utils$1VarHandleCache by another thread': 7}
+  blockingOperation: {'LockSupport.park': 124, 'Contended monitor enter': 18, 'Object.wait': 14}
+  eventThread: {'vt-long': 3, 'vt-short-0': 20, 'vt-short-1': 18, 'vt-short-2': 19, 'vt-short-3': 19, 'vt-short-4': 21, 'vt-short-5': 18, 'vt-short-6': 19, 'vt-short-7': 19}
+  carrierThread present: 156/156
+  first event top frame: postPinnedEvent | keys: ['blockingOperation', 'carrierThread', 'duration', 'eventThread', 'pinnedReason', 'stackTrace', 'startTime']
+--- (C) JFR 녹화 없음 (Micrometer RecordingStream 만) ---
+qsort done in 97 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=3 totalTime=83.1 ms max=29.4 ms
+=== run 3 ===
+--- (A) settings=default ---
+qsort done in 94 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=3 totalTime=83.5 ms max=29.8 ms
+  jfr summary: jdk.VirtualThreadPinned                     3           186
+  jdk.VirtualThreadPinned events=3  <20ms=0  >=20ms=3  min=26.3ms max=29.8ms
+  pinnedReason: {'Native or VM frame on stack': 3}
+  blockingOperation: {'LockSupport.park': 3}
+  eventThread: {'vt-long': 3}
+  carrierThread present: 3/3
+  first event top frame: postPinnedEvent | keys: ['blockingOperation', 'carrierThread', 'duration', 'eventThread', 'pinnedReason', 'stackTrace', 'startTime']
+--- (B) settings=default,jdk.VirtualThreadPinned#threshold=0ms ---
+qsort done in 99 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=159 totalTime=820.3 ms max=30.0 ms
+  jfr summary: jdk.VirtualThreadPinned                   159         10737
+  jdk.VirtualThreadPinned events=159  <20ms=156  >=20ms=3  min=0.0ms max=30.0ms
+  pinnedReason: {'VM call to jdk.internal.foreign.Utils$BaseAndScale.<clinit> on stack': 1, 'Native or VM frame on stack': 142, 'Freeze or preempt failed (2)': 1, 'Waited for initialization of java.lang.invoke.ConstantBootstraps by another thread': 6, 'Waited for initialization of jdk.internal.foreign.LayoutPath by another thread': 7, 'Waited for initialization of jdk.internal.foreign.Utils$1VarHandleCache by another thread': 2}
+  blockingOperation: {'Contended monitor enter': 20, 'Object.wait': 15, 'LockSupport.park': 124}
+  eventThread: {'vt-long': 4, 'vt-short-0': 20, 'vt-short-1': 20, 'vt-short-2': 19, 'vt-short-3': 16, 'vt-short-4': 20, 'vt-short-5': 19, 'vt-short-6': 21, 'vt-short-7': 20}
+  carrierThread present: 159/159
+  first event top frame: <clinit> | keys: ['blockingOperation', 'carrierThread', 'duration', 'eventThread', 'pinnedReason', 'stackTrace', 'startTime']
+--- (C) JFR 녹화 없음 (Micrometer RecordingStream 만) ---
+qsort done in 95 ms: short compares (sleep 5 ms, 8 VTs) = 120, long compares (sleep 25 ms, 1 VT) = 3
+Micrometer jvm.threads.virtual.pinned: count=3 totalTime=85.8 ms max=30.0 ms

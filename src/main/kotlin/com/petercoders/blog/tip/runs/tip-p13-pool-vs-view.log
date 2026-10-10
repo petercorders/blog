@@ -1,0 +1,54 @@
+# experiment: tip-p13-pool-vs-view — HikariCP 풀 10 앞의 Coroutine 대기열이 Hikari 지표에 보이는가. H2 mem + SLEEP_MS(100) alias. a: Dispatchers.IO + 풀 10, 100개 / b: IO.limitedParallelism(10) + 풀 10, 100개 / e: 두 경로 IO.lp(10)+IO.lp(10) 이 풀 10 공유, 50+50 (Σn=20) / f: IO.lp(6)+IO.lp(4), 50+50 (Σn=10) / c: IO.lp(10) 에서 태스크당 커넥션 2개(c1 을 쥔 채 c2), 풀 10, connectionTimeout 2s, 20개 / d: c 와 같고 풀 11. 1ms 샘플러로 threadsAwaitingConnection·activeConnections peak, 50ms 시점 스냅샷(awaiting, HikariPool.getConnection 프레임에 있는 스레드 수, Dispatcher 앞 대기 = launch 한 수 − 시작한 수, live DefaultDispatcher-worker), peakPlatformThreads(resetPeakThreadCount 뒤). 케이스마다 자식 JVM, 3회
+# java -version (tipLab JavaExec 의 javaLauncher = toolchain 26, 자식 JVM 도 같은 java.home):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21 (컴파일 toolchain 25), Spring Boot 4.1.1 BOM (kotlinx.coroutines 1.10.2, HikariCP 7.0.2, H2 2.4.240), sourceSet tipSpring (build.gradle.kts). Spring 컨텍스트는 띄우지 않고 HikariDataSource 를 직접 만든다(minimumIdle = maximumPoolSize)
+# run dir: /tmp/gradle-tip (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: run 1 시작 2026-10-08 10:58:33 KST, run 2·3 은 바로 이어서
+# load (기록 시점): 6.54 8.40 7.84
+# command: ./gradlew --offline -q tipLab --args='E3 1' ; --args='E3 2' ; --args='E3 3'
+# (생략: 케이스마다 찍히는 HikariCP INFO 줄 'e3 - Starting...', 'Added connection', 'Start completed.', 'Shutdown initiated...', 'Shutdown completed.' — run 마다 30줄, 실험과 무관)
+
+$ ./gradlew --offline -q tipLab --args='E3 1'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+=== run 1 (케이스마다 새 JVM: /Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java) ===
+[a IO(64) + pool 10, 100 tasks] total=1039 ms  peak awaiting=54  peak active=10  distinct worker threads=64  peakPlatformThreads=77
+[a IO(64) + pool 10, 100 tasks]   at 50ms: awaiting=54 active=10 idle=0 | threads in HikariPool.getConnection=54 | queued in front of dispatcher(submitted-started)=[IO:36] | live DefaultDispatcher-worker=68
+[b IO.lp(10) + pool 10, 100 tasks] total=1047 ms  peak awaiting=0  peak active=10  distinct worker threads=10  peakPlatformThreads=23
+[b IO.lp(10) + pool 10, 100 tasks]   at 50ms: awaiting=0 active=10 idle=0 | threads in HikariPool.getConnection=0 | queued in front of dispatcher(submitted-started)=[lp10:90] | live DefaultDispatcher-worker=14
+[e IO.lp(10) A + IO.lp(10) B + pool 10, 50+50] total=1047 ms  peak awaiting=10  peak active=10  distinct worker threads=20  peakPlatformThreads=32
+[e IO.lp(10) A + IO.lp(10) B + pool 10, 50+50]   at 50ms: awaiting=10 active=10 idle=0 | threads in HikariPool.getConnection=10 | queued in front of dispatcher(submitted-started)=[A(lp10):40 B(lp10):40] | live DefaultDispatcher-worker=23
+[f IO.lp(6) A + IO.lp(4) B + pool 10, 50+50] total=1346 ms  peak awaiting=0  peak active=10  distinct worker threads=10  peakPlatformThreads=23
+[f IO.lp(6) A + IO.lp(4) B + pool 10, 50+50]   at 50ms: awaiting=0 active=10 idle=0 | threads in HikariPool.getConnection=0 | queued in front of dispatcher(submitted-started)=[A(lp6):44 B(lp4):46] | live DefaultDispatcher-worker=14
+[c IO.lp(10), 2 connections/task, pool 10, connectionTimeout 2s, 20 tasks] ok=14 failed=6 total=2332 ms  peak awaiting=10  peak active=10  [SQLTransientConnectionException: e3 - Connection is not available, request timed out after 2006ms (total=10, active=8, idle=2, waiting=5)]
+[d IO.lp(10), 2 connections/task, pool 11, connectionTimeout 2s, 20 tasks] ok=20 failed=0 total=485 ms  peak awaiting=9  peak active=11  []
+
+$ ./gradlew --offline -q tipLab --args='E3 2'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+=== run 2 (케이스마다 새 JVM: /Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java) ===
+[a IO(64) + pool 10, 100 tasks] total=1041 ms  peak awaiting=54  peak active=10  distinct worker threads=64  peakPlatformThreads=80
+[a IO(64) + pool 10, 100 tasks]   at 50ms: awaiting=54 active=10 idle=0 | threads in HikariPool.getConnection=54 | queued in front of dispatcher(submitted-started)=[IO:36] | live DefaultDispatcher-worker=71
+[b IO.lp(10) + pool 10, 100 tasks] total=1043 ms  peak awaiting=0  peak active=10  distinct worker threads=10  peakPlatformThreads=22
+[b IO.lp(10) + pool 10, 100 tasks]   at 50ms: awaiting=0 active=10 idle=0 | threads in HikariPool.getConnection=0 | queued in front of dispatcher(submitted-started)=[lp10:90] | live DefaultDispatcher-worker=13
+[e IO.lp(10) A + IO.lp(10) B + pool 10, 50+50] total=1045 ms  peak awaiting=10  peak active=10  distinct worker threads=20  peakPlatformThreads=33
+[e IO.lp(10) A + IO.lp(10) B + pool 10, 50+50]   at 50ms: awaiting=10 active=10 idle=0 | threads in HikariPool.getConnection=10 | queued in front of dispatcher(submitted-started)=[A(lp10):40 B(lp10):40] | live DefaultDispatcher-worker=24
+[f IO.lp(6) A + IO.lp(4) B + pool 10, 50+50] total=1338 ms  peak awaiting=0  peak active=10  distinct worker threads=10  peakPlatformThreads=22
+[f IO.lp(6) A + IO.lp(4) B + pool 10, 50+50]   at 50ms: awaiting=0 active=10 idle=0 | threads in HikariPool.getConnection=0 | queued in front of dispatcher(submitted-started)=[A(lp6):44 B(lp4):46] | live DefaultDispatcher-worker=13
+[c IO.lp(10), 2 connections/task, pool 10, connectionTimeout 2s, 20 tasks] ok=12 failed=8 total=2333 ms  peak awaiting=10  peak active=10  [SQLTransientConnectionException: e3 - Connection is not available, request timed out after 2004ms (total=10, active=10, idle=0, waiting=7)]
+[d IO.lp(10), 2 connections/task, pool 11, connectionTimeout 2s, 20 tasks] ok=20 failed=0 total=432 ms  peak awaiting=9  peak active=11  []
+
+$ ./gradlew --offline -q tipLab --args='E3 3'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+=== run 3 (케이스마다 새 JVM: /Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java) ===
+[a IO(64) + pool 10, 100 tasks] total=1043 ms  peak awaiting=54  peak active=10  distinct worker threads=64  peakPlatformThreads=83
+[a IO(64) + pool 10, 100 tasks]   at 50ms: awaiting=54 active=10 idle=0 | threads in HikariPool.getConnection=54 | queued in front of dispatcher(submitted-started)=[IO:36] | live DefaultDispatcher-worker=74
+[b IO.lp(10) + pool 10, 100 tasks] total=1049 ms  peak awaiting=0  peak active=10  distinct worker threads=10  peakPlatformThreads=24
+[b IO.lp(10) + pool 10, 100 tasks]   at 50ms: awaiting=0 active=10 idle=0 | threads in HikariPool.getConnection=0 | queued in front of dispatcher(submitted-started)=[lp10:90] | live DefaultDispatcher-worker=15
+[e IO.lp(10) A + IO.lp(10) B + pool 10, 50+50] total=1043 ms  peak awaiting=10  peak active=10  distinct worker threads=20  peakPlatformThreads=32
+[e IO.lp(10) A + IO.lp(10) B + pool 10, 50+50]   at 50ms: awaiting=10 active=10 idle=0 | threads in HikariPool.getConnection=10 | queued in front of dispatcher(submitted-started)=[A(lp10):40 B(lp10):40] | live DefaultDispatcher-worker=23
+[f IO.lp(6) A + IO.lp(4) B + pool 10, 50+50] total=1338 ms  peak awaiting=0  peak active=10  distinct worker threads=10  peakPlatformThreads=22
+[f IO.lp(6) A + IO.lp(4) B + pool 10, 50+50]   at 50ms: awaiting=0 active=10 idle=0 | threads in HikariPool.getConnection=0 | queued in front of dispatcher(submitted-started)=[A(lp6):44 B(lp4):46] | live DefaultDispatcher-worker=13
+[c IO.lp(10), 2 connections/task, pool 10, connectionTimeout 2s, 20 tasks] ok=10 failed=10 total=4229 ms  peak awaiting=10  peak active=10  [SQLTransientConnectionException: e3 - Connection is not available, request timed out after 2004ms (total=10, active=10, idle=0, waiting=8)]
+[d IO.lp(10), 2 connections/task, pool 11, connectionTimeout 2s, 20 tasks] ok=20 failed=0 total=434 ms  peak awaiting=9  peak active=11  []

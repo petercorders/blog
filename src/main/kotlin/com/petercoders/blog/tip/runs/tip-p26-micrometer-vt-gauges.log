@@ -1,0 +1,30 @@
+# experiment: tip-p26-micrometer-vt-gauges — Micrometer VirtualThreadMetrics(micrometer-java21 1.17.1) 게이지를 VT 2,000개 sleep(4s) 중(1초 시점)과 CPU spin VT 200개(각 300ms) 중(150ms 시점)에 읽는다. jvm.threads.virtual.live{scheduling.status=mounted|queued}, parallelism, pool.size. 3회(매회 새 JVM)
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: micrometer-core/commons/observation 1.17.1 (gradle 캐시), HdrHistogram 2.2.2 (gradle 캐시), micrometer-java21 1.17.1 (Maven Central)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:43:32 KST
+# load: 10.71 8.49 6.81  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: java -cp <micrometer-core/commons/observation 1.17.1, HdrHistogram 2.2.2, micrometer-java21 1.17.1> VtGauges.java (3회)
+# 소스 대조(micrometer-java21-1.17.1-sources.jar VirtualThreadMetrics.java): live 게이지 둘은 VirtualThreadSchedulerMXBean.getMountedVirtualThreadCount()(tag scheduling.status=mounted)와 getQueuedVirtualThreadCount()(queued)를 읽는다. description 은 둘 다 'Approximate current number of virtual threads that are unfinished'. pinned Timer 는 RecordingStream 에 jdk.VirtualThreadPinned withThreshold(config.pinnedThreshold), RecordingConfig 는 private record 이고 기본 Duration.ofMillis(20). @since 1.14.0.
+=== run 1 ===
+registered: [jvm.threads.virtual.live[tag(scheduling.status=mounted)], jvm.threads.virtual.live[tag(scheduling.status=queued)], jvm.threads.virtual.parallelism[], jvm.threads.virtual.pinned[], jvm.threads.virtual.pool.size[], jvm.threads.virtual.submit.failed[]]
+before: live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=0 | ThreadMXBean threadCount=10
+2000 sleeping VTs (alive=2000): live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=15 | ThreadMXBean threadCount=26
+200 CPU-spinning VTs (alive=200): live{mounted}=15 live{queued}=185 (sum 200) parallelism=15 pool.size=15 | ThreadMXBean threadCount=26
+after: live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=15
+=== run 2 ===
+registered: [jvm.threads.virtual.live[tag(scheduling.status=mounted)], jvm.threads.virtual.live[tag(scheduling.status=queued)], jvm.threads.virtual.parallelism[], jvm.threads.virtual.pinned[], jvm.threads.virtual.pool.size[], jvm.threads.virtual.submit.failed[]]
+before: live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=0 | ThreadMXBean threadCount=10
+2000 sleeping VTs (alive=2000): live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=15 | ThreadMXBean threadCount=26
+200 CPU-spinning VTs (alive=200): live{mounted}=15 live{queued}=185 (sum 200) parallelism=15 pool.size=15 | ThreadMXBean threadCount=26
+after: live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=15
+=== run 3 ===
+registered: [jvm.threads.virtual.live[tag(scheduling.status=mounted)], jvm.threads.virtual.live[tag(scheduling.status=queued)], jvm.threads.virtual.parallelism[], jvm.threads.virtual.pinned[], jvm.threads.virtual.pool.size[], jvm.threads.virtual.submit.failed[]]
+before: live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=0 | ThreadMXBean threadCount=10
+2000 sleeping VTs (alive=2000): live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=15 | ThreadMXBean threadCount=26
+200 CPU-spinning VTs (alive=200): live{mounted}=15 live{queued}=185 (sum 200) parallelism=15 pool.size=15 | ThreadMXBean threadCount=26
+after: live{mounted}=0 live{queued}=0 (sum 0) parallelism=15 pool.size=15

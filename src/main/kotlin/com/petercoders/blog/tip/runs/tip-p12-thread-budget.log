@@ -1,0 +1,45 @@
+# experiment: tip-p12-thread-budget — Default(CPU spin 15)·IO(sleep 100, 한도 64)·IO.limitedParallelism(10)(sleep 30)·IO.limitedParallelism(100)(sleep 150) 를 따로/동시에 포화시킬 때 1초 시점 platform thread 총량과 DefaultDispatcher-worker 수. 상한(산술) 15+64+10+100=189 와 비교. 작업은 2초씩, 케이스마다 새 JVM, 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:39:36 KST
+# load: 13.45 7.44 6.08  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO ThreadBudget.kt -include-runtime -d tb.jar && for r in 1 2 3; do for c in DEF IO LP10 LP100 ALL; do java -cp tb.jar:$CO ThreadBudgetKt $c; done; done
+# 주: 아래 3회 직전의 시험 실행 1회(ALL)도 at 1s threadCount=196 peak=196 DefaultDispatcher-worker=189 였다(아래 3회와 별개).
+=== run 1 ===
+DEF    at 1s: threadCount= 22 peak= 22 (base before launch=6)  DefaultDispatcher-worker= 15  | Default(spin) now=15
+DEF    done: peak= 22  maxConcurrent: Default(spin)=15
+IO     at 1s: threadCount= 81 peak= 81 (base before launch=6)  DefaultDispatcher-worker= 74  | IO(sleep) now=64
+IO     done: peak= 81  maxConcurrent: IO(sleep)=64
+LP10   at 1s: threadCount= 21 peak= 21 (base before launch=6)  DefaultDispatcher-worker= 14  | IO.lp(10) now=10
+LP10   done: peak= 21  maxConcurrent: IO.lp(10)=10
+LP100  at 1s: threadCount=111 peak=111 (base before launch=6)  DefaultDispatcher-worker=104  | IO.lp(100) now=100
+LP100  done: peak=111  maxConcurrent: IO.lp(100)=100
+ALL    at 1s: threadCount=196 peak=196 (base before launch=6)  DefaultDispatcher-worker=189  | Default(spin) now=15  IO(sleep) now=64  IO.lp(10) now=10  IO.lp(100) now=100
+ALL    done: peak=196  maxConcurrent: Default(spin)=15  IO(sleep)=64  IO.lp(10)=10  IO.lp(100)=100
+=== run 2 ===
+DEF    at 1s: threadCount= 22 peak= 22 (base before launch=6)  DefaultDispatcher-worker= 15  | Default(spin) now=15
+DEF    done: peak= 22  maxConcurrent: Default(spin)=15
+IO     at 1s: threadCount= 78 peak= 78 (base before launch=6)  DefaultDispatcher-worker= 71  | IO(sleep) now=64
+IO     done: peak= 78  maxConcurrent: IO(sleep)=64
+LP10   at 1s: threadCount= 20 peak= 20 (base before launch=6)  DefaultDispatcher-worker= 13  | IO.lp(10) now=10
+LP10   done: peak= 20  maxConcurrent: IO.lp(10)=10
+LP100  at 1s: threadCount=110 peak=110 (base before launch=6)  DefaultDispatcher-worker=103  | IO.lp(100) now=100
+LP100  done: peak=110  maxConcurrent: IO.lp(100)=100
+ALL    at 1s: threadCount=196 peak=196 (base before launch=6)  DefaultDispatcher-worker=189  | Default(spin) now=15  IO(sleep) now=64  IO.lp(10) now=10  IO.lp(100) now=100
+ALL    done: peak=196  maxConcurrent: Default(spin)=15  IO(sleep)=64  IO.lp(10)=10  IO.lp(100)=100
+=== run 3 ===
+DEF    at 1s: threadCount= 22 peak= 22 (base before launch=6)  DefaultDispatcher-worker= 15  | Default(spin) now=15
+DEF    done: peak= 22  maxConcurrent: Default(spin)=15
+IO     at 1s: threadCount= 82 peak= 82 (base before launch=6)  DefaultDispatcher-worker= 75  | IO(sleep) now=64
+IO     done: peak= 82  maxConcurrent: IO(sleep)=64
+LP10   at 1s: threadCount= 20 peak= 20 (base before launch=6)  DefaultDispatcher-worker= 13  | IO.lp(10) now=10
+LP10   done: peak= 20  maxConcurrent: IO.lp(10)=10
+LP100  at 1s: threadCount=110 peak=110 (base before launch=6)  DefaultDispatcher-worker=103  | IO.lp(100) now=100
+LP100  done: peak=110  maxConcurrent: IO.lp(100)=100
+ALL    at 1s: threadCount=196 peak=196 (base before launch=6)  DefaultDispatcher-worker=189  | Default(spin) now=15  IO(sleep) now=64  IO.lp(10) now=10  IO.lp(100) now=100
+ALL    done: peak=196  maxConcurrent: Default(spin)=15  IO(sleep)=64  IO.lp(10)=10  IO.lp(100)=100

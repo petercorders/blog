@@ -1,0 +1,29 @@
+# experiment: tip-p17-tl-vt-dispatcher — kco/TlContext.kt 를 VT Dispatcher(newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()) 로 바꾼 TlContextVt.kt. 64개 Coroutine, delay(10) 전후 ThreadLocal 불일치 수와 그 값(null / 남의 값), asContextElement 대조 (3회, 매회 새 JVM). Default 결과는 kco-e29(64/64, 남의 값)
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:37:44 KST
+# load: 6.75 5.69 5.41  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO TlContextVt.kt -include-runtime -d tlvt.jar && java -cp tlvt.jar:$CO TlContextVtKt (3회)
+=== run 1 ===
+VT dispatcher plain ThreadLocal mismatches=64/64 (tl=null 64, other value 0)
+  plain37 before=(unnamed)#75 virtual=true after=(unnamed)#108 virtual=true tl=null
+  plain40 before=(unnamed)#78 virtual=true after=(unnamed)#114 virtual=true tl=null
+  plain15 before=(unnamed)#49 virtual=true after=(unnamed)#115 virtual=true tl=null
+VT dispatcher asContextElement mismatches=0/64
+=== run 2 ===
+VT dispatcher plain ThreadLocal mismatches=64/64 (tl=null 64, other value 0)
+  plain11 before=(unnamed)#43 virtual=true after=(unnamed)#122 virtual=true tl=null
+  plain4 before=(unnamed)#33 virtual=true after=(unnamed)#115 virtual=true tl=null
+  plain21 before=(unnamed)#55 virtual=true after=(unnamed)#117 virtual=true tl=null
+VT dispatcher asContextElement mismatches=0/64
+=== run 3 ===
+VT dispatcher plain ThreadLocal mismatches=64/64 (tl=null 64, other value 0)
+  plain33 before=(unnamed)#71 virtual=true after=(unnamed)#117 virtual=true tl=null
+  plain12 before=(unnamed)#46 virtual=true after=(unnamed)#118 virtual=true tl=null
+  plain56 before=(unnamed)#98 virtual=true after=(unnamed)#127 virtual=true tl=null
+VT dispatcher asContextElement mismatches=0/64

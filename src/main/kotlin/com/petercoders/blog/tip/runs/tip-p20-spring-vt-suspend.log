@@ -1,0 +1,83 @@
+# experiment: tip-p20-spring-vt-suspend — Spring MVC(Boot 4.1.1) suspend 핸들러가 spring.threads.virtual.enabled=false/true 에서 진입·delay(10) 뒤·withContext(IO) 안과 반환 뒤·withContext(VT Dispatcher) 안과 반환 뒤 어느 스레드에 있는가(Thread.isVirtual, 필터가 MDC.put 한 reqId). 타이머: /block(delay(10) 뒤 Thread.sleep(2000)) 을 보내고 100ms 뒤 /timer(withTimeout(100){delay(1000)}) 의 타임아웃이 몇 ms 에 발화하나(대조: /timer 단독). 설정마다 새 JVM, /probe 3회, 타이머 3회
+# java -version (tipLab JavaExec 의 javaLauncher = toolchain 26):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21 (컴파일 toolchain 25), Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, Tomcat 11.0.24, kotlinx.coroutines 1.10.2 + kotlinx-coroutines-reactor, io.micrometer:context-propagation 1.2.1 런타임), sourceSet tipSpring. spring.reactor.context-propagation 은 설정하지 않았다(아래 출력의 Hooks.isAutomaticContextPropagationEnabled=false)
+# run dir: /tmp/gradle-tip (rsync 사본), server.port=0, 요청은 java.net.http.HttpClient HTTP/1.1
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 시작 2026-10-08 11:00:43 KST, 두 설정을 이어서
+# load (기록 시점): 8.49 8.95 8.15
+# command: ./gradlew --offline -q tipLab --args='E10 false' ; ./gradlew --offline -q tipLab --args='E10 true'
+# 범위: 진입 스레드·delay 뒤 DefaultExecutor·20건 동시 /block 직렬화는 kco-e14(kcolab/runs/kco-e14-spring-suspend-threads.log, VT 끈 상태)와 kco-e13(Unconfined 타이머 지연) 이 이미 쟀다. 이 로그는 VT 를 켠 경우와 VT Dispatcher 왕복, Spring 핸들러 안 withTimeout 발화 시각만 더한다.
+# 소스 대조: Spring v7.0.9 CoroutinesUtils.java L89-101 — Dispatchers.getUnconfined() 를 쓰고, Hooks.isAutomaticContextPropagationEnabled() 일 때만 PropagationContextElement 를 더한다. v6.2.19 는 L88-97 에 Unconfined 만 있다.
+
+$ ./gradlew --offline -q tipLab --args='E10 false'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+spring.threads.virtual.enabled=false  server.port=0 -> local.server.port=54983  spring.reactor.context-propagation=(unset)  Hooks.isAutomaticContextPropagationEnabled=false
+GET /probe #1 (X-Req=r1): dispatcher=Dispatchers.Unconfined
+    entry=http-nio-auto-1-exec-1[virtual=false, mdc=r1]
+    after delay(10)=kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+    inside withContext(IO)=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    after withContext(IO) returns=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    inside withContext(vtDispatcher)=(unnamed VT #71)[virtual=true, mdc=null]
+    after withContext(vtDispatcher) returns=(unnamed VT #71)[virtual=true, mdc=null]
+GET /probe #2 (X-Req=r2): dispatcher=Dispatchers.Unconfined
+    entry=http-nio-auto-1-exec-3[virtual=false, mdc=r2]
+    after delay(10)=kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+    inside withContext(IO)=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    after withContext(IO) returns=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    inside withContext(vtDispatcher)=(unnamed VT #73)[virtual=true, mdc=null]
+    after withContext(vtDispatcher) returns=(unnamed VT #73)[virtual=true, mdc=null]
+GET /probe #3 (X-Req=r3): dispatcher=Dispatchers.Unconfined
+    entry=http-nio-auto-1-exec-5[virtual=false, mdc=r3]
+    after delay(10)=kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+    inside withContext(IO)=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    after withContext(IO) returns=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    inside withContext(vtDispatcher)=(unnamed VT #74)[virtual=true, mdc=null]
+    after withContext(vtDispatcher) returns=(unnamed VT #74)[virtual=true, mdc=null]
+GET /timer alone (warm-up): withTimeout(100){delay(1000)} ended at 101 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 1: /timer alone -> withTimeout(100){delay(1000)} ended at 105 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 1: /timer 100 ms after /block -> withTimeout(100){delay(1000)} ended at 1917 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 1: /block -> slept 2000 ms on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 2: /timer alone -> withTimeout(100){delay(1000)} ended at 104 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 2: /timer 100 ms after /block -> withTimeout(100){delay(1000)} ended at 1910 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 2: /block -> slept 2000 ms on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 3: /timer alone -> withTimeout(100){delay(1000)} ended at 105 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 3: /timer 100 ms after /block -> withTimeout(100){delay(1000)} ended at 1912 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 3: /block -> slept 2000 ms on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+
+$ ./gradlew --offline -q tipLab --args='E10 true'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+spring.threads.virtual.enabled=true  server.port=0 -> local.server.port=55009  spring.reactor.context-propagation=(unset)  Hooks.isAutomaticContextPropagationEnabled=false
+GET /probe #1 (X-Req=r1): dispatcher=Dispatchers.Unconfined
+    entry=tomcat-handler-0[virtual=true, mdc=r1]
+    after delay(10)=kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+    inside withContext(IO)=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    after withContext(IO) returns=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    inside withContext(vtDispatcher)=(unnamed VT #62)[virtual=true, mdc=null]
+    after withContext(vtDispatcher) returns=(unnamed VT #62)[virtual=true, mdc=null]
+GET /probe #2 (X-Req=r2): dispatcher=Dispatchers.Unconfined
+    entry=tomcat-handler-2[virtual=true, mdc=r2]
+    after delay(10)=kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+    inside withContext(IO)=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    after withContext(IO) returns=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    inside withContext(vtDispatcher)=(unnamed VT #67)[virtual=true, mdc=null]
+    after withContext(vtDispatcher) returns=(unnamed VT #67)[virtual=true, mdc=null]
+GET /probe #3 (X-Req=r3): dispatcher=Dispatchers.Unconfined
+    entry=tomcat-handler-4[virtual=true, mdc=r3]
+    after delay(10)=kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+    inside withContext(IO)=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    after withContext(IO) returns=DefaultDispatcher-worker-1[virtual=false, mdc=null]
+    inside withContext(vtDispatcher)=(unnamed VT #70)[virtual=true, mdc=null]
+    after withContext(vtDispatcher) returns=(unnamed VT #70)[virtual=true, mdc=null]
+GET /timer alone (warm-up): withTimeout(100){delay(1000)} ended at 103 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 1: /timer alone -> withTimeout(100){delay(1000)} ended at 103 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 1: /timer 100 ms after /block -> withTimeout(100){delay(1000)} ended at 1915 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 1: /block -> slept 2000 ms on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 2: /timer alone -> withTimeout(100){delay(1000)} ended at 101 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 2: /timer 100 ms after /block -> withTimeout(100){delay(1000)} ended at 1921 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 2: /block -> slept 2000 ms on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 3: /timer alone -> withTimeout(100){delay(1000)} ended at 104 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 3: /timer 100 ms after /block -> withTimeout(100){delay(1000)} ended at 1911 ms with TimeoutCancellationException on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]
+run 3: /block -> slept 2000 ms on kotlinx.coroutines.DefaultExecutor[virtual=false, mdc=null]

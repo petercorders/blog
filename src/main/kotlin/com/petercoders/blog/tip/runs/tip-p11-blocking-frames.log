@@ -1,0 +1,127 @@
+# experiment: tip-p11-blocking-frames — Default 워커 5종 + VT Dispatcher 1종 블로킹의 상태·톱 프레임 (a) Thread.sleep (b) 소켓 read 타임아웃 없음 (c) 중첩 runBlocking (d) 소켓 read soTimeout=30s (e) 읽히지 않는 stdout 파이프에 println (f) VT Dispatcher 위 소켓 read
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:34~10:37 KST (3회 실행 시작~로그 기록)
+# load: 3.79 5.17 5.23  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: kotlinc -cp $CO BlockingWorkers.kt -include-runtime -d bw.jar ; ( java -cp bw.jar:$CO BlockingWorkersKt 2> pid.txt | sleep 45 ) & sleep 5 ; jcmd <PID> Thread.dump_to_file -format=json bw-N.json ; parse.py 가 threadContainers[].threads 중 DefaultDispatcher-worker*/vtd-* 의 name/state/virtual/stack[0..5] 를 찍는다 (3회, 매회 새 JVM)
+# 주: (f) 는 Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("vtd-",0).factory()) — newVirtualThreadPerTaskExecutor 와 같은 구현에 덤프에서 찾을 이름만 붙였다. PID·Default.toString() 은 stderr(pid.txt) 로 받는다.
+# 소스 대조(jdk-26-ga src/java.base/share/classes/sun/nio/ch/NioSocketImpl.java): implRead L290-308 — configureNonBlockingIfNeeded(fd, remainingNanos > 0)(L299; L207-214 는 timed 이거나 VT 일 때만 non-blocking 으로 바꾼다). 타임아웃 있으면 timedRead(L302→L268-282, park(fd, Net.POLLIN, remainingNanos) L278), 없으면 tryRead→nd.read(L305, blocking fd 라 SocketDispatcher.read0 에서 멈춘다). park(L170-190): VT 면 Poller.poll(L173), platform 이면 Net.poll(L189).
+=== run 1 (pid 6012) ===
+Dispatchers.Default.toString() = Dispatchers.Default
+DefaultDispatcher-worker-1 TIMED_WAITING virtual=False container=<root> | top: java.base/java.lang.Thread.sleepNanos0(Native Method) | joinBlocking in stack: False
+      java.base/java.lang.Thread.sleepNanos(Thread.java:551)
+      java.base/java.lang.Thread.sleep(Thread.java:582)
+      BlockingWorkersKt$main$1$1.invokeSuspend(BlockingWorkers.kt:12)
+      kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+      kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+DefaultDispatcher-worker-2 RUNNABLE virtual=False container=<root> | top: java.base/sun.nio.ch.SocketDispatcher.read0(Native Method) | joinBlocking in stack: False
+      java.base/sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:48)
+      java.base/sun.nio.ch.NioSocketImpl.tryRead(NioSocketImpl.java:254)
+      java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:305)
+      java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:360)
+      java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:802)
+DefaultDispatcher-worker-3 TIMED_WAITING virtual=False container=<root> | top: java.base/jdk.internal.misc.Unsafe.park(Native Method) | joinBlocking in stack: True
+      java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:271)
+      kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:97)
+      kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+      kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+      kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+DefaultDispatcher-worker-4 RUNNABLE virtual=False container=<root> | top: java.base/sun.nio.ch.Net.poll(Native Method) | joinBlocking in stack: False
+      java.base/sun.nio.ch.NioSocketImpl.park(NioSocketImpl.java:189)
+      java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:278)
+      java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:302)
+      java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:360)
+      java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:802)
+DefaultDispatcher-worker-5 RUNNABLE virtual=False container=<root> | top: java.base/java.io.FileOutputStream.writeBytes(Native Method) | joinBlocking in stack: False
+      java.base/java.io.FileOutputStream.write(FileOutputStream.java:352)
+      java.base/java.lang.System$Out.write(System.java:1911)
+      java.base/java.io.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:123)
+      java.base/java.io.BufferedOutputStream.flush(BufferedOutputStream.java:203)
+      java.base/java.io.PrintStream.write(PrintStream.java:538)
+vtd-0 WAITING virtual=True container=java.util.concurrent.ThreadPerTaskExecutor@4a537c88 | top: java.base/java.lang.VirtualThread.park(VirtualThread.java:763) | joinBlocking in stack: False
+      java.base/java.lang.System$1.parkVirtualThread(System.java:2296)
+      java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:367)
+      java.base/sun.nio.ch.Poller.poll(Poller.java:197)
+      java.base/sun.nio.ch.Poller.poll(Poller.java:142)
+      java.base/sun.nio.ch.NioSocketImpl.park(NioSocketImpl.java:173)
+=== run 2 (pid 6630) ===
+Dispatchers.Default.toString() = Dispatchers.Default
+DefaultDispatcher-worker-1 TIMED_WAITING virtual=False container=<root> | top: java.base/java.lang.Thread.sleepNanos0(Native Method) | joinBlocking in stack: False
+      java.base/java.lang.Thread.sleepNanos(Thread.java:551)
+      java.base/java.lang.Thread.sleep(Thread.java:582)
+      BlockingWorkersKt$main$1$1.invokeSuspend(BlockingWorkers.kt:12)
+      kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+      kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+DefaultDispatcher-worker-2 RUNNABLE virtual=False container=<root> | top: java.base/sun.nio.ch.SocketDispatcher.read0(Native Method) | joinBlocking in stack: False
+      java.base/sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:48)
+      java.base/sun.nio.ch.NioSocketImpl.tryRead(NioSocketImpl.java:254)
+      java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:305)
+      java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:360)
+      java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:802)
+DefaultDispatcher-worker-3 TIMED_WAITING virtual=False container=<root> | top: java.base/jdk.internal.misc.Unsafe.park(Native Method) | joinBlocking in stack: True
+      java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:271)
+      kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:97)
+      kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+      kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+      kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+DefaultDispatcher-worker-4 RUNNABLE virtual=False container=<root> | top: java.base/sun.nio.ch.Net.poll(Native Method) | joinBlocking in stack: False
+      java.base/sun.nio.ch.NioSocketImpl.park(NioSocketImpl.java:189)
+      java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:278)
+      java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:302)
+      java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:360)
+      java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:802)
+DefaultDispatcher-worker-5 RUNNABLE virtual=False container=<root> | top: java.base/java.io.FileOutputStream.writeBytes(Native Method) | joinBlocking in stack: False
+      java.base/java.io.FileOutputStream.write(FileOutputStream.java:352)
+      java.base/java.lang.System$Out.write(System.java:1911)
+      java.base/java.io.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:123)
+      java.base/java.io.BufferedOutputStream.flush(BufferedOutputStream.java:203)
+      java.base/java.io.PrintStream.write(PrintStream.java:538)
+vtd-0 WAITING virtual=True container=java.util.concurrent.ThreadPerTaskExecutor@4a537c88 | top: java.base/java.lang.VirtualThread.park(VirtualThread.java:763) | joinBlocking in stack: False
+      java.base/java.lang.System$1.parkVirtualThread(System.java:2296)
+      java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:367)
+      java.base/sun.nio.ch.Poller.poll(Poller.java:197)
+      java.base/sun.nio.ch.Poller.poll(Poller.java:142)
+      java.base/sun.nio.ch.NioSocketImpl.park(NioSocketImpl.java:173)
+=== run 3 (pid 7230) ===
+Dispatchers.Default.toString() = Dispatchers.Default
+DefaultDispatcher-worker-1 TIMED_WAITING virtual=False container=<root> | top: java.base/java.lang.Thread.sleepNanos0(Native Method) | joinBlocking in stack: False
+      java.base/java.lang.Thread.sleepNanos(Thread.java:551)
+      java.base/java.lang.Thread.sleep(Thread.java:582)
+      BlockingWorkersKt$main$1$1.invokeSuspend(BlockingWorkers.kt:12)
+      kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+      kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+DefaultDispatcher-worker-2 RUNNABLE virtual=False container=<root> | top: java.base/sun.nio.ch.SocketDispatcher.read0(Native Method) | joinBlocking in stack: False
+      java.base/sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:48)
+      java.base/sun.nio.ch.NioSocketImpl.tryRead(NioSocketImpl.java:254)
+      java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:305)
+      java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:360)
+      java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:802)
+DefaultDispatcher-worker-3 TIMED_WAITING virtual=False container=<root> | top: java.base/jdk.internal.misc.Unsafe.park(Native Method) | joinBlocking in stack: True
+      java.base/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:271)
+      kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:97)
+      kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+      kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+      kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+DefaultDispatcher-worker-4 RUNNABLE virtual=False container=<root> | top: java.base/sun.nio.ch.Net.poll(Native Method) | joinBlocking in stack: False
+      java.base/sun.nio.ch.NioSocketImpl.park(NioSocketImpl.java:189)
+      java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:278)
+      java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:302)
+      java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:360)
+      java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:802)
+DefaultDispatcher-worker-5 RUNNABLE virtual=False container=<root> | top: java.base/java.io.FileOutputStream.writeBytes(Native Method) | joinBlocking in stack: False
+      java.base/java.io.FileOutputStream.write(FileOutputStream.java:352)
+      java.base/java.lang.System$Out.write(System.java:1911)
+      java.base/java.io.BufferedOutputStream.flushBuffer(BufferedOutputStream.java:123)
+      java.base/java.io.BufferedOutputStream.flush(BufferedOutputStream.java:203)
+      java.base/java.io.PrintStream.write(PrintStream.java:538)
+vtd-0 WAITING virtual=True container=java.util.concurrent.ThreadPerTaskExecutor@4a537c88 | top: java.base/java.lang.VirtualThread.park(VirtualThread.java:763) | joinBlocking in stack: False
+      java.base/java.lang.System$1.parkVirtualThread(System.java:2296)
+      java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:367)
+      java.base/sun.nio.ch.Poller.poll(Poller.java:197)
+      java.base/sun.nio.ch.Poller.poll(Poller.java:142)
+      java.base/sun.nio.ch.NioSocketImpl.park(NioSocketImpl.java:173)

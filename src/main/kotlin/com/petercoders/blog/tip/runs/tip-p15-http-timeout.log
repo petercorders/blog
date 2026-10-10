@@ -1,0 +1,65 @@
+# experiment: tip-p15-http-timeout — (1) JDK HttpClient HttpRequest.timeout(1s) 이 응답 헤더까지만 재는가, 바디 소비까지 재는가: JDK 25.0.4.1 vs 26.0.2.1. (2) Spring RestClient + JdkClientHttpRequestFactory(readTimeout=1s) 를 withTimeout(100) 아래에서 부르면 언제 끝나나(withContext(IO) / runInterruptible(IO)). 로컬 서버(com.sun.net.httpserver)는 헤더를 즉시 보내고 바디를 200ms 마다 1바이트씩 3초(15바이트) 보낸다. 각 3회
+# java -version:
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# deps (1): 없음(단일 파일 Java). (2): Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2), sourceSet tipSpring — '# runtime:' 줄이 실행 JVM·jar 를 직접 찍는다
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: (2) 시작 2026-10-08 10:59:42 KST, (1) 은 그 직전
+# load (기록 시점): 9.52 9.02 8.11
+# command: (1) $J25/bin/java HttpTimeout.java ; $J26/bin/java HttpTimeout.java   (2) ./gradlew --offline -q tipLab --args='E5' (JDK 26) ; $J25/bin/java -cp <tipLabClasspath> com.petercoders.blog.tip.spring.TipLabKt E5 (JDK 25)
+# 소스 대조: jdk-21-ga·jdk-25-ga HttpRequest.java L196-210 의 timeout javadoc 은 'If the response is not received within the specified timeout' 와 'block forever' 뿐이다. jdk-26-ga L254-284 에 @implSpec('at least ... the instant an HttpResponse is constructed')과 @implNote('The JDK built-in implementation applies timeout ... to the instant the response body is consumed, if present') 가 새로 있다.
+# 소스 대조: Spring v7.0.9 JdkClientHttpRequest.java 는 HttpRequest.Builder.timeout 을 쓰지 않는다(buildRequest L166-198 에 timeout 호출 없음). readTimeout 이 있으면 TimeoutHandler(javadoc L271, 클래스 L277-322, 'Temporary workaround ... until JDK-8208693 is fixed')가 completeOnTimeout 뒤 future.cancel(true) 또는 response body close 를 한다(L286-294).
+
+=== (1) JDK HttpClient ===
+$ JDK 25: /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java HttpTimeout.java
+java.runtime.version=25.0.4.1+1-LTS
+run 1 ofString()       timeout(1s):  3093 ms  status=200 bodyLength=15
+run 1 ofInputStream()  timeout(1s):  3040 ms  (headers at 2 ms)  status=200 bytesRead=15
+run 2 ofString()       timeout(1s):  3045 ms  status=200 bodyLength=15
+run 2 ofInputStream()  timeout(1s):  3048 ms  (headers at 6 ms)  status=200 bytesRead=15
+run 3 ofString()       timeout(1s):  3044 ms  status=200 bodyLength=15
+run 3 ofInputStream()  timeout(1s):  3058 ms  (headers at 2 ms)  status=200 bytesRead=15
+
+$ JDK 26: /Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java HttpTimeout.java
+java.runtime.version=26.0.2.1+1-7
+run 1 ofString()       timeout(1s):  1009 ms  java.net.http.HttpTimeoutException: request timed out
+run 1 ofInputStream()  timeout(1s):  1006 ms  (headers at 7 ms)  java.io.IOException: closed
+run 2 ofString()       timeout(1s):  1004 ms  java.net.http.HttpTimeoutException: request timed out
+run 2 ofInputStream()  timeout(1s):  1001 ms  (headers at 1 ms)  java.io.IOException: closed
+run 3 ofString()       timeout(1s):  1004 ms  java.net.http.HttpTimeoutException: request timed out
+run 3 ofInputStream()  timeout(1s):  1001 ms  (headers at 1 ms)  java.io.IOException: closed
+
+=== (2) Spring RestClient ===
+$ ./gradlew --offline -q tipLab --args='E5'   (JDK 26)
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+=== run 1 ===
+A RestClient readTimeout=1s (no withTimeout)                    1003 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+B withTimeout(100){withContext(IO){RestClient readTimeout=1s}}  1040 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+C withTimeout(100){runInterruptible(IO){RestClient readTimeout=1s}}   107 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: java.lang.InterruptedException
+=== run 2 ===
+A RestClient readTimeout=1s (no withTimeout)                    1006 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+B withTimeout(100){withContext(IO){RestClient readTimeout=1s}}  1003 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+C withTimeout(100){runInterruptible(IO){RestClient readTimeout=1s}}   103 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: java.lang.InterruptedException
+=== run 3 ===
+A RestClient readTimeout=1s (no withTimeout)                    1002 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+B withTimeout(100){withContext(IO){RestClient readTimeout=1s}}  1005 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+C withTimeout(100){runInterruptible(IO){RestClient readTimeout=1s}}   103 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: java.lang.InterruptedException
+
+$ $J25/bin/java -cp <tipLabClasspath> com.petercoders.blog.tip.spring.TipLabKt E5   (JDK 25)
+# runtime: java 25.0.4.1+1-LTS (Microsoft) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+=== run 1 ===
+A RestClient readTimeout=1s (no withTimeout)                    1003 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+B withTimeout(100){withContext(IO){RestClient readTimeout=1s}}  1036 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+C withTimeout(100){runInterruptible(IO){RestClient readTimeout=1s}}   111 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: java.lang.InterruptedException
+=== run 2 ===
+A RestClient readTimeout=1s (no withTimeout)                    1004 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+B withTimeout(100){withContext(IO){RestClient readTimeout=1s}}  1004 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+C withTimeout(100){runInterruptible(IO){RestClient readTimeout=1s}}   104 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: java.lang.InterruptedException
+=== run 3 ===
+A RestClient readTimeout=1s (no withTimeout)                    1006 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+B withTimeout(100){withContext(IO){RestClient readTimeout=1s}}  1006 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: closed
+C withTimeout(100){runInterruptible(IO){RestClient readTimeout=1s}}   106 ms  org.springframework.web.client.RestClientException: Error while extracting response for type [java.lang.String] and content type [application/ | cause=java.io.IOException: java.lang.InterruptedException

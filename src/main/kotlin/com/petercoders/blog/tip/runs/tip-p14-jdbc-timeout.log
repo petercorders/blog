@@ -1,0 +1,214 @@
+# experiment: tip-p14-jdbc-timeout — 블로킹 JDBC 호출을 무엇이 끊는가. H2 2.4.240 TCP 서버 모드(같은 JVM) + HikariCP 7.0.2(pool e4 max 2) + JdbcTemplate + DataSourceTransactionManager. 쿼리 둘: SLEEP = select SLEEP_MS(3000)(Java alias 안 Thread.sleep), SCAN = system_range(1,6500) CROSS JOIN 합계(약 3.5~4초, 행을 돌며 H2 가 cancel·timeout 을 확인). 케이스: 1 withTimeout(100)+withContext(IO), 2 withTimeout(100)+runInterruptible(IO), 3a withContext(IO) 안 job.invokeOnCompletion{Statement.cancel()}, 3b withTimeout 아래 감시 Coroutine finally{Statement.cancel()}, 4 JdbcTemplate.queryTimeout=1, 4' (SCAN) 4 직후 리셋 없이 일반 JdbcTemplate, 5 @Transactional(timeout=1), 6 connectionTimeout=250ms 풀 1개를 다른 스레드가 점유. 케이스마다 소요 ms·예외, 끝난 뒤 Hikari active/idle 과 select 1. 3회(run 마다 새 JVM)
+# java -version (tipLab JavaExec 의 javaLauncher = toolchain 26):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# build: Kotlin Gradle plugin 2.3.21 (컴파일 toolchain 25), Spring Boot 4.1.1 BOM (Spring Framework 7.0.9, kotlinx.coroutines 1.10.2, HikariCP 7.0.2, H2 2.4.240), sourceSet tipSpring (build.gradle.kts). 실행 JVM·jar 는 아래 '# runtime:' 줄이 직접 찍은 값
+# run dir: /tmp/gradle-tip (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: run 1 시작 2026-10-08 10:55:34 KST, run 2·3 은 바로 이어서
+# load (기록 시점): 7.60 8.48 7.76
+# command: ./gradlew --offline -q tipLab --args='E4 1' ; ... --args='E4 2' ; ... --args='E4 3'   (H2 결과 캐시를 피하려고 SQL 마다 상수 k 를 붙인다. SCAN n=6500 은 E4cal 보정값: n=5000 2,383 ms, 6000 2,734 ms, 6500 3,237 ms — 같은 SQL 재실행은 0 ms 였다)
+# 주(하네스 수정): 첫 시도(아래 '첫 시도 원문')에서 SCAN 1·2·3a 가 1초에 QueryTimeoutException 으로 끝났다. H2 의 Statement.setQueryTimeout 은 세션 설정 QUERY_TIMEOUT 을 바꾸고 Statement 를 닫아도 되돌리지 않으며, Hikari 도 반납 때 되돌리지 않아서 SLEEP 4·5 가 건 1초가 같은 커넥션의 다음 쿼리에 남은 것이다. 그래서 케이스마다 풀의 모든 커넥션에 SET QUERY_TIMEOUT 0 을 걸고 다시 쟀고(run 1~3), 이 누수 자체는 SCAN 4' 행으로 매 run 재현했다. 소스 대조(h2database 태그 version-2.4.240): JdbcStatement.setQueryTimeout L744-755 가 conn.setQueryTimeout(seconds)(L751)를 부르고, JdbcConnection.setQueryTimeout L723-736 이 세션에 'SET QUERY_TIMEOUT ?'(ms)를 실행한다. 다른 드라이버의 동작은 이 실험에서 재지 않았다.
+
+$ ./gradlew --offline -q tipLab --args='E4 1'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+H2 2.4.240 TCP server, SCAN n=6500, url=jdbc:h2:tcp://localhost:54203/mem:t;DB_CLOSE_DELAY=-1 | Hikari pool e4 max=2 | TxService proxy=com.petercoders.blog.tip.spring.e4.TxService$$SpringCGLIB$$0
+baseline SLEEP without any timeout: 3018 ms  (select SLEEP_MS(3000) + 0 * 0)
+baseline SCAN without any timeout: 4625 ms  (select sum(a.x * b.x) + 1 from system_range(1, 6500) a, system_range(1, 6500) b)
+=== run 1 ===
+SLEEP 1 withTimeout(100){withContext(IO){query}}            3028 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 2 withTimeout(100){runInterruptible(IO){query}}       3010 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3a withTimeout(100) + job.invokeOnCompletion{cancel}  3008 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  invokeOnCompletion handler called Statement.cancel() at +3007 ms -> JdbcSQLNonTransientException: The object is already closed [90007-240]
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3b withTimeout(100) + watcher finally{cancel}         3015 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  watcher finally called Statement.cancel() at +110 ms -> ok
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)       3002 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 5 @Transactional(timeout=1)                           3028 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 1 withTimeout(100){withContext(IO){query}}             3724 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 2 withTimeout(100){runInterruptible(IO){query}}        3554 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3a withTimeout(100) + job.invokeOnCompletion{cancel}   3522 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  invokeOnCompletion handler called Statement.cancel() at +3521 ms -> JdbcSQLNonTransientException: The object is already closed [90007-240]
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3b withTimeout(100) + watcher finally{cancel}           112 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; Statement was canceled or the session timed out; SQL statement: | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  watcher finally called Statement.cancel() at +105 ms -> ok
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)        1001 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 12 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4' leak check: plain JdbcTemplate right after 4, no reset  1000 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 13 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 5 @Transactional(timeout=1)                            1007 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 14 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+6 connectionTimeout=250ms, pool 1 held by another thread     256 ms  java.sql.SQLTransientConnectionException: e4-one - Connection is not available, request timed out after 255ms (total=1, active=1, idle=0, waiting=0)
+
+$ ./gradlew --offline -q tipLab --args='E4 2'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+H2 2.4.240 TCP server, SCAN n=6500, url=jdbc:h2:tcp://localhost:54311/mem:t;DB_CLOSE_DELAY=-1 | Hikari pool e4 max=2 | TxService proxy=com.petercoders.blog.tip.spring.e4.TxService$$SpringCGLIB$$0
+=== run 2 ===
+SLEEP 1 withTimeout(100){withContext(IO){query}}            3023 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 2 withTimeout(100){runInterruptible(IO){query}}       3006 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3a withTimeout(100) + job.invokeOnCompletion{cancel}  3045 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  invokeOnCompletion handler called Statement.cancel() at +3040 ms -> JdbcSQLNonTransientException: The object is already closed [90007-240]
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3b withTimeout(100) + watcher finally{cancel}         3019 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  watcher finally called Statement.cancel() at +112 ms -> ok
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)       3013 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 5 @Transactional(timeout=1)                           3027 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 1 withTimeout(100){withContext(IO){query}}             4064 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 2 withTimeout(100){runInterruptible(IO){query}}        3420 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3a withTimeout(100) + job.invokeOnCompletion{cancel}   3565 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  invokeOnCompletion handler called Statement.cancel() at +3565 ms -> JdbcSQLNonTransientException: The object is already closed [90007-240]
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3b withTimeout(100) + watcher finally{cancel}           108 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; Statement was canceled or the session timed out; SQL statement: | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  watcher finally called Statement.cancel() at +105 ms -> ok
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)        1000 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 10 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4' leak check: plain JdbcTemplate right after 4, no reset  1000 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 11 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 5 @Transactional(timeout=1)                            1002 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 12 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+6 connectionTimeout=250ms, pool 1 held by another thread     256 ms  java.sql.SQLTransientConnectionException: e4-one - Connection is not available, request timed out after 255ms (total=1, active=1, idle=0, waiting=0)
+
+$ ./gradlew --offline -q tipLab --args='E4 3'
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+H2 2.4.240 TCP server, SCAN n=6500, url=jdbc:h2:tcp://localhost:54447/mem:t;DB_CLOSE_DELAY=-1 | Hikari pool e4 max=2 | TxService proxy=com.petercoders.blog.tip.spring.e4.TxService$$SpringCGLIB$$0
+=== run 3 ===
+SLEEP 1 withTimeout(100){withContext(IO){query}}            3017 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 2 withTimeout(100){runInterruptible(IO){query}}       3007 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3a withTimeout(100) + job.invokeOnCompletion{cancel}  3007 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  invokeOnCompletion handler called Statement.cancel() at +3006 ms -> JdbcSQLNonTransientException: The object is already closed [90007-240]
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3b withTimeout(100) + watcher finally{cancel}         3013 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  watcher finally called Statement.cancel() at +106 ms -> ok
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)       3006 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 5 @Transactional(timeout=1)                           3007 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 1 withTimeout(100){withContext(IO){query}}             4122 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 2 withTimeout(100){runInterruptible(IO){query}}        3647 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3a withTimeout(100) + job.invokeOnCompletion{cancel}   3713 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  invokeOnCompletion handler called Statement.cancel() at +3713 ms -> JdbcSQLNonTransientException: The object is already closed [90007-240]
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3b withTimeout(100) + watcher finally{cancel}           115 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; Statement was canceled or the session timed out; SQL statement: | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  watcher finally called Statement.cancel() at +101 ms -> ok
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)        1000 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 10 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4' leak check: plain JdbcTemplate right after 4, no reset  1000 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 11 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 5 @Transactional(timeout=1)                            1002 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 12 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+6 connectionTimeout=250ms, pool 1 held by another thread     256 ms  java.sql.SQLTransientConnectionException: e4-one - Connection is not available, request timed out after 255ms (total=1, active=1, idle=0, waiting=0)
+
+=== 첫 시도 원문 (세션 리셋·cancel 시각 기록 추가 전, 같은 날 run 1~3 직전, run 1 만) ===
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+H2 2.4.240 TCP server, SCAN n=6500, url=jdbc:h2:tcp://localhost:53847/mem:t;DB_CLOSE_DELAY=-1 | Hikari pool e4 max=2 | TxService proxy=com.petercoders.blog.tip.spring.e4.TxService$$SpringCGLIB$$0
+baseline SLEEP without any timeout: 3012 ms  (select SLEEP_MS(3000) + 0 * 0)
+baseline SCAN without any timeout: 4453 ms  (select sum(a.x * b.x) + 1 from system_range(1, 6500) a, system_range(1, 6500) b)
+=== run 1 ===
+SLEEP 1 withTimeout(100){withContext(IO){query}}            3021 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 2 withTimeout(100){runInterruptible(IO){query}}       3009 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+Exception in thread "DefaultDispatcher-worker-2" kotlinx.coroutines.CompletionHandlerException: Exception in completion handler InvokeOnCompletion@7867157c[job@1399b24a] for DispatchedCoroutine{Cancelled}@1399b24a
+	at kotlinx.coroutines.JobSupport.notifyCompletion(JobSupport.kt:1629)
+	at kotlinx.coroutines.JobSupport.completeStateFinalization(JobSupport.kt:316)
+	at kotlinx.coroutines.JobSupport.finalizeFinishingState(JobSupport.kt:233)
+	at kotlinx.coroutines.JobSupport.tryMakeCompletingSlowPath(JobSupport.kt:946)
+	at kotlinx.coroutines.JobSupport.tryMakeCompleting(JobSupport.kt:894)
+	at kotlinx.coroutines.JobSupport.makeCompletingOnce$kotlinx_coroutines_core(JobSupport.kt:859)
+	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:99)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:820)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [DispatchedCoroutine{Cancelled}@1399b24a, Dispatchers.IO]
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: The object is already closed [90007-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:566)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.message.DbException.get(DbException.java:188)
+	at org.h2.jdbc.JdbcStatement.checkClosed(JdbcStatement.java:1300)
+	at org.h2.jdbc.JdbcStatement.cancel(JdbcStatement.java:685)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.cancel(HikariProxyStatement.java)
+	at com.petercoders.blog.tip.spring.e4.JdbcTimeoutKt$run$3$1$1$1.invokeSuspend$lambda$0(JdbcTimeout.kt:127)
+	at kotlinx.coroutines.InvokeOnCompletion.invoke(JobSupport.kt:1534)
+	at kotlinx.coroutines.JobSupport.notifyCompletion(JobSupport.kt:1625)
+	... 14 more
+SLEEP 3a withTimeout(100) + job.invokeOnCompletion{cancel}  3025 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 3b withTimeout(100) + watcher finally{cancel}         3009 ms  kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 100 ms
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)       3008 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SLEEP 5 @Transactional(timeout=1)                           3021 ms  returned normally
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 1 withTimeout(100){withContext(IO){query}}             1008 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 8 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was  | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 2 withTimeout(100){runInterruptible(IO){query}}        1001 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 9 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was  | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+Exception in thread "DefaultDispatcher-worker-2" kotlinx.coroutines.CompletionHandlerException: Exception in completion handler InvokeOnCompletion@2a94b45a[job@5a0cf614] for DispatchedCoroutine{Cancelled}@5a0cf614
+	at kotlinx.coroutines.JobSupport.notifyCompletion(JobSupport.kt:1629)
+	at kotlinx.coroutines.JobSupport.completeStateFinalization(JobSupport.kt:316)
+	at kotlinx.coroutines.JobSupport.finalizeFinishingState(JobSupport.kt:233)
+	at kotlinx.coroutines.JobSupport.tryMakeCompletingSlowPath(JobSupport.kt:946)
+	at kotlinx.coroutines.JobSupport.tryMakeCompleting(JobSupport.kt:894)
+	at kotlinx.coroutines.JobSupport.makeCompletingOnce$kotlinx_coroutines_core(JobSupport.kt:859)
+	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:99)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:820)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [DispatchedCoroutine{Cancelled}@5a0cf614, Dispatchers.IO]
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: The object is already closed [90007-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:566)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.message.DbException.get(DbException.java:188)
+	at org.h2.jdbc.JdbcStatement.checkClosed(JdbcStatement.java:1300)
+	at org.h2.jdbc.JdbcStatement.cancel(JdbcStatement.java:685)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.cancel(HikariProxyStatement.java)
+	at com.petercoders.blog.tip.spring.e4.JdbcTimeoutKt$run$3$1$1$1.invokeSuspend$lambda$0(JdbcTimeout.kt:127)
+	at kotlinx.coroutines.InvokeOnCompletion.invoke(JobSupport.kt:1534)
+	at kotlinx.coroutines.JobSupport.notifyCompletion(JobSupport.kt:1625)
+	... 14 more
+SCAN 3a withTimeout(100) + job.invokeOnCompletion{cancel}   1001 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; Statement was canceled or the session timed out; SQL statement: | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 3b withTimeout(100) + watcher finally{cancel}           106 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; Statement was canceled or the session timed out; SQL statement: | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 4 JdbcTemplate.queryTimeout=1 (setQueryTimeout)        1000 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 12 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+SCAN 5 @Transactional(timeout=1)                            1002 ms  org.springframework.dao.QueryTimeoutException: StatementCallback; SQL [select sum(a.x * b.x) + 13 from system_range(1, 6500) a, system_range(1, 6500) b]; Statement was | cause=org.h2.jdbc.JdbcSQLTimeoutException: Statement was canceled or the session timed out; SQL statement:
+                                                                  pool right after: active=0 idle=2 | all connections idle after +0 ms | then select 1: ok(1)
+6 connectionTimeout=250ms, pool 1 held by another thread     253 ms  java.sql.SQLTransientConnectionException: e4-one - Connection is not available, request timed out after 252ms (total=1, active=1, idle=0, waiting=0)

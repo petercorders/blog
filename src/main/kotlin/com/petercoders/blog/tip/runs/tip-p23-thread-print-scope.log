@@ -1,0 +1,47 @@
+# experiment: tip-p23-thread-print-scope — jcmd Thread.print 가 mount 된 VT(vt-spin) 와 unmount 된 VT(vt-sleep) 를 찍는가, JDK 25.0.4.1 과 26.0.2.1 비교 (1회씩)
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: (없음, 단일 파일 Java)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-08 10:37:16 KST
+# load: 3.52 5.07 5.19  (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# command: java ThreadPrintScope.java > pid.txt & sleep 4 ; jcmd <PID> Thread.print > tp-<v>.txt ; grep -n 'Mounted virtual thread\|vt-spin\|vt-sleep' ; jcmd <PID> help Thread.print | grep -i 'print all'
+# 추가 java -version (JDK 25 실행분):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+=== JDK 25 (openjdk version "25.0.4.1" 2026-08-18 LTS) pid 8841 ===
+--- jcmd help Thread.print (설명 줄) ---
+Thread.print
+Print all threads with stacktraces.
+--- grep -n 'Mounted virtual thread|vt-spin|vt-sleep' (Thread.print 151 줄 중) ---
+109:   Mounted virtual thread #26
+--- 'Mounted virtual thread' 줄 앞뒤 ---
+	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(java.base@25.0.4.1/ForkJoinPool.java:1450)
+	at java.util.concurrent.ForkJoinPool.runWorker(java.base@25.0.4.1/ForkJoinPool.java:2019)
+	at java.util.concurrent.ForkJoinWorkerThread.run(java.base@25.0.4.1/ForkJoinWorkerThread.java:187)
+   Mounted virtual thread #26
+	at ThreadPrintScope.lambda$main$0(ThreadPrintScope.java:10)
+	at ThreadPrintScope$$Lambda/0x0000007f01158210.run(Unknown Source)
+	at java.lang.Thread.runWith(java.base@25.0.4.1/Thread.java:1487)
+	at java.lang.VirtualThread.run(java.base@25.0.4.1/VirtualThread.java:460)
+	at java.lang.VirtualThread$VThreadContinuation$1.run(java.base@25.0.4.1/VirtualThread.java:252)
+=== JDK 26 (openjdk version "26.0.2.1" 2026-08-18) pid 8879 ===
+--- jcmd help Thread.print (설명 줄) ---
+Thread.print
+Print all platform threads, and mounted virtual threads, with stack traces. The Thread.dump_to_file command will print all threads to a file.
+--- grep -n 'Mounted virtual thread|vt-spin|vt-sleep' (Thread.print 162 줄 중) ---
+108:   Mounted virtual thread #32
+--- 'Mounted virtual thread' 줄 앞뒤 ---
+	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(java.base@26.0.2.1/ForkJoinPool.java:1450)
+	at java.util.concurrent.ForkJoinPool.runWorker(java.base@26.0.2.1/ForkJoinPool.java:2019)
+	at java.util.concurrent.ForkJoinWorkerThread.run(java.base@26.0.2.1/ForkJoinWorkerThread.java:187)
+   Mounted virtual thread #32
+	at ThreadPrintScope.lambda$main$0(ThreadPrintScope.java:10)
+	at ThreadPrintScope$$Lambda/0x000007f80115c210.run(Unknown Source)
+	at java.lang.Thread.runWith(java.base@26.0.2.1/Thread.java:1529)
+	at java.lang.VirtualThread.run(java.base@26.0.2.1/VirtualThread.java:475)
+	at java.lang.VirtualThread$VThreadContinuation$1.run(java.base@26.0.2.1/VirtualThread.java:255)
