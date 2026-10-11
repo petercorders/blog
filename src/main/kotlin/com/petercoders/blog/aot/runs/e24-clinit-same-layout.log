@@ -1,0 +1,45 @@
+# experiment: e24-clinit-same-layout — clinit·link methods 이벤트 수, F0/F1/E0/E1 같은 라운드 5회
+# date: 2026-10-10 14:43:01 +0900
+# uptime: 14:43  up 15 days, 14:32, 8 users, load averages: 13.60 10.07 8.47
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# fat jar: /tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/fat/blog-0.0.1-SNAPSHOT.jar mtime 2026-09-08 23:50:45 · 펼친 배치: /tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/dirA/application/blog-0.0.1-SNAPSHOT.jar mtime 2026-09-08 23:50:45
+# 사전 게이트
+# gate[E1]: AOTMode=on exit=0 
+# gate[F1]: AOTMode=on exit=0 
+# command: (cd <dir> && java -Xlog:perf+class+link <opts>) — 라운드마다 순서를 한 칸씩 돌린다
+## round 1 uptime: 13.60 10.07 8.47
+F0 r=1 exit=0 started_s=0.393 process_s=0.559 vm_init_clinit_events=268 exit_clinit_ms=169 exit_clinit_events=4615 exit_link_methods_events=53431
+F1 r=1 exit=0 started_s=0.282 process_s=0.385 vm_init_clinit_events=336 exit_clinit_ms=118 exit_clinit_events=4378 exit_link_methods_events=56194
+E0 r=1 exit=0 started_s=0.387 process_s=0.496 vm_init_clinit_events=268 exit_clinit_ms=153 exit_clinit_events=4491 exit_link_methods_events=52676
+E1 r=1 exit=0 started_s=0.138 process_s=0.202 vm_init_clinit_events=392 exit_clinit_ms=54 exit_clinit_events=3730 exit_link_methods_events=57897
+## round 2 uptime: 13.60 10.07 8.47
+F1 r=2 exit=0 started_s=0.334 process_s=0.493 vm_init_clinit_events=336 exit_clinit_ms=138 exit_clinit_events=4378 exit_link_methods_events=56194
+E0 r=2 exit=0 started_s=0.386 process_s=0.494 vm_init_clinit_events=268 exit_clinit_ms=151 exit_clinit_events=4491 exit_link_methods_events=52676
+E1 r=2 exit=0 started_s=0.127 process_s=0.189 vm_init_clinit_events=392 exit_clinit_ms=46 exit_clinit_events=3730 exit_link_methods_events=57897
+F0 r=2 exit=0 started_s=0.408 process_s=0.562 vm_init_clinit_events=268 exit_clinit_ms=169 exit_clinit_events=4615 exit_link_methods_events=53431
+## round 3 uptime: 13.96 10.20 8.53
+E0 r=3 exit=0 started_s=0.409 process_s=0.513 vm_init_clinit_events=268 exit_clinit_ms=154 exit_clinit_events=4491 exit_link_methods_events=52676
+E1 r=3 exit=0 started_s=0.219 process_s=0.298 vm_init_clinit_events=392 exit_clinit_ms=70 exit_clinit_events=3730 exit_link_methods_events=57897
+F0 r=3 exit=0 started_s=0.481 process_s=0.697 vm_init_clinit_events=268 exit_clinit_ms=205 exit_clinit_events=4615 exit_link_methods_events=53431
+F1 r=3 exit=0 started_s=0.289 process_s=0.398 vm_init_clinit_events=336 exit_clinit_ms=116 exit_clinit_events=4378 exit_link_methods_events=56194
+## round 4 uptime: 13.96 10.20 8.53
+E1 r=4 exit=0 started_s=0.135 process_s=0.2 vm_init_clinit_events=392 exit_clinit_ms=50 exit_clinit_events=3730 exit_link_methods_events=57897
+F0 r=4 exit=0 started_s=0.435 process_s=0.594 vm_init_clinit_events=268 exit_clinit_ms=175 exit_clinit_events=4615 exit_link_methods_events=53430
+F1 r=4 exit=0 started_s=0.262 process_s=0.384 vm_init_clinit_events=336 exit_clinit_ms=119 exit_clinit_events=4378 exit_link_methods_events=56194
+E0 r=4 exit=0 started_s=0.384 process_s=0.496 vm_init_clinit_events=268 exit_clinit_ms=156 exit_clinit_events=4491 exit_link_methods_events=52676
+## round 5 uptime: 13.80 10.23 8.55
+F0 r=5 exit=0 started_s=0.43 process_s=0.581 vm_init_clinit_events=268 exit_clinit_ms=173 exit_clinit_events=4615 exit_link_methods_events=53431
+F1 r=5 exit=0 started_s=0.288 process_s=0.402 vm_init_clinit_events=336 exit_clinit_ms=121 exit_clinit_events=4378 exit_link_methods_events=56194
+E0 r=5 exit=0 started_s=0.352 process_s=0.462 vm_init_clinit_events=268 exit_clinit_ms=145 exit_clinit_events=4491 exit_link_methods_events=52674
+E1 r=5 exit=0 started_s=0.13 process_s=0.192 vm_init_clinit_events=392 exit_clinit_ms=48 exit_clinit_events=3730 exit_link_methods_events=57897
+## 요약(이 로그의 5라운드에서 계산). 이벤트 수는 라운드마다 같았다(link methods 만 ±2)
+F0 n=5 exit0=5 clinit_events=[4615] link_methods_events=[53430, 53431] median_started_s=0.430
+F1 n=5 exit0=5 clinit_events=[4378] link_methods_events=[56194] median_started_s=0.288
+E0 n=5 exit0=5 clinit_events=[4491] link_methods_events=[52674, 52676] median_started_s=0.386
+E1 n=5 exit0=5 clinit_events=[3730] link_methods_events=[57897] median_started_s=0.135
+같은 배치 대조: 펼친 배치 E0 4491 → E1 3730 (−761, 0.831배) · fat jar F0 4615 → F1 4378 (−237, 0.949배)
+# e3(F0 4,615)는 이 로그의 F0 와 같은 값이다. e7(3,702)은 명령줄이 로그에 남지 않았지만 Started 0.166 s·link methods 57,940 이 이 로그의 E1(0.135·57,897)에 가깝고 F1(0.288·56,194)과 멀어, 1차 캐시(onRefresh 없이 끝까지 training)를 단 펼친 배치로 본다. 그래서 e3 → e7 의 차이에는 배치 차이가 섞여 있고, 캐시 몫은 이 로그의 같은 배치 대조로 본다.

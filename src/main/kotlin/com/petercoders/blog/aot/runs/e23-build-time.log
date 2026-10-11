@@ -1,0 +1,80 @@
+# experiment: e23-build-time — onRefresh 캐시 빌드 시간: 3단계(record→create) vs 한 줄(AOTCacheOutput), 같은 라운드 번갈아
+# date: 2026-10-10 14:16:34 +0900
+# uptime: 14:16  up 15 days, 14:05, 8 users, load averages: 5.54 7.05 7.31
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# app: web 변형(e14), /tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/web/application/blog-0.0.1-SNAPSHOT.jar sha256 208030fffd5177e6bfee3b0fa1310ce46916b23d449dbc0bdceef4e6cb660471
+# 출력: /tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/web/e23 (홀수 라운드 3단계 먼저, 짝수 라운드 한 줄 먼저)
+r=1 mode=3step training_ms=1543 assembly_ms=709 total_ms=2252 record_exit=0 create_exit=0 cache=62783488 load1=5.54
+r=1 mode=oneline total_ms=2054 exit=0 cache=62767104 child=1 load1=5.26
+r=2 mode=oneline total_ms=2041 exit=0 cache=62767104 child=1 load1=4.83
+r=2 mode=3step training_ms=1298 assembly_ms=700 total_ms=1998 record_exit=0 create_exit=0 cache=62767104 load1=4.93
+r=3 mode=3step training_ms=1325 assembly_ms=668 total_ms=1993 record_exit=0 create_exit=0 cache=62750720 load1=4.93
+r=3 mode=oneline total_ms=2158 exit=0 cache=62767104 child=1 load1=4.93
+r=4 mode=oneline total_ms=2113 exit=0 cache=62767104 child=1 load1=4.93
+r=4 mode=3step training_ms=1350 assembly_ms=671 total_ms=2021 record_exit=0 create_exit=0 cache=62750720 load1=4.93
+r=5 mode=3step training_ms=1397 assembly_ms=718 total_ms=2115 record_exit=0 create_exit=0 cache=62750720 load1=4.94
+r=5 mode=oneline total_ms=2100 exit=0 cache=62750720 child=1 load1=4.94
+r=6 mode=oneline total_ms=2002 exit=0 cache=62750720 child=1 load1=4.78
+r=6 mode=3step training_ms=1349 assembly_ms=680 total_ms=2029 record_exit=0 create_exit=0 cache=62750720 load1=4.78
+r=7 mode=3step training_ms=1484 assembly_ms=693 total_ms=2177 record_exit=0 create_exit=0 cache=62783488 load1=4.48
+r=7 mode=oneline total_ms=2295 exit=0 cache=62783488 child=1 load1=4.48
+r=8 mode=oneline total_ms=2062 exit=0 cache=62750720 child=1 load1=4.48
+r=8 mode=3step training_ms=1322 assembly_ms=795 total_ms=2117 record_exit=0 create_exit=0 cache=62767104 load1=4.92
+r=9 mode=3step training_ms=1421 assembly_ms=717 total_ms=2138 record_exit=0 create_exit=0 cache=62767104 load1=4.92
+r=9 mode=oneline total_ms=2025 exit=0 cache=62750720 child=1 load1=4.61
+r=10 mode=oneline total_ms=2070 exit=0 cache=62750720 child=1 load1=4.61
+r=10 mode=3step training_ms=1309 assembly_ms=676 total_ms=1985 record_exit=0 create_exit=0 cache=62750720 load1=4.61
+r=11 mode=3step training_ms=1392 assembly_ms=708 total_ms=2100 record_exit=0 create_exit=0 cache=62750720 load1=4.80
+r=11 mode=oneline total_ms=2096 exit=0 cache=62750720 child=1 load1=4.80
+r=12 mode=oneline total_ms=2047 exit=0 cache=62750720 child=1 load1=4.49
+r=12 mode=3step training_ms=1347 assembly_ms=722 total_ms=2069 record_exit=0 create_exit=0 cache=62767104 load1=4.49
+r=13 mode=3step training_ms=1343 assembly_ms=685 total_ms=2028 record_exit=0 create_exit=0 cache=62767104 load1=4.37
+r=13 mode=oneline total_ms=2078 exit=0 cache=62750720 child=1 load1=4.37
+r=14 mode=oneline total_ms=2060 exit=0 cache=62767104 child=1 load1=4.37
+r=14 mode=3step training_ms=1339 assembly_ms=667 total_ms=2006 record_exit=0 create_exit=0 cache=62767104 load1=5.06
+r=15 mode=3step training_ms=1370 assembly_ms=688 total_ms=2058 record_exit=0 create_exit=0 cache=62767104 load1=5.06
+r=15 mode=oneline total_ms=2039 exit=0 cache=62750720 child=1 load1=4.98
+r=16 mode=oneline total_ms=2069 exit=0 cache=62767104 child=1 load1=4.98
+r=16 mode=3step training_ms=1345 assembly_ms=671 total_ms=2016 record_exit=0 create_exit=0 cache=62767104 load1=4.98
+r=17 mode=3step training_ms=1331 assembly_ms=707 total_ms=2038 record_exit=0 create_exit=0 cache=62750720 load1=5.14
+r=17 mode=oneline total_ms=2089 exit=0 cache=62767104 child=1 load1=5.14
+r=18 mode=oneline total_ms=2081 exit=0 cache=62783488 child=1 load1=4.81
+r=18 mode=3step training_ms=1416 assembly_ms=706 total_ms=2122 record_exit=0 create_exit=0 cache=62783488 load1=4.81
+r=19 mode=3step training_ms=1364 assembly_ms=679 total_ms=2043 record_exit=0 create_exit=0 cache=62767104 load1=4.50
+r=19 mode=oneline total_ms=2069 exit=0 cache=62767104 child=1 load1=4.50
+r=20 mode=oneline total_ms=2122 exit=0 cache=62750720 child=1 load1=4.50
+r=20 mode=3step training_ms=1328 assembly_ms=721 total_ms=2049 record_exit=0 create_exit=0 cache=62750720 load1=9.75
+## summary
+rounds=20
+3step training_ms median=1347
+3step assembly_ms median=693
+3step total_ms median=2043
+oneline total_ms median=2069
+r=1 ratio_oneline_over_3step=0.912
+r=2 ratio_oneline_over_3step=1.022
+r=3 ratio_oneline_over_3step=1.083
+r=4 ratio_oneline_over_3step=1.046
+r=5 ratio_oneline_over_3step=0.993
+r=6 ratio_oneline_over_3step=0.987
+r=7 ratio_oneline_over_3step=1.054
+r=8 ratio_oneline_over_3step=0.974
+r=9 ratio_oneline_over_3step=0.947
+r=10 ratio_oneline_over_3step=1.043
+r=11 ratio_oneline_over_3step=0.998
+r=12 ratio_oneline_over_3step=0.989
+r=13 ratio_oneline_over_3step=1.025
+r=14 ratio_oneline_over_3step=1.027
+r=15 ratio_oneline_over_3step=0.991
+r=16 ratio_oneline_over_3step=1.026
+r=17 ratio_oneline_over_3step=1.025
+r=18 ratio_oneline_over_3step=0.981
+r=19 ratio_oneline_over_3step=1.013
+r=20 ratio_oneline_over_3step=1.036
+oneline_shorter_rounds=9/20
+ratio median=1.013
+exit codes:   20 create_exit=0   20 exit=0   20 record_exit=0 
+# end: 2026-10-10 14:18:04 +0900 uptime: 14:18  up 15 days, 14:07, 8 users, load averages: 9.75 7.38 7.38

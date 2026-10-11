@@ -1,0 +1,41 @@
+# experiment: e13-g — class+load 원본의 source 별 내역(새 실행 없음, e3·e13-b 원본 재집계)
+# date: 2026-10-10 14:22:30 +0900
+# inputs: fatjar-classload.log (5804줄, 데코레이션 있음), work-r2/classload-e13-E1.log (5802줄), work-r2/classload-e13-F0.log (5804줄)
+
+## (1) e3 fat jar 무캐시 (fatjar-classload.log)
+total=5804
+  shared objects file (기본 CDS 또는 AOT Cache) = 1379
+  jar:nested: (fat jar 안 BOOT-INF/lib·classes)    = 2927
+  jrt:/ (기본 CDS 에 없는 JDK 클래스)              = 637
+  file: (Spring Boot launcher 등)                  = 73
+  __JVM_LookupDefineClass__ (LambdaForm$MH 등)    = 152
+  __dynamic_proxy__                                = 42
+  source=호스트 클래스 이름 (lambda·TypeSwitch)    = 594 (그중 $$Lambda·$$TypeSwitch·/0x 이름 594)
+  합 = 5804
+  shared 가 아닌 줄 = 4425 = jar:nested 2927 + jrt 637 + file 73 + 실행 중 생성 788 (lookup 152 + proxy 42 + 호스트명 594)
+  shared 중 JDK 클래스(java·javax·jdk·sun·com.sun) = 1379
+  file: 중 org.springframework.boot.loader.*       = 73
+  jrt:/ 모듈별 상위 5:
+     557 java.base
+      27 java.management
+      14 java.desktop
+      12 jdk.management
+       7 java.logging
+
+## (1') e13-b F0 fat jar 무캐시 (classload-e13-F0.log, 데코레이션 없음)
+total=5804
+  shared objects file (기본 CDS 또는 AOT Cache) = 1379
+  jar:nested: (fat jar 안 BOOT-INF/lib·classes)    = 2927
+  jrt:/ (기본 CDS 에 없는 JDK 클래스)              = 637
+  file: (Spring Boot launcher 등)                  = 73
+  __JVM_LookupDefineClass__ (LambdaForm$MH 등)    = 152
+  __dynamic_proxy__                                = 42
+  source=호스트 클래스 이름 (lambda·TypeSwitch)    = 594 (그중 $$Lambda·$$TypeSwitch·/0x 이름 594)
+  합 = 5804
+  shared 가 아닌 줄 = 4425 = jar:nested 2927 + jrt 637 + file 73 + 실행 중 생성 788 (lookup 152 + proxy 42 + 호스트명 594)
+
+## (2) e13-b E1 펼친 배치 + 캐시 (classload-e13-E1.log, 데코레이션 없음 — 클래스 이름이 첫 칸)
+total=5802 shared=5604
+  shared 중 JDK 클래스(java·javax·jdk·sun·com.sun, hidden 제외) = 1922  (e3 기본 CDS 의 JDK 클래스 1,379 와 대조)
+  shared 중 hidden class($$Lambda·$$TypeSwitch·LambdaForm$·/0x) = 817
+  shared 중 그 밖(앱 클래스패스 등)                    = 2865

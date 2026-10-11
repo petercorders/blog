@@ -1,0 +1,219 @@
+# experiment: e25-jar-check-by-patch — jar 를 바꾼 뒤 캐시가 버려지는가, JDK 패치 버전별(JDK-8377932)
+# date: 2026-10-10 23:20:18 +0900
+# uptime: 23:20  up 15 days, 23:09, 8 users, load averages: 6.25 7.02 6.39
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks-aot/tem2502-arm/jdk-25.0.2+10/Contents/Home/bin/java):
+#   openjdk version "25.0.2" 2026-01-20 LTS
+#   OpenJDK Runtime Environment Temurin-25.0.2+10 (build 25.0.2+10-LTS)
+#   OpenJDK 64-Bit Server VM Temurin-25.0.2+10 (build 25.0.2+10-LTS, mixed mode, sharing)
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks-aot/tem2503-arm/jdk-25.0.3+9/Contents/Home/bin/java):
+#   openjdk version "25.0.3" 2026-04-21 LTS
+#   OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+#   OpenJDK 64-Bit Server VM Temurin-25.0.3+9 (build 25.0.3+9-LTS, mixed mode, sharing)
+# java -version (/private/tmp/claude-501/-Users-kibong-home/4381b381-89b9-4b5b-9b02-1560d5db0b05/scratchpad/jdks-aot/tem25041-arm/jdk-25.0.4.1+1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home/bin/java):
+#   openjdk version "25.0.4.1" 2026-08-18 LTS
+#   OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+#   OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# java -version (/Users/kibong_home/Library/Java/JavaVirtualMachines/openjdk-26.0.2.1/Contents/Home/bin/java):
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# pinned jar sha256: 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b (기대값 89abfdeba6c568ea8fdd6d34a69a238d7a2a602185e1d3131f607d6e81152b7b)
+# 조건마다 runs/work-r2/e25/<라벨>/ 에 고정 jar 를 새로 펼치고(-Djarmode=tools extract) onRefresh 로 캐시 c.aot 를 만든다
+## [T02] OpenJDK Runtime Environment Temurin-25.0.2+10 (build 25.0.2+10-LTS)
+  training+assembly exit=0 size=43515904
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5665 shared=0 nonshared=5665 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the shared archive file: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1480 shared=0 nonshared=1480 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the shared archive file: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [T03] OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+  training+assembly exit=0 size=43532288
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5665 shared=0 nonshared=5665 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the shared archive file: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1480 shared=0 nonshared=1480 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the shared archive file: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [T41] OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+  training+assembly exit=0 size=43548672
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5667 shared=0 nonshared=5667 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1480 shared=0 nonshared=1480 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [J25] OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+  training+assembly exit=0 size=43548672
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5667 shared=0 nonshared=5667 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1480 shared=0 nonshared=1480 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [J26] OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+  training+assembly exit=0 size=45072384
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5712 shared=0 nonshared=5712 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1577 shared=0 nonshared=1577 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [hello T02] OpenJDK Runtime Environment Temurin-25.0.2+10 (build 25.0.2+10-LTS)
+  -cp HelloWorld.jar(mtime 2026-01-01 00:00:00), training+assembly exit=0 size=10174464
+  (0) 그대로      on exit=0 · validation: Archived boot classpath validation: passed 
+  touch 뒤 mtime 2026-10-10 23:20:40
+  (1) jar touch   on exit=0 · auto exit=0 HelloWorld source: shared objects file · validation: Archived boot classpath validation: passed 
+## [hello T03] OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+  -cp HelloWorld.jar(mtime 2026-01-01 00:00:00), training+assembly exit=0 size=10174464
+  (0) 그대로      on exit=0 · validation: Archived boot classpath validation: passed 
+  touch 뒤 mtime 2026-10-10 23:20:41
+  (1) jar touch   on exit=0 · auto exit=0 HelloWorld source: shared objects file · validation: Archived boot classpath validation: passed 
+## [hello T41] OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+  -cp HelloWorld.jar(mtime 2026-01-01 00:00:00), training+assembly exit=0 size=10190848
+  (0) 그대로      on exit=0 · validation: Archived boot classpath validation: passed Archived app classpath validation: passed 
+  touch 뒤 mtime 2026-10-10 23:20:42
+  (1) jar touch   on exit=1 · auto exit=0 HelloWorld source: file:/private/tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/e25/hello-T41/HelloWorld.jar · validation: Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'HelloWorld.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [hello J25] OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+  -cp HelloWorld.jar(mtime 2026-01-01 00:00:00), training+assembly exit=0 size=10190848
+  (0) 그대로      on exit=0 · validation: Archived boot classpath validation: passed Archived app classpath validation: passed 
+  touch 뒤 mtime 2026-10-10 23:20:42
+  (1) jar touch   on exit=1 · auto exit=0 HelloWorld source: file:/private/tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/e25/hello-J25/HelloWorld.jar · validation: Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'HelloWorld.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [hello J26] OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+  -cp HelloWorld.jar(mtime 2026-01-01 00:00:00), training+assembly exit=0 size=10354688
+  (0) 그대로      on exit=0 · validation: Archived boot classpath validation: passed Archived app classpath validation: passed 
+  touch 뒤 mtime 2026-10-10 23:20:43
+  (1) jar touch   on exit=1 · auto exit=0 HelloWorld source: file:/private/tmp/gradle-aot/src/main/kotlin/com/petercoders/blog/aot/runs/work-r2/e25/hello-J26/HelloWorld.jar · validation: Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'HelloWorld.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [why T03] OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+  record exit=0 · create exit=0 · create 중 class+load class+load total=5605 shared=4902 nonshared=703
+  create 중 app classpath(file:/jar:)에서 평소대로 load 된 클래스 1개:
+    org.springframework.boot.logging.log4j2.Log4J2LoggingSystem source: spring-boot-4.1.1.jar
+## [whyq T03] OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+  record·create 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  record exit=0 · create exit=0 · create 중 class+load class+load total=5600 shared=4898 nonshared=702
+  create 중 app classpath(file:/jar:)에서 평소대로 load 된 클래스 0개:
+## [why T41] OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+  record exit=0 · create exit=0 · create 중 class+load class+load total=5605 shared=4902 nonshared=703
+  create 중 app classpath(file:/jar:)에서 평소대로 load 된 클래스 1개:
+    org.springframework.boot.logging.log4j2.Log4J2LoggingSystem source: spring-boot-4.1.1.jar
+## [whyq T41] OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+  record·create 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  record exit=0 · create exit=0 · create 중 class+load class+load total=5600 shared=4898 nonshared=702
+  create 중 app classpath(file:/jar:)에서 평소대로 load 된 클래스 0개:
+## [quiet-T02] OpenJDK Runtime Environment Temurin-25.0.2+10 (build 25.0.2+10-LTS)
+  training·운영 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  training+assembly exit=0 size=43466752
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5799 shared=5600 nonshared=199 · on exit=0 · Archived boot classpath validation: passed 
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=0 class+load total=5799 shared=5600 nonshared=199 · StringUtils source: shared objects file · Started: 1
+      on exit=0 · Archived boot classpath validation: passed 
+## [quiet-T03] OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+  training·운영 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  training+assembly exit=0 size=43483136
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5799 shared=5600 nonshared=199 · on exit=0 · Archived boot classpath validation: passed 
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=0 class+load total=5799 shared=5600 nonshared=199 · StringUtils source: shared objects file · Started: 1
+      on exit=0 · Archived boot classpath validation: passed 
+## [quiet-T41] OpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)
+  training·운영 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  training+assembly exit=0 size=43483136
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5661 shared=0 nonshared=5661 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1480 shared=0 nonshared=1480 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [quiet-J25] OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS)
+  training·운영 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  training+assembly exit=0 size=43499520
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5661 shared=0 nonshared=5661 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1480 shared=0 nonshared=1480 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+## [quiet-J26] OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+  training·운영 모두 -Dorg.springframework.boot.logging.LoggingSystem=org.springframework.boot.logging.logback.LogbackLoggingSystem
+  training+assembly exit=0 size=45088768
+  (0) 그대로       on exit=0 · Archived boot classpath validation: passed Archived app classpath validation: passed 
+  (1) 앱 jar touch  auto exit=0 class+load total=5712 shared=0 nonshared=5712 · on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/blog-0.0.1-SNAPSHOT.jar', timestamp has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+  (1') mtime 되돌림 on exit=0
+  (2) StringUtils.class 삭제(spring-core 2035755 → 2024945 B)
+      캐시 없이 exit=1 NoClassDefFoundError: org/springframework/util/StringUtils
+      auto exit=1 class+load total=1577 shared=0 nonshared=1577 · StringUtils source:  · Started: 0
+      on exit=1 · Archived boot classpath validation: passed Archived app classpath validation: failed 
+    [warning][aot] This file is not the one used while building the AOT cache: 'application/lib/spring-core-7.0.9.jar', timestamp has changed, size has changed
+    [error  ][aot] shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)
+    [error  ][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+# end: 2026-10-10 23:21:10 +0900 uptime: 23:21  up 15 days, 23:10, 8 users, load averages: 6.66 6.94 6.39

@@ -1,7 +1,7 @@
 # JDK AOT Cache: Spring Boot에 켜기 전에 확인할 것
 
 블로그 글의 실험 코드와 실행 로그 전문이다. 본문에는 요지 명령과 결정적인 출력 몇 줄만 실려 있다.
-실험은 두 번에 나눠 돌렸다. 1차(e1~e12, 2026-09)는 `setup.sh`·`bench.sh`로, r2(e13~e22, 2026-10-08)는 아래 고정 기준 위에서 `r2-*.sh`·`eNN.sh`로 돌렸다.
+실험은 두 번에 나눠 돌렸다. 1차(e1~e12, 2026-09)는 `setup.sh`·`bench.sh`로, r2(e13~e22, 2026-10-08)는 아래 고정 기준 위에서 `r2-*.sh`·`eNN.sh`로 돌렸다. 2026-10-10 감사 라운드에서 e13-g(원본 재집계)와 e23(빌드 시간 재측정), e24(같은 배치끼리의 clinit 카운터), e25(JDK 패치별 jar 검사, JDK-8377932)를 더했다.
 
 ## 고정 기준
 
@@ -26,6 +26,7 @@
 | JDK 27 (e16·e19) | Temurin `27+35` — tarball(sha256 `a59626c9…`)을 풀어 절대경로로 실행 |
 | JDK 21 (e20) | Temurin `21.0.12.1+1-LTS` — tarball(sha256 `3623232f…`)을 풀어 절대경로로 실행 |
 | JDK 25 다른 빌드 (e17) | Temurin `25.0.4.1+1` arm64·x64(Rosetta 2), `25.0.3+9`, `25.0.2+10` arm64 |
+| JDK 패치별 (e25) | Temurin `25.0.2+10`·`25.0.3+9`·`25.0.4.1+1` arm64 tarball(`JDKS=<푼 폴더>`), Microsoft `25.0.4.1+1-LTS`, OpenJDK `26.0.2.1+1-7` |
 | 앱 | Spring Boot 4.1.1 + Kotlin 2.3.21, 진입점 `com.petercoders.blog.BlogApplicationKt` |
 | agent (e16) | `dd-java-agent` 1.67.0(Maven Central, sha1 `8da71687…`), 직접 만든 Java agent 둘, native agent 하나 |
 
@@ -44,6 +45,7 @@ r2는 다른 작업과 같은 기기에서 돌았고 load가 크게 흔들렸다
 | e19-b (15라운드) | 4.13 / 13.85 / 15.78 |
 | e20-b (15라운드) | 5.36 / 6.76 / 8.55 |
 | e16-rr (10라운드) | 5.79 / 6.51 / 7.46 |
+| e23 (20라운드) · e24 (5라운드) · e25 | 4.37~5.54(마지막 측정 9.75) · 13.60~13.96 · 6.25~6.66(시작·끝 기록) |
 
 ## 파일
 
@@ -61,6 +63,10 @@ r2는 다른 작업과 같은 기기에서 돌았고 load가 크게 흔들렸다
 | `e17-local.sh` | docker 대신 로컬로 확인한 것: 다른 벤더·패치·아키텍처의 JDK 25, 파일 복사와 mtime, 한 줄 방식 메모리 |
 | `e18.sh` · `e19.sh` · `e20.sh` · `e21.sh` · `e22.sh` | CDS+AOT 동시 지정 / JDK 27 / JDK 21 / dynamic Proxy / training 설정 |
 | `e13f.sh` | 새 실행 없이 e13-b 의 E1 원본 class+load 와 e21 의 JDK 25 training 출력을 읽어 캐시 밖 198줄을 분류한다 |
+| `e13g.sh` | 새 실행 없이 e3 의 fat jar class+load 와 e13-b 의 F0·E1 원본을 source 별로 다시 센다(기본 CDS 밖 JDK 클래스·hidden class) |
+| `e23.sh` | web 변형 앱에서 onRefresh 캐시를 3단계(record→create)와 한 줄(`AOTCacheOutput`)로 같은 라운드에 번갈아 만들며 빌드 시간을 잰다 |
+| `e24.sh` | F0/F1/E0/E1 을 같은 라운드에서 `-Xlog:perf+class+link`로 띄워 clinit·link methods 이벤트 수를 같은 배치끼리 대조한다(e3·e7 은 배치가 달랐다) |
+| `e25.sh` | JDK 패치별로 jar 를 바꾼 뒤 캐시가 버려지는가(JDK-8377932). `one`(앱 jar touch·spring-core 클래스 삭제), `quiet`(같은 조건 + logging system 을 Logback 으로 고정), `hello`(JBS 의 HelloWorld 재현), `why`·`whyq`(3단계 create 중 앱 클래스패스에서 평소대로 load 된 클래스) |
 | `rr_summary.py` | 라운드로빈 로그 요약(비율 중앙값·승패) |
 | `variants/` | 변형 앱 overlay(`*.kt.txt`, 메인 빌드에 섞이지 않도록 확장자를 바꿔 둔다)와 `build-variant.sh` |
 | `runs/` | 아래 표의 로그 전문 |
@@ -76,8 +82,8 @@ r2는 다른 작업과 같은 기기에서 돌았고 load가 크게 흔들렸다
 | e3 | `runs/e3-classload-perf.log` | `class+load` 5,804줄의 출처(기본 CDS 1,379 / `jar:nested` 2,927), 그 중 `run()` 시작(uptime 약 0.170 s) 전 2,047줄 | 도입 · 그 한 줄이 실제로 바꾸는 것 · 켠 다음 운영에서 보는 것 · 검증 메모 |
 | e4 | `runs/e4-aot-fatjar.log` | fat jar + 캐시 — unregistered 3,019(aot-linked 0), boot 2,133·platform 6·app 101 aot-linked | ① fat jar 그대로는 앱 클래스가 link되지 않는다 · 검증 메모 |
 | e5 | `runs/e5-aot-extracted.log` | 펼친 배치 ± 캐시(482 → 249 ms, e2·e4 와 서로 다른 5회 배치), 캐시 적용 class+load shared 5,691/5,806(98%) | 캐시는 클래스 준비만 대신한다 · 펼쳐도 캐시 밖에 남는 클래스는 확인만 하면 된다 · 켠 다음 운영에서 보는 것 · 도입 체크리스트 · 검증 메모 |
-| e6 | `runs/e6-aotmap.log` | `-Xlog:aot+map=trace` 덤프의 영역·항목 집계 | 펼쳐도 캐시 밖에 남는 클래스는 확인만 하면 된다 · 검증 메모 |
-| e7 | `runs/e7-perf-with-cache-raw.log` | 캐시 적용 시 `clinit`·`link methods` 카운터 | 검증 메모 |
+| e6 | `runs/e6-aotmap.log` | `-Xlog:aot+map=trace` 덤프의 영역·항목 집계(Heap 영역 45,017 객체, inited 884 중 hidden 733) | 캐시는 클래스 준비만 대신한다 · 펼쳐도 캐시 밖에 남는 클래스는 확인만 하면 된다 · 검증 메모 |
+| e7 | `runs/e7-perf-with-cache-raw.log` | 캐시 적용 시 `clinit`·`link methods` 카운터(clinit 3,702). 명령줄이 남지 않았고 Started 0.166 s 로 보아 펼친 배치 + 1차 캐시다. e3(fat jar 무캐시 4,615)와는 배치가 달라 본문은 같은 배치 대조인 e24 를 쓴다 | 검증 메모 |
 | e8 | `runs/e8-replay-training.log` | `AOTReplayTraining` on/off — 컴파일 수·tier 4·벽시계 | ② training run이 캐시에 담길 범위를 정한다 |
 | e9 | `runs/work/single-step.log` | `-XX:AOTCacheOutput` 한 줄 방식의 자식 실행(136행 `Picked up JAVA_TOOL_OPTIONS`) | 그 한 줄이 실제로 바꾸는 것 |
 | e10 | `runs/e10-invalidation.log` | 무효화 4조건 × `auto`/`on`, 유효 vs 무효 기동 시간 | ③ 캐시는 조용히 버려진다 · 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 · 켠 다음 운영에서 보는 것 · 검증 메모 |
@@ -103,8 +109,8 @@ e10b 1차 시도의 `size: 16441 -> 16442 … AOTMode=auto exit=1 stderr_lines=1
 | e13-d | `runs/e13-d-gate.log` | 빌드 게이트 명령(`AOTMode=on` + onRefresh)을 유효·깨진 캐시에 | ③ 캐시는 조용히 버려진다 · 이미지 빌드 끝에서 AOTMode=on으로 한 번 띄운다 · 켠 다음 운영에서 보는 것 |
 | e13-e | `runs/e13-e-samesize-lib.log` | 크기·mtime 이 같은 lib jar 에서 클래스를 지웠을 때 | 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 |
 | e13-f | `runs/e13-f-nonshared-198.log` | E1(펼침+onRefresh 캐시) class+load 중 캐시 밖 198줄 전부의 분류와 전문(새 실행 없음, e13-b 원본 class+load 와 e21 JDK 25 training 출력 재집계) | 펼쳐도 캐시 밖에 남는 클래스는 확인만 하면 된다 · CRaC와 native-image는 다시 만드는 조건으로 고른다 · 검증 메모 |
-| e14 | `runs/e14-measure.log`, `runs/e14-diag.log`, `runs/e14-replay.log` | web 변형 앱: 캐시 없음 / onRefresh / 요청 1,000회 training 의 기동·첫 요청, 첫 요청 중 새 class+load, profile 재생 대조 | 도입 · ② training run이 캐시에 담길 범위를 정한다 · 연결과 스레드 풀 웜업은 남는다 · 도입 체크리스트 · 검증 메모 |
-| e14 | `runs/e14-train.log`, `runs/e14-gate.log` | 캐시 만들기: training 을 onRefresh·`jcmd AOT.end_recording`·MXBean·SIGTERM 으로 끝내기, training·assembly 시간, 캐시마다 `on` 게이트 | ② training run이 캐시에 담길 범위를 정한다 · training을 끝내는 방법은 넷이다 · 캐시는 jar와 같은 이미지 단계에서 만든다 · CRaC와 native-image는 다시 만드는 조건으로 고른다 |
+| e14 | `runs/e14-measure.log`, `runs/e14-diag.log`, `runs/e14-replay.log` | web 변형 앱: 캐시 없음 / onRefresh / 요청 1,000회 training 의 기동·첫 요청, 첫 요청 중 새 class+load, profile 재생 대조 | 도입 · ② training run이 캐시에 담길 범위를 정한다 · 연결과 스레드 풀 웜업은 남는다 · CRaC와 native-image는 다시 만드는 조건으로 고른다 · 도입 체크리스트 · 검증 메모 |
+| e14 | `runs/e14-train.log`, `runs/e14-gate.log` | 캐시 만들기: training 을 onRefresh·`jcmd AOT.end_recording`·MXBean·SIGTERM 으로 끝내기, training·assembly 시간(부하 아래 1회, 본문은 e23 으로 대체), 캐시마다 `on` 게이트 | JDK 버전마다 그 한 줄이 다르다 · ② training run이 캐시에 담길 범위를 정한다 · training을 끝내는 방법은 넷이다 |
 | e15 | `runs/e15-option-mismatch-jdk25.log`, `runs/e15-option-mismatch-jdk26.log`, `runs/e15-option-mismatch-jdk25-extra.log`, `runs/e15-option-mismatch-jdk26-extra.log` | GC·Heap·헤더 플래그 불일치 격자, ZGC 로 training 한 캐시 | JDK 버전마다 그 한 줄이 다르다 · 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 · GC 종류가 아니라 CompressedOops 상태를 맞춘다 · 켠 다음 운영에서 보는 것 |
 | e16 | `runs/e16-build.log`, `runs/e16-agent-jdk25.log`, `runs/e16-agent-jdk26.log`, `runs/e16-agent-jdk27.log`, `runs/e16-native-cflh.log`, `runs/e16-rr-jdk25.log` | agent 조합 A·B·C·D × JDK 25·26·27 | 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 · agent 구성은 training과 운영에서 같이 정한다 · 이미지 빌드 끝에서 AOTMode=on으로 한 번 띄운다 · 켠 다음 운영에서 보는 것 |
 | e17-A | `runs/e17-A-copy-mtime.log` | 펼친 앱 폴더를 `cp -R`·`rsync -r` / `cp -Rp`·`rsync -a`로 복사했을 때 jar mtime 과 `on` exit | 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 · 캐시는 jar와 같은 이미지 단계에서 만든다 |
@@ -121,6 +127,10 @@ e10b 1차 시도의 `size: 16441 -> 16442 … AOTMode=auto exit=1 stderr_lines=1
 | e20 | `runs/e20-a0-jdk21-pinnedjar-fails.log`, `runs/e20-a-jdk21-cds.log`, `runs/e20-b-jdk21-roundrobin.log` | JDK 21 동적 CDS(고정 jar 는 class file 69 라 Java 21 빌드 변형을 썼다) | JDK 버전마다 그 한 줄이 다르다 · JDK 21에 머문다면 펼친 배치와 동적 CDS까지다 |
 | e21 | `runs/e21-jdk26-proxy.log` | dynamic Proxy 가 캐시에 실리는가(JDK 26, 대조 25) | 펼쳐도 캐시 밖에 남는 클래스는 확인만 하면 된다 · 검증 메모 |
 | e22 | `runs/e22-training-config.log` | Kotlin non-null `@ConfigurationProperties` 와 training run(#36102) | 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 · training run은 빌드 환경에서도 운영과 같은 조건으로 돌린다 |
+| e13-g | `runs/e13-g-source-breakdown.log` | (2026-10-10, 새 실행 없음) e3 class+load 5,804줄 = 기본 CDS 1,379 + `jar:nested` 2,927 + `jrt:/` 637(기본 CDS 밖 JDK 클래스) + `file:` launcher 73 + 실행 중 생성 788(`__JVM_LookupDefineClass__` 152, `__dynamic_proxy__` 42, lambda·TypeSwitch 594). E1 캐시에서 온 5,604줄 = JDK 1,922 + hidden 817 + 그 밖 2,865 | 도입 · 그 한 줄이 실제로 바꾸는 것 · 검증 메모 |
+| e23 | `runs/e23-build-time.log` | (2026-10-10) web 변형 앱 onRefresh 캐시 빌드 시간, 같은 라운드 20회 번갈아: 3단계 training 1,347 + assembly 693 = 2,043 ms, 한 줄 2,069 ms(중앙값), 한 줄/3단계 1.013, 한 줄이 짧은 라운드 9/20. e14-train 의 (a)·(a1) 차이는 부하 때문이었다 | 캐시는 jar와 같은 이미지 단계에서 만든다 · CRaC와 native-image는 다시 만드는 조건으로 고른다 |
+| e24 | `runs/e24-clinit-same-layout.log` | (2026-10-10) clinit 이벤트 수를 같은 배치끼리: 펼친 배치 E0 4,491 → E1(e13 의 onRefresh 캐시) 3,730(0.831배), fat jar F0 4,615 → F1 4,378. 5라운드 모두 같은 값, 게이트 통과 캐시 | 캐시는 클래스 준비만 대신한다 · 검증 메모 |
+| e25 | `runs/e25-jar-check-by-patch.log` | (2026-10-10) 패치별 jar 검사. 이 앱(펼친 배치, onRefresh 캐시)은 Temurin 25.0.2·25.0.3·25.0.4.1, Microsoft 25.0.4.1, OpenJDK 26.0.2.1 모두 앱 jar touch 에 `on` exit 1. JBS 의 HelloWorld(`-cp`) 재현은 25.0.2·25.0.3 에서 touch 뒤에도 `on` exit 0 이고 'Archived app classpath validation' 줄이 없다(25.0.4.1·26.0.2.1 은 exit 1). create 중 앱 클래스패스에서 평소대로 load 된 클래스는 `Log4J2LoggingSystem` 1개, logging system 을 Logback 으로 고정하면 0개. 그 상태(quiet)에서 25.0.2·25.0.3 은 touch 뒤 `on` exit 0·shared 5,600/5,799, `StringUtils.class`를 지운 spring-core(2,035,755 → 2,024,945 B)도 `on` exit 0 이고 `StringUtils`가 캐시에서 올라온다(캐시 없이는 `NoClassDefFoundError`). 25.0.4.1·26.0.2.1 은 모두 거부 | JDK 버전마다 그 한 줄이 다르다 · 배포에서 캐시를 깨는 변경과 검사를 지나치는 변경 · 25.0.4와 26.0.2 아래 패치는 앱 jar 검사를 건너뛸 수 있다 · 이미지 빌드 끝에서 AOTMode=on으로 한 번 띄운다 · 켠 다음 운영에서 보는 것 · 도입 체크리스트 · 검증 메모 |
 | ref | `runs/ref-kakao-tps-slide.log` | if(kakao)2024 TPS 2145 vs 1607 이 어느 구간 값인지(원본 PDF) | CRaC와 native-image는 다시 만드는 조건으로 고른다 · 검증 메모 |
 
 ## r2 결과 요약
@@ -131,7 +141,9 @@ e10b 1차 시도의 `size: 16441 -> 16442 … AOTMode=auto exit=1 stderr_lines=1
 
 **③ 무효화 (e13-d·e)**: 깨진 캐시에 빌드 게이트 명령을 돌리면 stdout 에 `[error  ][aot] unrecoverable error`(앞서 warning 이 찍혀 레벨 칸이 공백으로 채워진다), `Error occurred during initialization of VM`, `Unable to use AOT cache.`가 찍히고 exit 1, stderr 0줄이다. 크기·mtime 을 맞춘 `spring-core-7.0.9.jar`에서 `StringUtils.class`를 지우면 캐시 있는 기동은 `AOTMode=on`까지 exit 0 이고 `StringUtils`를 `shared objects file`에서 올린다. 캐시 없이 띄우면 `NoClassDefFoundError`로 exit 1 이다.
 
-**② training 범위 (e14, web 변형 앱, 15라운드, 캐시 없음 N 대비 비율 중앙값)**: onRefresh 캐시 A 는 기동 Started 0.414, 첫 200 까지 0.505 이지만 첫 요청 지연은 0.930(A<N 9/15). 요청 1,000회 + `jcmd AOT.end_recording` 캐시 B 는 첫 요청 0.334, 첫 200 까지 0.445(B<A 첫 요청 15/15). 첫 요청 동안 새로 load 되는 클래스는 N 730(shared 아님 718), A 676(전부 shared 아님), B 21. B 는 첫 요청 전에 이미 9,082개를 올려 둔다(N 8,059). B 에서 profile 재생만 끈 대조(`-XX:-AOTReplayTraining`)는 첫 요청 비율 0.970(6/10)으로 차이가 없다. 캐시 크기는 A 62,783,488 B, B 70,221,824 B. training·assembly 시간(부하 큰 상태): A record 6,752 ms + create 2,378 ms, B create 3,093 ms.
+**③ 패치별 jar 검사 (e25, JDK-8377932)**: 25.0.0~25.0.3·26.0.0~26.0.1 은 앱 클래스패스 검사를 `need_to_check_app_classpath()`가 참일 때만 하는데, assembly(`AOTMode=create`)가 `_max_used_index`를 갱신하지 않아 create 중 앱 jar 에서 평소대로 load 된 클래스가 없으면 검사가 통째로 빠진다(수정 b41ba3a4, backport 25.0.4·26.0.2). 이 앱은 `Log4J2LoggingSystem`(training 에서 verification 실패로 빠진 클래스) 하나가 create 중 spring-boot jar 에서 load 돼 우연히 검사가 켜졌다. `-Dorg.springframework.boot.logging.LoggingSystem=…LogbackLoggingSystem` 으로 그 load 를 없애면 25.0.2·25.0.3 에서 touch 한 jar 도, 크기가 바뀐 spring-core 도 `on` exit 0 으로 통과한다. HelloWorld jar 는 만든 직후 mtime 을 과거로 고정한다(`st_mtime` 은 초 단위라 1초 안의 touch 는 mtime 이 같다).
+
+**② training 범위 (e14, web 변형 앱, 15라운드, 캐시 없음 N 대비 비율 중앙값)**: onRefresh 캐시 A 는 기동 Started 0.414, 첫 200 까지 0.505 이지만 첫 요청 지연은 0.930(A<N 9/15). 요청 1,000회 + `jcmd AOT.end_recording` 캐시 B 는 첫 요청 0.334, 첫 200 까지 0.445(B<A 첫 요청 15/15). 첫 요청 동안 새로 load 되는 클래스는 N 730(shared 아님 718), A 676(전부 shared 아님), B 21. B 는 첫 요청 전에 이미 9,082개를 올려 둔다(N 8,059). B 에서 profile 재생만 끈 대조(`-XX:-AOTReplayTraining`)는 첫 요청 비율 0.970(6/10)으로 차이가 없다. 캐시 크기는 A 62,783,488 B, B 70,221,824 B. training·assembly 시간(부하 큰 상태, 한 번씩): A record 6,752 ms + create 2,378 ms, 한 줄 4,751 ms, B create 3,093 ms. 이 A 값은 e23 의 같은 라운드 재측정(3단계 2,043 ms, 한 줄 2,069 ms, load 4.4~5.5)으로 대체한다.
 
 **training 을 끝내는 방법 (e14-train)**: 한 줄 방식(`AOTCacheOutput`) 실행 중 `jcmd <pid> AOT.end_recording`을 부르면 그 자리에서 자식 assembly 가 뜨고 캐시가 만들어진다. `HotSpotAOTCacheMXBean.endRecording()`도 같다(`{"mode":"record","wasRecording":true,"ended":true}`). record 후 SIGTERM 만으로 끝내도 configuration 이 남는다. `jcmd <pid> AOT.end_training`은 `Unknown diagnostic command`다. 바이너리로 보면 `AOT.end_recording`은 Temurin 25.0.3 에 있고 25.0.2 에 없다. `HotSpotAOTCacheMXBean`은 25.0.4.1 에 있고 25.0.3 에 없다(e17-B2).
 
@@ -153,6 +165,7 @@ e10b 1차 시도의 `size: 16441 -> 16442 … AOTMode=auto exit=1 stderr_lines=1
 - **e15 컨테이너 한도**: docker 대신 `-XX:ActiveProcessorCount=1 -XX:MaxRAM=512m`로 ergonomics 를 흉내 냈다(Serial 이 골라진다). JDK 26 은 `MaxRAM` deprecated 경고를 stderr 에 1줄 찍는다.
 - **e22 (c)**: `spring-boot-starter-data-jpa` 4.1.1 이 offline Gradle 캐시에 없어(3.0.4 만 있다) 이른 DB 접속 재현은 하지 않았다.
 - **e14 의 연결 웜업·Tomcat 스레드 풀**: 이 변형 앱에는 외부 연결이 없다.
+- **e25 의 JDK 26.0.0·26.0.1**: 로컬 바이너리가 없어 재지 않았다. 26 쪽 범위는 JBS backport(JDK-8379281, 26.0.2)로만 안다.
 
 ## 재현 명령
 
@@ -169,6 +182,12 @@ for s in B B2 F A C; do bash e17-local.sh $s; done
 bash e18.sh; for s in a b c d e; do bash e19.sh $s; done
 JDK_PATHS=<JDK 21 home> bash variants/build-variant.sh e20-jdk21 build; bash e20.sh prep; bash e20.sh a; bash e20.sh b
 bash e21.sh; bash e13f.sh > runs/e13-f-nonshared-198.log   # e13-b 원본 class+load 와 e21 training 출력을 읽는다
+bash e13g.sh > runs/e13-g-source-breakdown.log            # e3·e13-b 원본 class+load 의 source 별 내역
+L=runs/e23-build-time.log; bash e23.sh header > $L; for i in $(seq 1 20); do bash e23.sh round $i >> $L; done; bash e23.sh summary $L >> $L
+L=runs/e24-clinit-same-layout.log; bash e24.sh run 5 > $L; bash e24.sh summary $L >> $L
+export JDKS=<Temurin 25.0.2·25.0.3·25.0.4.1 을 푼 폴더>; L=runs/e25-jar-check-by-patch.log; bash e25.sh header > $L
+for j in T02 T03 T41 J25 J26; do bash e25.sh one $j >> $L; done; for j in T02 T03 T41 J25 J26; do bash e25.sh hello $j >> $L; done
+for j in T03 T41; do bash e25.sh why $j >> $L; bash e25.sh whyq $j >> $L; done; for j in T02 T03 T41 J25 J26; do bash e25.sh quiet $j >> $L; done
 bash variants/build-variant.sh e22-props prepare && bash variants/build-variant.sh e22-props build && bash variants/build-variant.sh e22-props extract && bash e22.sh prep && bash e22.sh run
 ```
 
