@@ -123,6 +123,7 @@ fun main(args: Array<String>) {
         when (section) {
             "S1" -> runS1(ctx)
             "S2" -> runS2(ctx)
+            "S2f" -> runS2f()
             "S3" -> runS3(ctx)
             "S4" -> runS4(ctx)
             "S4b" -> runS4b()

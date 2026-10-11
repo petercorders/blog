@@ -1,0 +1,18 @@
+# experiment: [S2f] SecureProbe.finalNoField — 클래스는 열려 있고 메서드만 final, 본문은 주입 필드(jdbc)를 읽지 않고 정적 카운터만 올린다. admin/user 로 불러 예외 클래스와 카운터 증가분으로 판정. 컨텍스트는 CglibAopProxy 로거 INFO(Boot 기본 레벨)로 새로 띄운다
+# java -version (Gradle 툴체인 25 = JavaExec 실행 JVM): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 셸 기본 /usr/bin/java 는 26.0.2.1 이지만 secLab 은 툴체인 JVM 으로 돈다(아래 # runtime 줄이 실행 JVM 의 java.runtime.version).
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q secLab --args='S2f'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-10 14:48 KST)
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S2f] final 메서드가 주입 필드를 읽지 않으면 — ROLE_USER 로 불러도 본문이 도나
+2026-10-10T14:48:59.130+09:00  WARN 4576 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final void com.petercoders.blog.sec.SecureProbe.finalSecured(java.lang.String)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-10-10T14:48:59.131+09:00  WARN 4576 --- [blog] [           main] o.s.aop.framework.CglibAopProxy          : Public final method [public final void com.petercoders.blog.sec.SecureProbe.finalNoField(java.lang.String)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+bean class = com.petercoders.blog.sec.SecureProbe$$SpringCGLIB$$0, isCglibProxy = true
+SecureProbe.finalNoField is final = true
+| case | auth | thrown | counter delta | body ran on |
+|---|---|---|---|---|
+| final, no injected field | admin | - | 1 | com.petercoders.blog.sec.SecureProbe$$SpringCGLIB$$0 |
+| final, no injected field | user | - | 1 | com.petercoders.blog.sec.SecureProbe$$SpringCGLIB$$0 |
+| external → proxy secured() | user | org.springframework.security.authorization.AuthorizationDeniedException | - | - |
+| final, reads jdbc (finalSecured) | user | java.lang.NullPointerException | - | - |
+# exit=0

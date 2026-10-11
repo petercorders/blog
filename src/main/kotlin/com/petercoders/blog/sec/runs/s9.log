@@ -13,3 +13,15 @@ bean class = com.petercoders.blog.secx.s9.S9Target$$SpringCGLIB$$0
 byId("alice") -> threw org.springframework.security.authorization.AuthorizationDeniedException
 byIdWithP("alice") -> returned body-ran
 # exit=0
+# --- 2026-10-10 14:21 KST 재실행: 본문 bash 블록에 넣은 javac 한 줄로 다시 컴파일해 같은 러너 명령으로 돌린 결과(rsync 사본 /tmp/gradle-sec)
+# compile: javac --release 25 -d build/s9classes -cp "$(find ~/.gradle/caches -name spring-security-core-7.1.1.jar | head -1)" src/main/kotlin/com/petercoders/blog/sec/s9src/com/petercoders/blog/secx/s9/S9Target.java   (셸 javac 26.0.2.1, -parameters 없음)
+# javap -v: MethodParameters 줄 수 = 0, major version: 69
+# command: ./gradlew --offline -q secLab --args='S9 build/s9classes'
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.vendor=Microsoft
+## [S9] -parameters 없이 javac 로 컴파일한 Java 클래스 — alice(ROLE_USER) 로 id="alice" 호출
+S9Target loaded by URLClassLoader from file:/private/tmp/gradle-sec/build/s9classes/
+reflection: byId parameter[0].isNamePresent=false name=arg0
+reflection: byIdWithP parameter[0].isNamePresent=false name=arg0
+bean class = com.petercoders.blog.secx.s9.S9Target$$SpringCGLIB$$0
+byId("alice") -> threw org.springframework.security.authorization.AuthorizationDeniedException
+byIdWithP("alice") -> returned body-ran

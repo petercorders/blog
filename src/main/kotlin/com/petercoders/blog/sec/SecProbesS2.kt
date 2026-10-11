@@ -75,6 +75,57 @@ open class SecureProbe(private val jdbc: JdbcTemplate) {
     final fun finalSecured(tag: String) {
         jdbc.update("insert into sec_log(tag, note) values (?, 'body-ran')", tag)
     }
+
+    /**
+     * [S2f] finalSecured 와 같되 주입 필드(jdbc)를 읽지 않는다. 본문이 돌았는지는 정적 카운터로,
+     * 어느 인스턴스에서 돌았는지는 this.javaClass(Object.getClass, 필드 아님)로 남긴다.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    final fun finalNoField(tag: String) {
+        finalNoFieldRuns.incrementAndGet()
+        finalNoFieldLastThis = this.javaClass.name
+    }
+
+    companion object {
+        val finalNoFieldRuns = java.util.concurrent.atomic.AtomicInteger()
+        @Volatile
+        var finalNoFieldLastThis: String = "-"
+    }
+}
+
+/**
+ * [S2f] 클래스는 열려 있고 메서드만 final 인데 주입 필드를 읽지 않는 경우.
+ * 컨텍스트 하나를 CglibAopProxy 로거 INFO(Boot 기본 레벨)로 새로 띄운다 — 7.0.9 CglibAopProxy 는
+ * INFO 가 켜져 있을 때만 클래스를 검사해 public final 메서드마다 WARN 을 남긴다(이 러너 기본은 root=WARN 이라 S2 에서는 안 찍혔다).
+ * 판정은 예외 클래스와 카운터 증가분으로만 한다. WARN 줄은 로그에 그대로 남는 관찰값이다.
+ */
+fun runS2f() {
+    println("## [S2f] final 메서드가 주입 필드를 읽지 않으면 — ROLE_USER 로 불러도 본문이 도나")
+    val ctx = bootSec("secs2f", "", "logging.level.org.springframework.aop.framework.CglibAopProxy=INFO")
+    try {
+        val p = ctx.getBean(SecureProbe::class.java)
+        println("bean class = ${p.javaClass.name}, isCglibProxy = ${org.springframework.aop.support.AopUtils.isCglibProxy(p)}")
+        val finalMod = java.lang.reflect.Modifier.isFinal(
+            SecureProbe::class.java.getMethod("finalNoField", String::class.java).modifiers)
+        println("SecureProbe.finalNoField is final = $finalMod")
+        println("| case | auth | thrown | counter delta | body ran on |")
+        println("|---|---|---|---|---|")
+        for (role in listOf("admin", "user")) {
+            authS2As(role)
+            val before = SecureProbe.finalNoFieldRuns.get()
+            SecureProbe.finalNoFieldLastThis = "-"
+            val thrown = thrownOf { p.finalNoField("$role-final-no-field") }
+            val delta = SecureProbe.finalNoFieldRuns.get() - before
+            println("| final, no injected field | $role | $thrown | $delta | ${SecureProbe.finalNoFieldLastThis} |")
+        }
+        // 대조: 같은 컨텍스트에서 검사 자체는 켜져 있다(외부 → Proxy 는 user 거부).
+        authS2As("user")
+        println("| external → proxy secured() | user | ${thrownOf { p.secured("user-s2f-external") }} | - | - |")
+        authS2As("user")
+        println("| final, reads jdbc (finalSecured) | user | ${thrownOf { p.finalSecured("user-s2f-final") }} | - | - |")
+    } finally {
+        ctx.close()
+    }
 }
 
 private fun authS2As(role: String) {

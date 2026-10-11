@@ -1,0 +1,35 @@
+# experiment: [S17] #15254 가 닫힌 뒤 올라온 Boot 4.0.0-RC2 재현 샘플(github.com/rbetjes/spring-security-issue-15254-demo)의 설정(anonymous 끔, /test authenticated, 나머지 denyAll, ResponseEntityExceptionHandler 상속 advice, @PreAuthorize("hasRole('ROLE_ADMIN')") 컨트롤러)을 Boot 4.1.1 로 옮겨 같은 GET 을 (a) RestTestClient.bindToApplicationContext(샘플 테스트와 같은 방식, MockMvc 에 Security Filter 없음) (b) MockMvc + springSecurity() (c) 실제 서버(RANDOM_PORT)로 보낸다. 판정은 상태 코드와 500 본문의 예외 클래스
+# java -version (Gradle Test 태스크도 툴체인 25): openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && SEC_S17=1 ./gradlew --offline test --rerun --tests 'com.petercoders.blog.sec.SecS17Test'   (실행은 rsync 사본 /tmp/gradle-sec 에서, 2026-10-10 14:14 KST)
+# (SEC_S17 이 없으면 7개 모두 skipped: 같은 명령을 SEC_S17 없이 돌린 결과 tests=7 skipped=7 failures=0)
+# 소스 근거(spring-test 7.0.9): RestTestClient.bindToApplicationContext 는 MockMvcBuilders.webAppContextSetup(context) 만 부르고 Filter 를 붙이지 않는다(DefaultRestTestClientBuilder). MockMvcClientHttpRequestFactory.executeInternal() 은 mockMvc.perform() 이 던진 예외를 catch (Exception ex) 로 잡아 ex.toString() 본문의 500 응답으로 바꾼다.
+# 아래는 build/test-results/test/TEST-com.petercoders.blog.sec.SecS17Test.xml 의 요약(테스트 이름·결과)과 system-out 의 [S17] 줄, Gradle 출력 끝 줄이다.
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft
+testsuite com.petercoders.blog.sec.SecS17Test: tests=7 failures=0 errors=0 skipped=0
+  PASSED  a1 Filter 없는 MockMvc, 인증 없음()
+  PASSED  a2 Filter 없는 MockMvc, USER()
+  PASSED  a3 Filter 없는 MockMvc, ADMIN()
+  PASSED  b1 springSecurity MockMvc, 인증 없음()
+  PASSED  b2 springSecurity MockMvc, USER()
+  PASSED  b3 springSecurity MockMvc, ADMIN()
+  PASSED  c1 실제 서버, 인증 없음()
+[S17] (a) bindToApplicationContext, 인증 없음 -> status=500 body='jakarta.servlet.ServletException: Request processing failed: org.springframework.security.authentication.AuthenticationCredentialsNotFoundException: An Authentication object was not found in the SecurityContext'
+[S17] (a) bindToApplicationContext, @WithMockUser USER -> status=500 body='jakarta.servlet.ServletException: Request processing failed: org.springframework.security.authorization.AuthorizationDeniedException: Access Denied'
+[S17] (a) bindToApplicationContext, @WithMockUser ADMIN -> status=200 body='TEST'
+[S17] (b) MockMvc + springSecurity(), 인증 없음 -> status=403 body='Forbidden'
+[S17] (b) MockMvc + springSecurity(), @WithMockUser USER -> status=403 body='Forbidden'
+[S17] (b) MockMvc + springSecurity(), @WithMockUser ADMIN -> status=200 body='TEST'
+[S17] (c) 실제 서버(RANDOM_PORT), 인증 없음 -> status=403 body='-'
+--- gradle (끝 부분)
+BUILD SUCCESSFUL in 3s
+7 actionable tasks: 1 executed, 6 up-to-date
+
+# 재실행(clone 재현 확인, 2026-10-10 14:31 KST): origin/main HEAD 49a563a 를 git archive 로 /tmp/gradle-sec-clean 에 풀고,
+# 그 커밋에 없던 네 파일(src/test/.../sec/SecS17Test.kt, sec/runs/s17.log, sec/runs/s9.log, sec/README.md)만 더한 뒤 같은 명령을 돌렸다.
+# command: cd /tmp/gradle-sec-clean && SEC_S17=1 ./gradlew --offline test --rerun --tests 'com.petercoders.blog.sec.SecS17Test'
+# runtime: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft
+testsuite com.petercoders.blog.sec.SecS17Test: tests=7 failures=0 errors=0 skipped=0
+# system-out 의 [S17] 일곱 줄은 위와 글자 그대로 같다(diff 결과 차이 없음). build.gradle.kts 등 다른 파일은 49a563a 그대로였으니, 이 테스트는 build.gradle.kts 변경 없이 돈다.
+--- gradle (끝 부분)
+BUILD SUCCESSFUL in 5s
