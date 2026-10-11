@@ -1,0 +1,38 @@
+# experiment: tip-p28-vt-dispatcher-config — 3편 코드 절 요지 코드 VtDispatcherConfig 를 kotlin-spring(allopen) 없이 kotlinc 로 컴파일해 AnnotationConfigApplicationContext 로 띄운다. PLAIN(@Configuration 만) 은 기동 거부되는가, FIXED(@Configuration(proxyBeanMethods = false), 본문 판) 는 기동·Virtual Thread 실행·close 때 Executor 종료가 되는가. JVM 을 따로 띄워 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-10 14:14:29 KST
+# load:  8.58 8.37 7.78   (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# deps: kotlinx-coroutines-core-jvm 1.10.2, spring-context·beans·core·aop·expression 7.0.9, micrometer-observation·commons 1.17.1, commons-logging 1.3.5, jspecify 1.0.0
+# command: "$KC" -cp "$CO:$SC" VtDispatcherConfig.kt -include-runtime -d vtdc.jar && for r in 1 2 3; do $J26/bin/java -cp "vtdc.jar:$CO:$SC" VtDispatcherConfigKt; done
+=== run 1 ===
+# runtime: java 26.0.2.1+1-7 | Spring Framework 7.0.9 | VtDispatcherConfig final=true
+10월 10, 2026 2:14:30 오후 org.springframework.context.annotation.AnnotationConfigApplicationContext refresh
+WARNING: Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.parsing.BeanDefinitionParsingException: Configuration problem: @Configuration class 'VtDispatcherConfigPlain' may not be final. Remove the final modifier to continue.
+Offending resource: VtDispatcherConfigPlain
+PLAIN : refused BeanDefinitionParsingException / root BeanDefinitionParsingException: Configuration problem: @Configuration class 'VtDispatcherConfigPlain' may not be final. Remove the final modifier to continue.
+Offending resource: VtDispatcherConfigPlain
+FIXED : started, bean=ExecutorCoroutineDispatcherImpl, withContext(bean) isVirtual=true, executor.isShutdown before close=false
+FIXED : after ctx.close() executor.isShutdown=true isTerminated=true
+=== run 2 ===
+# runtime: java 26.0.2.1+1-7 | Spring Framework 7.0.9 | VtDispatcherConfig final=true
+10월 10, 2026 2:14:30 오후 org.springframework.context.annotation.AnnotationConfigApplicationContext refresh
+WARNING: Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.parsing.BeanDefinitionParsingException: Configuration problem: @Configuration class 'VtDispatcherConfigPlain' may not be final. Remove the final modifier to continue.
+Offending resource: VtDispatcherConfigPlain
+PLAIN : refused BeanDefinitionParsingException / root BeanDefinitionParsingException: Configuration problem: @Configuration class 'VtDispatcherConfigPlain' may not be final. Remove the final modifier to continue.
+Offending resource: VtDispatcherConfigPlain
+FIXED : started, bean=ExecutorCoroutineDispatcherImpl, withContext(bean) isVirtual=true, executor.isShutdown before close=false
+FIXED : after ctx.close() executor.isShutdown=true isTerminated=true
+=== run 3 ===
+# runtime: java 26.0.2.1+1-7 | Spring Framework 7.0.9 | VtDispatcherConfig final=true
+10월 10, 2026 2:14:30 오후 org.springframework.context.annotation.AnnotationConfigApplicationContext refresh
+WARNING: Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.parsing.BeanDefinitionParsingException: Configuration problem: @Configuration class 'VtDispatcherConfigPlain' may not be final. Remove the final modifier to continue.
+Offending resource: VtDispatcherConfigPlain
+PLAIN : refused BeanDefinitionParsingException / root BeanDefinitionParsingException: Configuration problem: @Configuration class 'VtDispatcherConfigPlain' may not be final. Remove the final modifier to continue.
+Offending resource: VtDispatcherConfigPlain
+FIXED : started, bean=ExecutorCoroutineDispatcherImpl, withContext(bean) isVirtual=true, executor.isShutdown before close=false
+FIXED : after ctx.close() executor.isShutdown=true isTerminated=true

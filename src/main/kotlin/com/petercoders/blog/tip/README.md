@@ -4,7 +4,7 @@
 
 원고: `~/Desktop/blog/JAVA-KOTLIN-CONCURRENCY/3-CONCURRENCY-PRACTICE-POST.md`
 
-이 디렉터리는 3편에서 새로 실행한 실험 17건(tip-p1~p9 5건, 2026-10-08 재작성 실험 tip-p11~p26 12건)의 소스와 로그만 담는다. 1·2편 실험(`jkc/`, `jvt/`, `kco/`, `kcolab/`)은 각자 디렉터리를 그대로 재사용한다. Spring·HikariCP 실험은 `spring/` 아래에 있고 Gradle sourceSet `tipSpring`(build.gradle.kts)으로 main 과 격리해 돌린다.
+이 디렉터리는 3편에서 새로 실행한 실험 21건(tip-p1~p9 5건, 2026-10-08 재작성 실험 tip-p11~p26 12건, 2026-10-10 본문 요지 코드 전문 실행 tip-p27·p28 2건, 2026-10-10 SCAN 기준선 재측정 tip-p29 1건, 2026-10-10 DefaultExecutor 타이머 범위 tip-p30 1건)의 소스와 로그만 담는다. 1·2편 실험(`jkc/`, `jvt/`, `kco/`, `kcolab/`)은 각자 디렉터리를 그대로 재사용한다. Spring·HikariCP 실험은 `spring/` 아래에 있고 Gradle sourceSet `tipSpring`(build.gradle.kts)으로 main 과 격리해 돌린다.
 
 ## 실행 환경
 
@@ -20,7 +20,8 @@
 | Kotlin Gradle plugin (tipSpring) | 2.3.21, 컴파일 toolchain 25, 실행 JDK 26 |
 | Spring (tipSpring) | Spring Boot 4.1.1 BOM → Spring Framework 7.0.9, HikariCP 7.0.2, H2 2.4.240, Tomcat 11.0.24, kotlinx-coroutines-reactor 1.10.2, context-propagation 1.2.1(runtimeOnly, `spring.reactor.context-propagation` 은 설정하지 않음) |
 | kotlinx-coroutines-core-jvm | 1.10.2 (tipSpring 도 Boot 4.1.1 BOM 으로 1.10.2) |
-| Micrometer (tip-p22·p26) | micrometer-core 1.17.1, micrometer-java21 1.17.1 (Maven Central) |
+| Micrometer (tip-p22·p26·p27) | micrometer-core 1.17.1, micrometer-java21 1.17.1 (Maven Central) |
+| Spring (tip-p28, kotlinc 단독) | spring-context·beans·core·aop·expression 7.0.9, micrometer-observation·commons 1.17.1, commons-logging 1.3.5, jspecify 1.0.0. kotlin-spring(allopen) 플러그인 없이 컴파일해 'may not be final' 거부를 재현한다(Gradle 빌드는 kotlin-spring 이 걸려 있어 재현되지 않는다) |
 | BlockHound (tip-p25) | blockhound 1.0.17.RELEASE + kotlinx-coroutines-debug 1.10.2 (kco-e24 와 같은 jar) |
 
 절대 시간(ms)·스레드 수는 이 기기를 탄다. 다른 기기로 옮길 때는 절대값이 아니라 갈림의 방향과 비율만 이식 가능하다.
@@ -37,9 +38,10 @@
 | `VtCount.java` | 가상 스레드 2,000개 위에서 `ThreadMXBean`·`VirtualThreadSchedulerMXBean`·`jcmd` 덤프·JFR이 각각 무엇을 세는지 | 운영 · ThreadMXBean은 Virtual Thread를 세지 않는다 (재인용: 운영 · JFR은 상시로 켜고 Virtual Thread 이벤트는 조사할 때만 켠다 의 Start·End 이벤트 수, ④ 표 '관측' 행) |
 | `IoVsLoom.kt` | `Thread.sleep(100)` 1,000개를 `Dispatchers.IO`/`IO.limitedParallelism(1000)`/가상 스레드 디스패처에 던졌을 때 총 시간과 플랫폼 스레드 peak | ④ Virtual Thread Dispatcher는 블로킹은 받지만 상한과 ThreadLocal은 다시 건다 |
 | `BlockingWorkers.kt` (tip-p11) | 위 세 케이스에 (d) soTimeout 소켓 read (e) 읽히지 않는 stdout 파이프 println (f) VT Dispatcher 위 소켓 read 를 더해 톱 프레임 비교. 타임아웃 없는 소켓은 `SocketDispatcher.read0`, soTimeout 소켓은 `Net.poll`, stdout 막힘은 `FileOutputStream.writeBytes`, VT 는 `VirtualThread.park`(아래 `Poller.poll`) | ① 상태 열이 아니라 톱 프레임으로 판정한다 |
-| `ThreadBudget.kt` (tip-p12) | Default spin 15·IO sleep 100·IO.lp(10)·IO.lp(100) 를 따로/동시에 포화. 동시 포화 1초 시점 DefaultDispatcher-worker 189 = 15+64+10+100 | ② platform thread 총량은 코어 수 + 64 + Σn까지 간다 |
+| `ThreadBudget.kt` (tip-p12) | Default spin 15·IO sleep 100·IO.lp(10)·IO.lp(100) 를 따로/동시에 포화. 동시 포화 1초 시점 DefaultDispatcher-worker 189 = 15+64+10+100(ThreadMXBean 196 = 189 + 시작 전 JVM 스레드 6 + 측정 스레드 1). 단독 IO 71~75 ≤ 15+64, 단독 LP100 103~104 ≤ 15+100 | ② worker 수는 코어 수 + 64 + Σn까지 간다 |
 | `spring/e3/PoolVsView.kt` (tip-p13) | 풀 10 앞 Coroutine 100개: IO 면 Hikari awaiting 54, IO.lp(10) 면 awaiting 0 인데 view 앞 대기 90. 두 경로 Σn 20 > 풀 10 이면 awaiting 10, 6+4 로 나누면 0. 태스크당 커넥션 2개 20건은 풀 10 에서 6~10건이 connectionTimeout(2초)으로 실패(ok/failed 14/6·12/8·10/10), 풀 11 에서 3회 모두 20/0 | ② 같은 풀을 쓰는 view는 n의 합을 풀 크기 안으로 나눈다 · ② view 앞 대기열은 Hikari 지표에 보이지 않는다 (재인용: 코드 · Dispatcher와 Executor는 프로세스에 하나씩 만들고 닫는다) |
 | `spring/e4/JdbcTimeout.kt` (tip-p14) | withTimeout·runInterruptible·invokeOnCompletion·감시 Coroutine cancel·setQueryTimeout·@Transactional(timeout)·connectionTimeout 이 블로킹 JDBC(H2 TCP)를 언제 끊는지. H2 setQueryTimeout 의 세션 누수도 기록 | ③ 끊는 것은 층마다 다른 타임아웃이다 (재인용: ③ runInterruptible은 JDBC 소켓을 끊지 못한다 의 표 JDBC 행) |
+| `spring/e4/JdbcTimeout.kt` `calibrate()` (tip-p29) | tip-p14 의 SCAN 을 타임아웃 없이 새 JVM 3회: 3,294~4,031 ms(JVM 안 첫 SCAN 3,937~4,031). tip-p14 의 기준선 둘(run 1 4,625 ms, 첫 시도 4,453 ms)과 합치면 타임아웃 없는 SCAN 은 3,294~4,625 ms 이고, 표의 withTimeout·runInterruptible 행(3,420~4,122 ms)은 끊긴 것이 아니라 그 변동 안이다 | ③ 끊는 것은 층마다 다른 타임아웃이다 |
 | `HttpTimeout.java`, `spring/e5/RestClientTimeout.kt` (tip-p15) | HttpRequest.timeout(1s) 이 JDK 25 는 헤더까지(3초에 200), JDK 26 은 바디 소비까지(1초에 HttpTimeoutException). RestClient(JdkClientHttpRequestFactory readTimeout 1s) 는 withTimeout(100) 아래에서도 1초, runInterruptible 이면 약 100ms | ③ HttpRequest.timeout은 JDK 26부터 응답 바디까지 잰다 (재인용: ③ runInterruptible은 JDBC 소켓을 끊지 못한다 의 표 HTTP 행) |
 | `TlContextVt.kt` (tip-p17) | kco/TlContext.kt 를 VT Dispatcher 로: 감싸지 않은 ThreadLocal 은 64/64 가 null(남의 값이 아니라), asContextElement 0/64 | ④ ThreadLocal은 감싸지 않으면 재개마다 null이 된다 (재인용: ④ 표 'ThreadLocal' 행) |
 | `spring/e10/SpringVtSuspend.kt` (tip-p20) | spring.threads.virtual.enabled=true 여도 suspend 핸들러는 delay 뒤 `kotlinx.coroutines.DefaultExecutor`(platform). withContext(VT Dispatcher) 반환 뒤에는 VT 에 남는다. DefaultExecutor 가 2초 막히면 다른 요청의 withTimeout(100) 이 약 1.9초에 발화 | ① 진입점마다 블로킹이 남는 스레드가 다르다 (재인용: ④ ThreadLocal은 감싸지 않으면 재개마다 null이 된다 의 Observation·MDC 문단) |
@@ -47,6 +49,9 @@
 | `ThreadPrintScope.java` (tip-p23) | jcmd Thread.print 가 JDK 25·26 모두 carrier 아래 'Mounted virtual thread #N' 을 찍고 unmount 된 VT 는 안 찍는다. 도움말 문구만 26 에서 바뀌었다 | 운영 · ThreadMXBean은 Virtual Thread를 세지 않는다 (Thread.print 범위) |
 | `IoVsLoom.kt` VTLP10·IOLP10·VT100 (tip-p24) | VT Dispatcher.limitedParallelism(10): sleep(100)×100 이 약 1.04초, 동시 10, 100/100 이 VT 위에서 돈다. platform thread 는 carrier(ForkJoinPool) 13개 | ④ Virtual Thread Dispatcher는 블로킹은 받지만 상한과 ThreadLocal은 다시 건다 ('상한은 view로 다시 건다' 문단과 표 '64 한도와 동시 실행 상한' 행) |
 | `BlockHoundVt.kt` (tip-p25) | BlockHound+kotlinx-coroutines-debug 가 Default·Default.lp(2) 의 sleep 은 잡고 IO·VT Dispatcher 는 안 잡는다(JDK 26·25) | ① BlockHound는 Default worker 위의 블로킹만 잡는다 |
+| `DbGateway.kt` (tip-p27) | 본문 요지 코드 DbGateway 전문. IO.limitedParallelism(2) 앞 Thread.sleep(100) 4건: Micrometer Timer db.view.wait count 4, max 104.3~106.9ms, mean 52.9~54.0ms(뒤의 2건이 view 앞에서 기다린 시간) | ② view 앞 대기열은 Hikari 지표에 보이지 않는다 |
+| `VtDispatcherConfig.kt` (tip-p28) | 본문 요지 코드 VtDispatcherConfig 전문. kotlin-spring 없이 컴파일하면 `@Configuration` 만 붙인 판은 'may not be final' 로 기동 거부, `@Configuration(proxyBeanMethods = false)` 판은 기동·Bean 위 Coroutine isVirtual=true·ctx.close() 뒤 Executor isShutdown·isTerminated=true | 코드 · Dispatcher와 Executor는 프로세스에 하나씩 만들고 닫는다 |
+| `VtDelayTimer.kt` (tip-p30) | DefaultExecutor 를 Unconfined 의 delay(10) 뒤 Thread.sleep(2000) 으로 막은 동안 Dispatcher 별 delay(100)·withTimeout(100){delay(1000)}. VT Dispatcher 1,912~1,922·1,917~1,923ms, VT.limitedParallelism(4) 1,912~1,920·1,915~1,919ms, IO 1,908~1,921·1,912~1,917ms 로 같이 밀리고, newScheduledThreadPool(1).asCoroutineDispatcher() 는 101~110·103~107ms(타이머를 그 executor 가 잰다). 막지 않은 기준선 102~115ms | ④ Virtual Thread Dispatcher는 블로킹은 받지만 상한과 ThreadLocal은 다시 건다 (재인용: ① 진입점마다 블로킹이 남는 스레드가 다르다 의 타이머 범위, ④ 표 '타이머' 행) |
 | `VtGauges.java` (tip-p26) | Micrometer jvm.threads.virtual.live{mounted,queued} 가 VT 2,000개 sleep 중 0·0(합 0). CPU spin 200개 중에는 15·185 | 운영 · ThreadMXBean은 Virtual Thread를 세지 않는다 (Micrometer 게이지) |
 
 다른 편이 이미 잰 것(3편 계획 E6·E8·E9·E11)은 여기서 다시 재지 않았다: MDCContext 스냅샷은 `kco/runs/kco-e16-mdccontext.log`, `@Transactional suspend fun` 은 `kcolab/runs/kco-e15-transactional-suspend.log`, `@Cacheable`·`@Async`·`@Timed` 와 suspend 는 `kcolab/runs/kco-e25-spring-proxy-suspend.log`·`kco-e26-timed-suspend.log`, Default 위 BlockHound 는 `kco/runs/kco-e24-blockhound.log`. PropagationContextElement 직접 사용(E11)은 시리즈 교차 조정으로 2편 몫이 되어 3편에서 재지 않았다.
@@ -64,7 +69,7 @@
 
 ## 빌드·실행 명령
 
-환경 변수: `J26=$(/usr/libexec/java_home -v 26)`, `J25=$(/usr/libexec/java_home -v 25)`, `KC=kotlinc 절대경로`, `CO=kotlinx-coroutines-core-jvm-1.10.2.jar 절대경로`. `java_home -v` 는 없는 버전을 상위로 폴백하니 `java -version` 으로 확인한다.
+환경 변수: `J26=$(/usr/libexec/java_home -v 26)`, `J25=$(/usr/libexec/java_home -v 25)`, `KC=kotlinc 절대경로`, `CO=kotlinx-coroutines-core-jvm-1.10.2.jar 절대경로`, `MC`=micrometer-core·commons·observation 1.17.1 + HdrHistogram 2.2.2 jar 들, `SC`=spring-context·beans·core·aop·expression 7.0.9 + micrometer-observation·commons 1.17.1 + commons-logging 1.3.5 + jspecify 1.0.0 jar 들(콜론으로 잇는다). `java_home -v` 는 없는 버전을 상위로 폴백하니 `java -version` 으로 확인한다.
 
 ```bash
 # BlockingWorkers.kt (tip-p11. stdout 은 (e) 케이스가 읽히지 않는 파이프에 쓰므로 PID 는 stderr 로 받는다. tip-p1 은 (a)~(c) 세 케이스·stdout PID 판이었다)
@@ -97,15 +102,25 @@ for case in VTLP10 IOLP10 VT100; do $J26/bin/java -cp "ivl.jar:$CO" IoVsLoomKt $
 "$KC" -cp "$CO" TlContextVt.kt -include-runtime -d tlvt.jar && $J26/bin/java -cp "tlvt.jar:$CO" TlContextVtKt
 "$KC" -cp "$CO:$BH" BlockHoundVt.kt -include-runtime -d bhvt.jar && $J26/bin/java -XX:+AllowRedefinitionToAddDeleteMethods -XX:+EnableDynamicAgentLoading -cp "bhvt.jar:$CO:$BH:$DBG" BlockHoundVtKt
 
+# DefaultExecutor 타이머 범위 (tip-p30). 케이스마다 새 JVM, 3회
+"$KC" -cp "$CO" VtDelayTimer.kt -include-runtime -d vdt.jar && for r in 1 2 3; do for c in VT VTLP IO SCHED; do $J26/bin/java -cp "vdt.jar:$CO" VtDelayTimerKt $c; done; done
+
+# 본문 요지 코드 전문 (tip-p27·p28). 새 JVM 으로 3회씩
+"$KC" -cp "$CO:$MC" DbGateway.kt -include-runtime -d dbg.jar && for r in 1 2 3; do $J26/bin/java -cp "dbg.jar:$CO:$MC" DbGatewayKt; done
+"$KC" -cp "$CO:$SC" VtDispatcherConfig.kt -include-runtime -d vtdc.jar && for r in 1 2 3; do $J26/bin/java -cp "vtdc.jar:$CO:$SC" VtDispatcherConfigKt; done
+
 # 단독 Java (tip-p15·p22·p23·p26). MCP = micrometer-core·commons·observation 1.17.1 + HdrHistogram 2.2.2 + micrometer-java21 1.17.1
 $J25/bin/java HttpTimeout.java; $J26/bin/java HttpTimeout.java
 $J26/bin/java --enable-native-access=ALL-UNNAMED -XX:StartFlightRecording=filename=pin.jfr,settings=default,jdk.VirtualThreadPinned#threshold=0ms -cp "$MCP" PinBelowThreshold.java
 $J26/bin/java ThreadPrintScope.java > pid.txt & sleep 4; $J26/bin/jcmd $(head -1 pid.txt) Thread.print | grep 'Mounted virtual thread'
 $J26/bin/java -cp "$MCP" VtGauges.java
 
-# Spring·HikariCP (tip-p13·p14·p15·p20). 저장소를 rsync 한 사본에서 돌린다. main classpath 는 건드리지 않는다
+# Spring·HikariCP (tip-p13·p14·p15·p20·p29). 저장소를 rsync 한 사본에서 돌린다. main classpath 는 건드리지 않는다
 ./gradlew --offline -q tipLab --args='E3 1'      # 1·2·3 반복
 ./gradlew --offline -q tipLab --args='E4 1'      # 1·2·3 반복
+# tip-p29: tipLab 은 -D 를 넘기지 않으니 같은 클래스패스로 java 를 직접 띄운다
+./gradlew --offline -q tipSpringClasses; CP=$(./gradlew --offline -q tipLabClasspath)
+for r in 1 2 3; do $J26/bin/java -Dtip.cal=6500,6500,6500 -cp "$CP" com.petercoders.blog.tip.spring.TipLabKt E4cal; done
 ./gradlew --offline -q tipLab --args='E5'
 ./gradlew --offline -q tipLab --args='E10 false'; ./gradlew --offline -q tipLab --args='E10 true'
 ```
@@ -131,5 +146,9 @@ $J26/bin/java -cp "$MCP" VtGauges.java
 | `runs/tip-p24-vt-limited.log` | `IoVsLoom.kt` VTLP10·IOLP10·VT100 (케이스마다 새 JVM, 3회) |
 | `runs/tip-p25-blockhound.log` | `BlockHoundVt.kt` (JDK 26·25 각 1회) |
 | `runs/tip-p26-micrometer-vt-gauges.log` | `VtGauges.java` (3회) |
+| `runs/tip-p27-dbgateway-view-wait.log` | `DbGateway.kt` (새 JVM, 3회) |
+| `runs/tip-p28-vt-dispatcher-config.log` | `VtDispatcherConfig.kt` (새 JVM, 3회) |
+| `runs/tip-p29-scan-baseline.log` | `spring/e4/JdbcTimeout.kt` `calibrate()` (SCAN 기준선, 새 JVM 3회) |
+| `runs/tip-p30-vt-delay-timer.log` | `VtDelayTimer.kt` (VT / VTLP / IO / SCHED, 케이스마다 새 JVM, 3회) |
 
 `git commit`/`git push`는 이 파이프라인이 하지 않는다. 파일만 놓아두고 사용자가 직접 커밋한다.

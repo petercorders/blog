@@ -1,0 +1,86 @@
+# experiment: tip-p30-vt-delay-timer — DefaultExecutor 가 막히면(Unconfined 에서 delay(10) 뒤 Thread.sleep(2000)) 어느 Dispatcher 위의 delay(100)·withTimeout(100){delay(1000)} 이 같이 밀리는가. 케이스: VT = newVirtualThreadPerTaskExecutor().asCoroutineDispatcher(), VTLP = VT.limitedParallelism(4), IO = Dispatchers.IO(대조), SCHED = newScheduledThreadPool(1).asCoroutineDispatcher()(대조). 각 케이스 막지 않은 기준선(alone)과 막은 상태(blocked). 케이스마다 새 JVM, 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-10 23:13:26 KST
+# load:  5.76 5.35 5.73   (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# deps: kotlinx-coroutines-core-jvm 1.10.2
+# command: "$KC" -cp "$CO" VtDelayTimer.kt -include-runtime -d vdt.jar && for r in 1 2 3; do for c in VT VTLP IO SCHED; do $J26/bin/java -cp "vdt.jar:$CO" VtDelayTimerKt $c; done; done
+=== run 1 ===
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=VT
+VT dispatcher=java.util.concurrent.ThreadPerTaskExecutor@200a570f class=kotlinx.coroutines.ExecutorCoroutineDispatcherImpl
+VT alone   : delay(100)=107ms before=(unnamed)#28 virtual=true after=(unnamed)#31 virtual=true
+VT alone   : withTimeout(100){delay(1000)}=115ms TimeoutCancellationException
+VT blocked : delay(100)=1922ms before=(unnamed)#34 virtual=true after=(unnamed)#35 virtual=true | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+VT blocked : withTimeout(100){delay(1000)}=1917ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=VTLP
+VTLP dispatcher=java.util.concurrent.ThreadPerTaskExecutor@3b22cdd0.limitedParallelism(4) class=kotlinx.coroutines.internal.LimitedDispatcher
+VTLP alone   : delay(100)=106ms before=(unnamed)#28 virtual=true after=(unnamed)#31 virtual=true
+VTLP alone   : withTimeout(100){delay(1000)}=112ms TimeoutCancellationException
+VTLP blocked : delay(100)=1917ms before=(unnamed)#34 virtual=true after=(unnamed)#35 virtual=true | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+VTLP blocked : withTimeout(100){delay(1000)}=1915ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=IO
+IO dispatcher=Dispatchers.IO class=kotlinx.coroutines.scheduling.DefaultIoScheduler
+IO alone   : delay(100)=102ms before=DefaultDispatcher-worker-1#27 virtual=false after=DefaultDispatcher-worker-1#27 virtual=false
+IO alone   : withTimeout(100){delay(1000)}=111ms TimeoutCancellationException
+IO blocked : delay(100)=1908ms before=DefaultDispatcher-worker-1#27 virtual=false after=DefaultDispatcher-worker-1#27 virtual=false | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+IO blocked : withTimeout(100){delay(1000)}=1913ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=SCHED
+SCHED dispatcher=java.util.concurrent.ScheduledThreadPoolExecutor@182decdb[Running, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0] class=kotlinx.coroutines.ExecutorCoroutineDispatcherImpl
+SCHED alone   : delay(100)=111ms before=sched-1#27 virtual=false after=sched-1#27 virtual=false
+SCHED alone   : withTimeout(100){delay(1000)}=113ms TimeoutCancellationException
+SCHED blocked : delay(100)=110ms before=sched-1#27 virtual=false after=sched-1#27 virtual=false | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+SCHED blocked : withTimeout(100){delay(1000)}=103ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+=== run 2 ===
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=VT
+VT dispatcher=java.util.concurrent.ThreadPerTaskExecutor@200a570f class=kotlinx.coroutines.ExecutorCoroutineDispatcherImpl
+VT alone   : delay(100)=111ms before=(unnamed)#28 virtual=true after=(unnamed)#31 virtual=true
+VT alone   : withTimeout(100){delay(1000)}=112ms TimeoutCancellationException
+VT blocked : delay(100)=1916ms before=(unnamed)#34 virtual=true after=(unnamed)#35 virtual=true | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+VT blocked : withTimeout(100){delay(1000)}=1920ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=VTLP
+VTLP dispatcher=java.util.concurrent.ThreadPerTaskExecutor@3b22cdd0.limitedParallelism(4) class=kotlinx.coroutines.internal.LimitedDispatcher
+VTLP alone   : delay(100)=111ms before=(unnamed)#28 virtual=true after=(unnamed)#31 virtual=true
+VTLP alone   : withTimeout(100){delay(1000)}=105ms TimeoutCancellationException
+VTLP blocked : delay(100)=1920ms before=(unnamed)#34 virtual=true after=(unnamed)#35 virtual=true | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+VTLP blocked : withTimeout(100){delay(1000)}=1917ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=IO
+IO dispatcher=Dispatchers.IO class=kotlinx.coroutines.scheduling.DefaultIoScheduler
+IO alone   : delay(100)=109ms before=DefaultDispatcher-worker-1#27 virtual=false after=DefaultDispatcher-worker-1#27 virtual=false
+IO alone   : withTimeout(100){delay(1000)}=113ms TimeoutCancellationException
+IO blocked : delay(100)=1921ms before=DefaultDispatcher-worker-1#27 virtual=false after=DefaultDispatcher-worker-1#27 virtual=false | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+IO blocked : withTimeout(100){delay(1000)}=1917ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=SCHED
+SCHED dispatcher=java.util.concurrent.ScheduledThreadPoolExecutor@182decdb[Running, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0] class=kotlinx.coroutines.ExecutorCoroutineDispatcherImpl
+SCHED alone   : delay(100)=111ms before=sched-1#27 virtual=false after=sched-1#27 virtual=false
+SCHED alone   : withTimeout(100){delay(1000)}=110ms TimeoutCancellationException
+SCHED blocked : delay(100)=101ms before=sched-1#27 virtual=false after=sched-1#27 virtual=false | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+SCHED blocked : withTimeout(100){delay(1000)}=104ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+=== run 3 ===
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=VT
+VT dispatcher=java.util.concurrent.ThreadPerTaskExecutor@200a570f class=kotlinx.coroutines.ExecutorCoroutineDispatcherImpl
+VT alone   : delay(100)=112ms before=(unnamed)#28 virtual=true after=(unnamed)#31 virtual=true
+VT alone   : withTimeout(100){delay(1000)}=113ms TimeoutCancellationException
+VT blocked : delay(100)=1912ms before=(unnamed)#34 virtual=true after=(unnamed)#35 virtual=true | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+VT blocked : withTimeout(100){delay(1000)}=1923ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=VTLP
+VTLP dispatcher=java.util.concurrent.ThreadPerTaskExecutor@3b22cdd0.limitedParallelism(4) class=kotlinx.coroutines.internal.LimitedDispatcher
+VTLP alone   : delay(100)=111ms before=(unnamed)#28 virtual=true after=(unnamed)#31 virtual=true
+VTLP alone   : withTimeout(100){delay(1000)}=113ms TimeoutCancellationException
+VTLP blocked : delay(100)=1912ms before=(unnamed)#34 virtual=true after=(unnamed)#35 virtual=true | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+VTLP blocked : withTimeout(100){delay(1000)}=1919ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=IO
+IO dispatcher=Dispatchers.IO class=kotlinx.coroutines.scheduling.DefaultIoScheduler
+IO alone   : delay(100)=110ms before=DefaultDispatcher-worker-1#27 virtual=false after=DefaultDispatcher-worker-1#27 virtual=false
+IO alone   : withTimeout(100){delay(1000)}=103ms TimeoutCancellationException
+IO blocked : delay(100)=1911ms before=DefaultDispatcher-worker-1#27 virtual=false after=DefaultDispatcher-worker-1#27 virtual=false | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+IO blocked : withTimeout(100){delay(1000)}=1912ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | case=SCHED
+SCHED dispatcher=java.util.concurrent.ScheduledThreadPoolExecutor@182decdb[Running, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0] class=kotlinx.coroutines.ExecutorCoroutineDispatcherImpl
+SCHED alone   : delay(100)=111ms before=sched-1#27 virtual=false after=sched-1#27 virtual=false
+SCHED alone   : withTimeout(100){delay(1000)}=112ms TimeoutCancellationException
+SCHED blocked : delay(100)=108ms before=sched-1#27 virtual=false after=sched-1#27 virtual=false | blocker slept on [kotlinx.coroutines.DefaultExecutor]
+SCHED blocked : withTimeout(100){delay(1000)}=107ms TimeoutCancellationException | blocker slept on [kotlinx.coroutines.DefaultExecutor]

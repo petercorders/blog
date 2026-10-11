@@ -1,0 +1,26 @@
+# experiment: tip-p27-dbgateway-view-wait — 3편 ② 요지 코드 DbGateway 를 그대로 실행. Dispatchers.IO.limitedParallelism(2) 앞에 Thread.sleep(100) 호출 4건을 동시에 던져 view 앞 대기가 Micrometer Timer db.view.wait 에 남는지(count·max·mean). JVM 을 따로 띄워 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-10 14:14:14 KST
+# load:  5.58 7.88 7.60   (다른 실험이 같은 기기에서 동시에 돌 수 있어 절대 ms 는 부하를 탄다)
+# deps: kotlinx-coroutines-core-jvm 1.10.2, micrometer-core·micrometer-commons·micrometer-observation 1.17.1, HdrHistogram 2.2.2
+# command: "$KC" -cp "$CO:$MC" DbGateway.kt -include-runtime -d dbg.jar && for r in 1 2 3; do $J26/bin/java -cp "dbg.jar:$CO:$MC" DbGatewayKt; done
+=== run 1 ===
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | micrometer-core-1.17.1.jar
+view n=2, calls=4 x Thread.sleep(100)
+call end ms (from launch): 217, 215, 113, 113
+db.view.wait count=4 max=106.9ms mean=54.0ms total=216.0ms
+=== run 2 ===
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | micrometer-core-1.17.1.jar
+view n=2, calls=4 x Thread.sleep(100)
+call end ms (from launch): 109, 211, 109, 214
+db.view.wait count=4 max=104.3ms mean=52.9ms total=211.4ms
+=== run 3 ===
+# runtime: java 26.0.2.1+1-7 | kotlinx-coroutines-core-jvm-1.10.2.jar | micrometer-core-1.17.1.jar
+view n=2, calls=4 x Thread.sleep(100)
+call end ms (from launch): 111, 216, 217, 111
+db.view.wait count=4 max=106.6ms mean=53.8ms total=215.4ms

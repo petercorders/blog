@@ -1,0 +1,44 @@
+# experiment: tip-p29-scan-baseline — tip-p14 의 SCAN 쿼리(select sum(a.x * b.x) + k from system_range(1, 6500) a, system_range(1, 6500) b)를 타임아웃 없이 잰 기준선 3회. tip-p14 는 기준선을 run 1 에서 한 번(4,625 ms, 첫 시도 4,453 ms)만 쟀고, 표의 withTimeout(100)·runInterruptible 행(SCAN 3,420~4,122 ms)이 그보다 빨라서 그 차이가 끊긴 것인지 변동인지 가르려고 다시 쟀다. spring/e4/JdbcTimeout.kt 의 calibrate()(E4cal): H2 2.4.240 TCP 서버(같은 JVM) + HikariCP 7.0.2 풀 1 + JdbcTemplate, 타임아웃·Coroutine 없음. 한 JVM 안에서 n=6500 을 세 번(SQL 마다 상수 k 가 달라 H2 결과 캐시를 타지 않는다. 첫 번째가 JVM 안 첫 SCAN), JVM 을 새로 띄워 3회
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# build: tipSpring sourceSet (build.gradle.kts), Kotlin Gradle plugin 2.3.21(컴파일 toolchain 25), Spring Boot 4.1.1 BOM(HikariCP 7.0.2, H2 2.4.240). 클래스패스는 ./gradlew --offline -q tipSpringClasses tipLabClasspath 출력. tipLab JavaExec 는 -D 를 넘기지 않아 같은 클래스패스로 java 를 직접 띄웠다
+# run dir: /tmp/gradle-tip (rsync 사본)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# command: for r in 1 2 3; do $J26/bin/java -Dtip.cal=6500,6500,6500 -cp "$(./gradlew --offline -q tipLabClasspath)" com.petercoders.blog.tip.spring.TipLabKt E4cal; done
+# 주: 로그 기록 직전 같은 명령을 시간 확인용으로 한 번 돌렸다(14:31 KST 직전, 기록 밖): 4065 ms, 3398 ms, 3447 ms
+# 요약(이 로그의 3회): JVM 안 첫 SCAN 3,937~4,031 ms, 둘째·셋째 3,294~3,908 ms, 전체 3,294~4,031 ms. 다른 실험이 같은 기기에서 함께 돌 수 있어 절대 ms 는 부하를 탄다(아래 load)
+# date: 2026-10-10 14:31:46 KST
+# load (시작 시점):  5.98 6.45 6.44 
+=== run 1 (새 JVM) ===
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+14:31:46.422 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
+14:31:46.441 [main] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-1 - Added connection conn1: url=jdbc:h2:tcp://localhost:55078/mem:t user=
+14:31:46.442 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Start completed.
+calibrate SCAN n=6500: 3937 ms
+calibrate SCAN n=6500: 3598 ms
+calibrate SCAN n=6500: 3428 ms
+14:31:57.429 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown initiated...
+14:31:57.433 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown completed.
+=== run 2 (새 JVM) ===
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+14:31:57.676 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
+14:31:57.697 [main] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-1 - Added connection conn1: url=jdbc:h2:tcp://localhost:55146/mem:t user=
+14:31:57.698 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Start completed.
+calibrate SCAN n=6500: 3961 ms
+calibrate SCAN n=6500: 3408 ms
+calibrate SCAN n=6500: 3294 ms
+14:32:08.388 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown initiated...
+14:32:08.390 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown completed.
+=== run 3 (새 JVM) ===
+# runtime: java 26.0.2.1+1-7 (Oracle Corporation) | Spring Boot 4.1.1 | Spring Framework 7.0.9 | kotlinx-coroutines-core-jvm-1.10.2.jar | reactor bridge: kotlinx-coroutines-reactor-1.10.2.jar | HikariCP-7.0.2.jar | h2-2.4.240.jar | context-propagation: context-propagation-1.2.1.jar | kotlin-stdlib-2.3.21.jar
+14:32:08.624 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Starting...
+14:32:08.644 [main] INFO com.zaxxer.hikari.pool.HikariPool -- HikariPool-1 - Added connection conn1: url=jdbc:h2:tcp://localhost:55214/mem:t user=
+14:32:08.645 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Start completed.
+calibrate SCAN n=6500: 4031 ms
+calibrate SCAN n=6500: 3814 ms
+calibrate SCAN n=6500: 3908 ms
+14:32:20.428 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown initiated...
+14:32:20.430 [main] INFO com.zaxxer.hikari.HikariDataSource -- HikariPool-1 - Shutdown completed.
+# load (끝난 시점):  5.22 6.20 6.35 
