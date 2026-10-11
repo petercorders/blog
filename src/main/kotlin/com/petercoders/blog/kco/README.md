@@ -13,7 +13,7 @@
 | Kotlin 컴파일러 | kotlinc 2.3.20 (IntelliJ IDEA 번들 `/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc`) |
 | kotlinx.coroutines | `kotlinx-coroutines-core-jvm` 1.10.2 (`~/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/`) |
 | 소스 인용 태그 | kotlinx.coroutines `1.10.2`, Kotlin 컴파일러 `v2.3.20`(일부 `v2.1.20`으로 교차 확인) |
-| 실행일 | 2026-09-09 ~ 2026-09-11(kco-e1 ~ e9), 2026-10-08(kco-e10 ~ e30, 아래 '2편 실무 재편 실험' 표) |
+| 실행일 | 2026-09-09 ~ 2026-09-11(kco-e1 ~ e9), 2026-10-08(kco-e10 ~ e30), 2026-10-10(kco-e31), 2026-10-11(kco-e32) — 아래 '2편 실무 재편 실험' 표 |
 
 **절대 시간(ms)은 이 기기를 탄다.** 다른 기기에서 그대로 재현되지 않는다 — 이식 가능한 것은 비율(예: 같은 워커 위에서 `Thread.sleep`이 `delay`의 약 96배)이지 절대값이 아니다.
 
@@ -109,14 +109,14 @@ javap -p -cp "$CO" kotlinx.coroutines.internal.LimitedDispatcher
 | `runs/kco-e7-tlcontext.log` | TlContext.kt 실행 결과(3회) + CombinedContext javap |
 | `runs/kco-e9-invokesuspend.log` | SuspKt$work$1의 invokeSuspend 확인 |
 
-kco-e10 ~ kco-e31 로그는 아래 '2편 실무 재편 실험' 표에 있다.
+kco-e10 ~ kco-e32 로그는 아래 '2편 실무 재편 실험' 표에 있다.
 
 ## 참고
 
 - 실험 소스는 이 폴더, 실행 로그는 `runs/`에 있다. Spring 실험은 `../kcolab/`, 재사용한 원 로그는 `../jkc/runs/`에 있다.
 - 본문 링크 베이스: `https://github.com/petercorders/blog/blob/main/src/main/kotlin/com/petercoders/blog/kco/`
 
-## 2편 실무 재편 실험(kco-e10 ~ kco-e31, 2026-10-08 · kco-e31 은 2026-10-10)
+## 2편 실무 재편 실험(kco-e10 ~ kco-e32, 2026-10-08 · kco-e31 은 2026-10-10 · kco-e32 는 2026-10-11 최종 감사 반영)
 
 2편을 실무 기준(두괄식, ①~⑤ 절)으로 재편하면서 새로 돌린 실험이다. 원 로그(e5, e6-kotlin, e3-kotlin, kco-e3~e7)는 **기록값**으로 두고, `kco-e10-restore-*` 는 복원한 소스로 다시 돌린 **재현 확인**이다. 모든 새 로그 머리에는 `java -version`·kotlinc 버전·의존성·실행 시각·부하(load average)·명령이 있다. 실행일에 다른 글의 실험이 같은 기기에서 동시에 돌아 load average 가 7~55 사이를 오갔다. 절대 ms 는 그 부하를 탄다.
 
@@ -146,12 +146,13 @@ kotlinc 단독 실험 환경: OpenJDK 26.0.2.1, kotlinc 2.3.20(IntelliJ 번들),
 | `kco-e29-tlcontext-rerun.log` | `TlContext.kt` | kco-e7 재현(헤더 포함) | 64·64·64/64, asContextElement 0/64 | ThreadLocal에 기대는 컨텍스트는 suspension을 넘지 못한다 · 3편 '④ ThreadLocal은 감싸지 않으면 재개마다 null이 된다'(Default 쪽 대조) |
 | `kco-e30-withlock-suspend.log` | `WithLockSuspend.kt`(컴파일 실패가 정상), `ExplicitLockSuspend.kt` | `kotlin.concurrent.withLock` 안 suspension, lock()/unlock() 직접 호출 | withLock 블록은 kco-e27 과 같은 `error: the 'delay' suspension point is inside a critical section.`(K2 `FirJvmSuspensionPointInsideMutexLockChecker`), lock()/unlock() 직접 호출은 컴파일·실행됨 | synchronized와 ReentrantLock 대신 Mutex를 쓴다 |
 | `kco-e31-io-worker-count.log` | `IoWorkerCount.kt` | kco-e12 의 live 수로는 IO 의 64 초과 여부를 가를 수 없다는 감사 지적(2026-10-10). 이름이 `DefaultDispatcher-worker-` 인 스레드만 센다(1ms 샘플 peak, 종료 뒤 생존 수, 최대 번호), 새로 생긴 worker 아닌 스레드 이름도 찍는다. 케이스마다 별도 JVM, 각 3회 | IO: worker 67(3회 같음), 태스크 실행 64. LP256: 259~264 중 256. LP16: 19~20 중 16. 새 non-worker 스레드 0. 여분은 1.10.2 `CoroutineScheduler.tryCreateWorker`(non-blocking 작업용 worker 확보)가 만든다. 여분 수는 조건식의 상한(코어 수 15)이 아니라 dispatch 타이밍이 정한다. 블로킹 dispatch 는 park 된 worker 를 먼저 깨우고, 없을 때만 하나(created−blocking 이 0이던 순간에만 둘)를 만든다. LP256 여분 3~8 이 실행마다 달랐다 | ③ Dispatchers.IO의 64는 풀이 아니라 상한이다 · IO.limitedParallelism(n)은 64를 나눠 쓰지 않는다(kco-e12 peak 해석) |
+| `kco-e32-invokesuspend-disasm.log` | `Susp.kt`(kco-e9 와 같은 소스, 재컴파일) | 최종 감사 지적(2026-10-11): `invokeSuspend`가 label로 재개 지점을 고른다는 서술을 kco-e9(시그니처 grep)·kco-e10-restore-Susp(SuspKt 전체 tableswitch 개수)가 받쳐 주지 않았다. `javap -c -p 'SuspKt$work$1'`와 `javap -c -p SuspKt` 전체 디스어셈블 | `invokeSuspend(Object)` 는 result 필드 저장 → label에 `Int.MIN_VALUE` ior → `invokestatic SuspKt.work(Continuation)` → areturn 네 줄이 전부, tableswitch 없음. label 0~2 tableswitch 는 `SuspKt.work(Continuation)` 안(65번째 바이트)에 있다 | ③ 실행되는 것은 함수가 아니라 이 객체다(첫 절), 그림 02 |
 
 Spring 실험(kco-e14·e15·e18·e25·e26)의 표는 `../kcolab/README.md` 에 있다.
 
 3편(`3-CONCURRENCY-PRACTICE-POST.md`, 2026-10-08 재편)은 위 표의 kco-e12·e13·e24·e29 와 `../kcolab/` 의 kco-e14('① 진입점마다 블로킹이 남는 스레드가 다르다', Virtual Thread 를 끈 쪽 대조)를 다시 재지 않고 2편 링크와 실험 id 로 인용한다. 이 디렉터리 파일을 직접 링크하지는 않는다. 3편이 새로 잰 실험은 `../tip/README.md` 에 있다.
 
-### 빌드·실행 명령(kco-e10 ~ e31)
+### 빌드·실행 명령(kco-e10 ~ e32)
 
 ```bash
 KC="/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc"
@@ -163,4 +164,5 @@ CO=$(ls ~/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-corou
 #                          blockhound 1.0.17.RELEASE + kotlinx-coroutines-debug 1.10.2, JVM 옵션 -XX:+AllowRedefinitionToAddDeleteMethods (kco-e24)
 #                          kotlinx-coroutines-core-jvm 1.11.0 (kco-e19 경고 비교, 컴파일만)
 # 인자: NestedRunBlockingKt [deadlock] · IoSiblingsKt {ALL|IO|LP256|LP16} · IoWorkerCountKt {IO|LP256|LP16}(케이스마다 별도 JVM) · HeapCoroutinesKt 100000 · DebugModeKt {names|trace|probes}
+# kco-e32: "$KC" -cp "$CO" Susp.kt -include-runtime -d susp.jar && $J26/bin/javap -c -p -cp susp.jar 'SuspKt$work$1' && $J26/bin/javap -c -p -cp susp.jar SuspKt
 ```

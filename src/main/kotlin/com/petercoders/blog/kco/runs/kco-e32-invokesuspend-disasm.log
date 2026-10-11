@@ -1,0 +1,235 @@
+# experiment: kco-e32-invokesuspend-disasm — 2026-10-11 최종 감사 반영. ③ "실행되는 것은 함수가 아니라 이 객체다" 문단과 그림 02 alt가
+#   SuspKt$work$1.invokeSuspend(Object)와 SuspKt.work(Continuation)의 바이트코드를 근거로 쓴다. kco-e9 로그(javap -p, grep)는
+#   invokeSuspend 메서드가 존재한다는 것만 보였을 뿐 본문·로 전체는 없었다 — 이 로그가 그 전체를 verbatim으로 남긴다.
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  ("/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc" -version 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (Mac17,9, arm64), hw.ncpu=15
+# date: 2026-10-11 22:51 KST, load averages: 5.98 7.20 6.97
+# command:
+#   KC="/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc"
+#   J26=$(/usr/libexec/java_home -v 26)
+#   CO=$(find ~/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm -name "*1.10.2*.jar" | head -1)
+#   "$KC" -cp "$CO" Susp.kt -include-runtime -d susp.jar
+#   "$J26/bin/javap" -c -p -cp susp.jar 'SuspKt$work$1'
+#   "$J26/bin/javap" -c -p -cp susp.jar SuspKt
+$ javap -c -p -cp susp.jar 'SuspKt$work$1'
+Compiled from "Susp.kt"
+final class SuspKt$work$1 extends kotlin.coroutines.jvm.internal.ContinuationImpl {
+  int I$0;
+
+  java.lang.Object result;
+
+  int label;
+
+  SuspKt$work$1(kotlin.coroutines.Continuation<? super SuspKt$work$1>);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #30                 // Method kotlin/coroutines/jvm/internal/ContinuationImpl."<init>":(Lkotlin/coroutines/Continuation;)V
+         5: return
+
+  public final java.lang.Object invokeSuspend(java.lang.Object);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: putfield      #42                 // Field result:Ljava/lang/Object;
+         5: aload_0
+         6: aload_0
+         7: getfield      #45                 // Field label:I
+        10: ldc           #46                 // int -2147483648
+        12: ior
+        13: putfield      #45                 // Field label:I
+        16: aload_0
+        17: checkcast     #48                 // class kotlin/coroutines/Continuation
+        20: invokestatic  #52                 // Method SuspKt.work:(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+        23: areturn
+}
+
+$ javap -c -p -cp susp.jar SuspKt
+Compiled from "Susp.kt"
+public final class SuspKt {
+  public static final java.lang.Object step(int, kotlin.coroutines.Continuation<? super java.lang.Integer>);
+    Code:
+         0: aload_1
+         1: instanceof    #11                 // class SuspKt$step$1
+         4: ifeq          36
+         7: aload_1
+         8: checkcast     #11                 // class SuspKt$step$1
+        11: astore_3
+        12: aload_3
+        13: getfield      #15                 // Field SuspKt$step$1.label:I
+        16: ldc           #16                 // int -2147483648
+        18: iand
+        19: ifeq          36
+        22: aload_3
+        23: dup
+        24: getfield      #15                 // Field SuspKt$step$1.label:I
+        27: ldc           #16                 // int -2147483648
+        29: isub
+        30: putfield      #15                 // Field SuspKt$step$1.label:I
+        33: goto          45
+        36: new           #11                 // class SuspKt$step$1
+        39: dup
+        40: aload_1
+        41: invokespecial #20                 // Method SuspKt$step$1."<init>":(Lkotlin/coroutines/Continuation;)V
+        44: astore_3
+        45: aload_3
+        46: getfield      #24                 // Field SuspKt$step$1.result:Ljava/lang/Object;
+        49: astore_2
+        50: invokestatic  #30                 // Method kotlin/coroutines/intrinsics/IntrinsicsKt.getCOROUTINE_SUSPENDED:()Ljava/lang/Object;
+        53: astore        4
+        55: aload_3
+        56: getfield      #15                 // Field SuspKt$step$1.label:I
+        59: tableswitch   { // 0 to 1
+                       0: 80
+                       1: 108
+                 default: 126
+            }
+        80: aload_2
+        81: invokestatic  #36                 // Method kotlin/ResultKt.throwOnFailure:(Ljava/lang/Object;)V
+        84: lconst_1
+        85: aload_3
+        86: aload_3
+        87: iload_0
+        88: putfield      #39                 // Field SuspKt$step$1.I$0:I
+        91: aload_3
+        92: iconst_1
+        93: putfield      #15                 // Field SuspKt$step$1.label:I
+        96: invokestatic  #45                 // Method kotlinx/coroutines/DelayKt.delay:(JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+        99: dup
+       100: aload         4
+       102: if_acmpne     118
+       105: aload         4
+       107: areturn
+       108: aload_3
+       109: getfield      #39                 // Field SuspKt$step$1.I$0:I
+       112: istore_0
+       113: aload_2
+       114: invokestatic  #36                 // Method kotlin/ResultKt.throwOnFailure:(Ljava/lang/Object;)V
+       117: aload_2
+       118: pop
+       119: iload_0
+       120: iconst_1
+       121: iadd
+       122: invokestatic  #51                 // Method kotlin/coroutines/jvm/internal/Boxing.boxInt:(I)Ljava/lang/Integer;
+       125: areturn
+       126: new           #53                 // class java/lang/IllegalStateException
+       129: dup
+       130: ldc           #55                 // String call to \'resume\' before \'invoke\' with coroutine
+       132: invokespecial #58                 // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+       135: athrow
+
+  public static final java.lang.Object work(kotlin.coroutines.Continuation<? super java.lang.Integer>);
+    Code:
+         0: aload_0
+         1: instanceof    #70                 // class SuspKt$work$1
+         4: ifeq          39
+         7: aload_0
+         8: checkcast     #70                 // class SuspKt$work$1
+        11: astore        4
+        13: aload         4
+        15: getfield      #71                 // Field SuspKt$work$1.label:I
+        18: ldc           #16                 // int -2147483648
+        20: iand
+        21: ifeq          39
+        24: aload         4
+        26: dup
+        27: getfield      #71                 // Field SuspKt$work$1.label:I
+        30: ldc           #16                 // int -2147483648
+        32: isub
+        33: putfield      #71                 // Field SuspKt$work$1.label:I
+        36: goto          49
+        39: new           #70                 // class SuspKt$work$1
+        42: dup
+        43: aload_0
+        44: invokespecial #72                 // Method SuspKt$work$1."<init>":(Lkotlin/coroutines/Continuation;)V
+        47: astore        4
+        49: aload         4
+        51: getfield      #73                 // Field SuspKt$work$1.result:Ljava/lang/Object;
+        54: astore_3
+        55: invokestatic  #30                 // Method kotlin/coroutines/intrinsics/IntrinsicsKt.getCOROUTINE_SUSPENDED:()Ljava/lang/Object;
+        58: astore        5
+        60: aload         4
+        62: getfield      #71                 // Field SuspKt$work$1.label:I
+        65: tableswitch   { // 0 to 2
+                       0: 92
+                       1: 117
+                       2: 156
+                 default: 181
+            }
+        92: aload_3
+        93: invokestatic  #36                 // Method kotlin/ResultKt.throwOnFailure:(Ljava/lang/Object;)V
+        96: iconst_1
+        97: aload         4
+        99: aload         4
+       101: iconst_1
+       102: putfield      #71                 // Field SuspKt$work$1.label:I
+       105: invokestatic  #75                 // Method step:(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+       108: dup
+       109: aload         5
+       111: if_acmpne     122
+       114: aload         5
+       116: areturn
+       117: aload_3
+       118: invokestatic  #36                 // Method kotlin/ResultKt.throwOnFailure:(Ljava/lang/Object;)V
+       121: aload_3
+       122: checkcast     #77                 // class java/lang/Number
+       125: invokevirtual #81                 // Method java/lang/Number.intValue:()I
+       128: istore_1
+       129: iload_1
+       130: aload         4
+       132: aload         4
+       134: iload_1
+       135: putfield      #82                 // Field SuspKt$work$1.I$0:I
+       138: aload         4
+       140: iconst_2
+       141: putfield      #71                 // Field SuspKt$work$1.label:I
+       144: invokestatic  #75                 // Method step:(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+       147: dup
+       148: aload         5
+       150: if_acmpne     167
+       153: aload         5
+       155: areturn
+       156: aload         4
+       158: getfield      #82                 // Field SuspKt$work$1.I$0:I
+       161: istore_1
+       162: aload_3
+       163: invokestatic  #36                 // Method kotlin/ResultKt.throwOnFailure:(Ljava/lang/Object;)V
+       166: aload_3
+       167: checkcast     #77                 // class java/lang/Number
+       170: invokevirtual #81                 // Method java/lang/Number.intValue:()I
+       173: istore_2
+       174: iload_1
+       175: iload_2
+       176: iadd
+       177: invokestatic  #51                 // Method kotlin/coroutines/jvm/internal/Boxing.boxInt:(I)Ljava/lang/Integer;
+       180: areturn
+       181: new           #53                 // class java/lang/IllegalStateException
+       184: dup
+       185: ldc           #55                 // String call to \'resume\' before \'invoke\' with coroutine
+       187: invokespecial #58                 // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+       190: athrow
+
+  public static final void main();
+    Code:
+         0: aconst_null
+         1: new           #88                 // class SuspKt$main$1
+         4: dup
+         5: aconst_null
+         6: invokespecial #89                 // Method SuspKt$main$1."<init>":(Lkotlin/coroutines/Continuation;)V
+         9: checkcast     #91                 // class kotlin/jvm/functions/Function2
+        12: iconst_1
+        13: aconst_null
+        14: invokestatic  #97                 // Method kotlinx/coroutines/BuildersKt.runBlocking$default:(Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/lang/Object;
+        17: pop
+        18: return
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: invokestatic  #100                // Method main:()V
+         3: return
+}
