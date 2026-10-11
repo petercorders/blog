@@ -41,4 +41,4 @@ cd /tmp/gradle-kco
 | `kco-e26-timed-suspend.log` | `e26/E26.kt` | @Timed suspend { sleep(100); delay(400) } | reactor 있음: timer mean 7.1 ms(Mono 생성까지, (a)). reactor 없음: 108.0 ms(첫 suspension 까지, (b)). try/finally 타이머 515 ms | AOP 타이머는 suspend 함수의 Mono 생성까지만 잰다 |
 | `kcolab-snippets-compile.log` | `snippets/Snippets.kt` | 본문 요지 코드 컴파일(OrderDao, DispatcherConfig, ItemClient, ExcelJobs) | 컴파일 성공(실행하지 않음) | withContext(Dispatchers.IO)는 블로킹 호출 바로 바깥에 건다 (OrderDao) / DB view는 커넥션 풀 크기에 맞춘다 (DispatcherConfig) / suspend 호출과 fan-out에는 Semaphore로 상한을 건다 (ItemClient) / Bean은 scope를 필드 하나로 들고 @PreDestroy에서 닫는다 (ExcelJobs) |
 
-커밋·푸시는 하지 않았다.
+이 디렉터리와 `build.gradle.kts` 의 `kcolab` sourceSet·`kcoLab`/`kcoLabNoReactor` 태스크는 커밋 7d42abb 로 들어갔다.

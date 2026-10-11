@@ -1,0 +1,39 @@
+# experiment: kco-e31-io-worker-count — kco-e12 의 live 수에는 worker 아닌 스레드가 섞여(별도 JVM LP16: 6 -> 25~27, worker 16) IO 의 64 초과 여부를 가를 수 없었다. 케이스마다 JVM 을 따로 띄워 이름이 DefaultDispatcher-worker- 인 live 스레드만 센다(1ms 샘플 peak + 종료 뒤 생존 수 + 최대 worker 번호), 새로 생긴 worker 아닌 스레드 이름도 찍는다
+# java -version:
+#   openjdk version "26.0.2.1" 2026-08-18
+#   OpenJDK Runtime Environment (build 26.0.2.1+1-7)
+#   OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing)
+# kotlinc -version: info: kotlinc-jvm 2.3.20 (JRE 26.0.2.1+1-7)  (IntelliJ 번들 kotlinc 실출력)
+# deps: kotlinx-coroutines-core-jvm 1.10.2 (/Users/kibong_home/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.10.2/4a9f78ef49483748e2c129f3d124b8fa249dafbf/kotlinx-coroutines-core-jvm-1.10.2.jar)
+# machine: Apple M5 Pro (arm64), hw.ncpu=15
+# date: 2026-10-10 14:42:18 KST
+# load: { 7.50 8.32 7.78 }
+# command: kotlinc -cp $CO IoWorkerCount.kt -include-runtime -d iwc.jar ; java -cp iwc.jar:$CO IoWorkerCountKt {IO|LP256|LP16}  (케이스마다 별도 JVM, 각 3회)
+# note: liveStart 는 샘플러 스레드(worker-sampler) 1개를 포함한다. 샘플러는 루트 ThreadGroup.enumerate 로 스레드 이름만 읽는다(스택을 걷지 않는다).
+=== separate JVM: IO (rep 1) ===
+Dispatchers.IO                 443 ms  distinctWorkers= 64  aliveWorkers= 67  peakWorkers= 67  maxWorkerIndex= 67  liveStart=  7  liveEnd= 73  peakAfterReset= 74
+    new non-worker threads since start (0): []
+=== separate JVM: IO (rep 2) ===
+Dispatchers.IO                 431 ms  distinctWorkers= 64  aliveWorkers= 67  peakWorkers= 67  maxWorkerIndex= 67  liveStart=  7  liveEnd= 73  peakAfterReset= 74
+    new non-worker threads since start (0): []
+=== separate JVM: IO (rep 3) ===
+Dispatchers.IO                 429 ms  distinctWorkers= 64  aliveWorkers= 67  peakWorkers= 67  maxWorkerIndex= 67  liveStart=  7  liveEnd= 73  peakAfterReset= 74
+    new non-worker threads since start (0): []
+=== separate JVM: LP256 (rep 1) ===
+IO.limitedParallelism(256)     145 ms  distinctWorkers=256  aliveWorkers=264  peakWorkers=264  maxWorkerIndex=264  liveStart=  7  liveEnd=270  peakAfterReset=271
+    new non-worker threads since start (0): []
+=== separate JVM: LP256 (rep 2) ===
+IO.limitedParallelism(256)     140 ms  distinctWorkers=256  aliveWorkers=263  peakWorkers=263  maxWorkerIndex=263  liveStart=  7  liveEnd=269  peakAfterReset=270
+    new non-worker threads since start (0): []
+=== separate JVM: LP256 (rep 3) ===
+IO.limitedParallelism(256)     147 ms  distinctWorkers=256  aliveWorkers=259  peakWorkers=259  maxWorkerIndex=259  liveStart=  7  liveEnd=265  peakAfterReset=266
+    new non-worker threads since start (0): []
+=== separate JVM: LP16 (rep 1) ===
+IO.limitedParallelism(16)     1683 ms  distinctWorkers= 16  aliveWorkers= 20  peakWorkers= 20  maxWorkerIndex= 20  liveStart=  7  liveEnd= 26  peakAfterReset= 27
+    new non-worker threads since start (0): []
+=== separate JVM: LP16 (rep 2) ===
+IO.limitedParallelism(16)     1683 ms  distinctWorkers= 16  aliveWorkers= 19  peakWorkers= 19  maxWorkerIndex= 19  liveStart=  7  liveEnd= 25  peakAfterReset= 26
+    new non-worker threads since start (0): []
+=== separate JVM: LP16 (rep 3) ===
+IO.limitedParallelism(16)     1667 ms  distinctWorkers= 16  aliveWorkers= 19  peakWorkers= 19  maxWorkerIndex= 19  liveStart=  7  liveEnd= 25  peakAfterReset= 26
+    new non-worker threads since start (0): []

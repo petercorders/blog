@@ -24,6 +24,7 @@
 | `TailCall.kt` | 꼬리 호출 suspend 함수(`tail`)는 상태 머신 클래스·tableswitch를 만들지 않고, 비-꼬리 호출(`nonTail`)은 만든다 | (재편 후 본문에서 뺐다) |
 | (jar 직접 javap, 소스 없음) | `CoroutineScheduler`의 `controlState` 비트 상수(`BLOCKING_SHIFT`, `CPU_PERMITS_SHIFT`, `MAX_SUPPORTED_POOL_SIZE`)와 `WorkerState` enum 5종이 실제로 그 이름·값으로 컴파일돼 있는지 | (재편 후 본문에서 뺐다) |
 | `IoSiblings.kt` | `Dispatchers.IO`와 `IO.limitedParallelism(n)`이 같은 스레드 풀을 공유하되 각자 다른 병렬도 한도를 갖는 "형제" 관계임을 실측 | IO.limitedParallelism(n)은 64를 나눠 쓰지 않는다 (peak 해석은 kco-e12) |
+| `IoWorkerCount.kt` | (kco-e31) 케이스마다 별도 JVM 에서 이름이 `DefaultDispatcher-worker-` 인 스레드만 세어, IO 가 64개를 넘겨 worker 를 만드는지와 태스크를 받지 않은 여분 수를 본다 | ③ Dispatchers.IO의 64는 풀이 아니라 상한이다 |
 | `NestedRunBlocking.kt` | (kco-e4, 옛 판) `limitedParallelism(1)` 워커 위에서 중첩 `runBlocking { delay(300) }`이 다른 코루틴을 굶기는지. 대조군 d 도 311ms 를 기다려 결론을 가르지 못하는 설계였다 → kco-e11 에서 다시 짰다 | suspend 안의 runBlocking은 delay를 블로킹으로 바꾼다 (v2 수치만 쓴다) |
 | `RintCause.kt` | `runInterruptible` 취소 시 `cause`가 `null`(Job.cancel() 경로)인지 `InterruptedException`(스레드 직접 interrupt 경로)인지가 취소의 출처에 따라 갈림 | 취소는 suspension point에서만 끊긴다 |
 | `ScopeFail.kt` | `coroutineScope`는 자식 실패 시 형제를 즉시 취소하지만 `supervisorScope`는 그렇지 않음(`async` 예외가 `await()` 전에 이미 형제를 취소하는지 여부) | ④ 자식의 실패는 await 전에 형제를 취소한다 / supervisorScope는 서로 독립인 작업에만 쓴다 |
@@ -108,18 +109,18 @@ javap -p -cp "$CO" kotlinx.coroutines.internal.LimitedDispatcher
 | `runs/kco-e7-tlcontext.log` | TlContext.kt 실행 결과(3회) + CombinedContext javap |
 | `runs/kco-e9-invokesuspend.log` | SuspKt$work$1의 invokeSuspend 확인 |
 
-kco-e10 ~ kco-e30 로그는 아래 '2편 실무 재편 실험' 표에 있다.
+kco-e10 ~ kco-e31 로그는 아래 '2편 실무 재편 실험' 표에 있다.
 
 ## 참고
 
-- 이 저장소에는 `git add`/`git commit`/`git push`를 하지 않았다. 커밋·푸시는 사용자가 직접 한다.
+- 실험 소스는 이 폴더, 실행 로그는 `runs/`에 있다. Spring 실험은 `../kcolab/`, 재사용한 원 로그는 `../jkc/runs/`에 있다.
 - 본문 링크 베이스: `https://github.com/petercorders/blog/blob/main/src/main/kotlin/com/petercoders/blog/kco/`
 
-## 2편 실무 재편 실험(kco-e10 ~ kco-e30, 2026-10-08)
+## 2편 실무 재편 실험(kco-e10 ~ kco-e31, 2026-10-08 · kco-e31 은 2026-10-10)
 
 2편을 실무 기준(두괄식, ①~⑤ 절)으로 재편하면서 새로 돌린 실험이다. 원 로그(e5, e6-kotlin, e3-kotlin, kco-e3~e7)는 **기록값**으로 두고, `kco-e10-restore-*` 는 복원한 소스로 다시 돌린 **재현 확인**이다. 모든 새 로그 머리에는 `java -version`·kotlinc 버전·의존성·실행 시각·부하(load average)·명령이 있다. 실행일에 다른 글의 실험이 같은 기기에서 동시에 돌아 load average 가 7~55 사이를 오갔다. 절대 ms 는 그 부하를 탄다.
 
-kotlinc 단독 실험 환경: OpenJDK 26.0.2.1, kotlinc 2.3.20(IntelliJ 번들), kotlinx-coroutines-core-jvm 1.10.2. 1.11.0 jar 는 lint 경고 비교(kco-e19)에만 쓴다. Spring 실험(kco-e14·e15·e18·e25·e26)은 `../kcolab/` 에 있다(Gradle sourceSet `kcolab`, toolchain JDK 25).
+kotlinc 단독 실험 환경: OpenJDK 26.0.2.1, kotlinc 2.3.20(IntelliJ 번들), kotlinx-coroutines-core-jvm 1.10.2. 1.11.0 jar 는 `launch(Job)` 컴파일 경고(@Deprecated WARNING, #4435) 비교(kco-e19)에만 쓴다. Spring 실험(kco-e14·e15·e18·e25·e26)은 `../kcolab/` 에 있다(Gradle sourceSet `kcolab`, toolchain JDK 25).
 
 | 로그(`runs/`) | 소스 | 무엇을 보나 | 결과 요지 | 본문 절(재편 후) |
 |---|---|---|---|---|
@@ -130,7 +131,7 @@ kotlinc 단독 실험 환경: OpenJDK 26.0.2.1, kotlinc 2.3.20(IntelliJ 번들),
 | `kco-e10-restore-Workers.log` | `../jkc/Workers.kt`(로그 형식으로 수정) | e3-kotlin 재현 | Default 15 / IO 64 / shared 15, core.pool.size=4 → 4 (같음) | ③ Dispatchers.IO의 64는 풀이 아니라 상한이다 |
 | `kco-e10-restore-CancelLoop.log` | `../jkc/CancelLoop.kt`(로그 형식으로 수정, 끝에 exitProcess) | e6-kotlin 재현 | 4줄 원 기록과 같음 | 취소는 suspension point에서만 끊긴다 |
 | `kco-e11-nested-runblocking-v2.log` | `NestedRunBlocking.kt`(v2) | limitedParallelism(1) 위 중첩 runBlocking 뒤 형제 vs 순수 delay 뒤 형제, bol.com 2스레드 풀 V1/V2/V3 | A 301~313 ms vs B 0 ms(9회), V1 1010~1014 ms, V2 2011~2012 ms(첫 실행 8,516 ms 는 부하 이상치), V3 교착(jcmd: main·pool 두 스레드 모두 `BlockingCoroutine.joinBlocking`) | suspend 안의 runBlocking은 delay를 블로킹으로 바꾼다 |
-| `kco-e12-io-siblings-peak.log` | `IoSiblings.kt`(케이스 인자, reset+live) | peakThreads 264 의 원인 | 한 JVM: LP16 시작 live=264(앞 케이스 worker 생존) → keep-alive. 별도 JVM LP16 peak 25~27. IO peak 74~76 | IO.limitedParallelism(n)은 64를 나눠 쓰지 않는다 · 3편 '④ Virtual Thread Dispatcher는 블로킹은 받지만 상한과 ThreadLocal은 다시 건다'(케이스마다 JVM 을 따로 띄우는 이유) |
+| `kco-e12-io-siblings-peak.log` | `IoSiblings.kt`(케이스 인자, reset+live) | peakThreads 264 의 원인 | 한 JVM: LP16 시작 live=264(앞 케이스 worker 생존) → keep-alive. 별도 JVM LP16 peak 25~27. IO peak 74~76(live 수에는 worker 아닌 스레드도 섞일 수 있어 64 초과 판정은 kco-e31 로 한다) | IO.limitedParallelism(n)은 64를 나눠 쓰지 않는다 · 3편 '④ Virtual Thread Dispatcher는 블로킹은 받지만 상한과 ThreadLocal은 다시 건다'(케이스마다 JVM 을 따로 띄우는 이유) |
 | `kco-e13-unconfined-blocking.log` | `UnconfinedBlocking.kt` | Unconfined 에서 delay(1) 뒤 sleep(100) ×20, 타이머 프로브 | 재개 스레드 전부 `kotlinx.coroutines.DefaultExecutor`, 총 2,774~2,879 ms vs withContext(IO) 113~116 ms. 그 동안 Default 위 delay(10) 최대 지연 2,096~2,146 ms(평소 5~7) | ① 블로킹 호출은 Dispatcher가 대신 옮겨 주지 않는다 · 3편 '① 진입점마다 블로킹이 남는 스레드가 다르다'(Spring 밖 타이머 지연) |
 | `kco-e16-mdccontext.log` | `MdcContext.kt` | MDCContext 생성 시점, Coroutine 안 MDC.put | put 뒤 생성 → 값 유지, put 앞 생성 → null, 안에서 put → delay 뒤 null, MDCContext 없이 63·61·64/64 불일치, put 뒤 per-coroutine 생성 0/64 (logback; slf4j-simple 은 NOPMDCAdapter 라 무효) | ThreadLocal에 기대는 컨텍스트는 suspension을 넘지 못한다 |
 | `kco-e17-not-a-mutex.log` | `NotAMutex.kt` | limitedParallelism(4) vs Semaphore(4), JUC vs kotlinx Semaphore | 피크 100(105~109 ms) vs 4(2,653~2,704 ms). JUC acquire 두 개가 병렬도 2 view 의 셋째를 521~534 ms 까지 막음, kotlinx 는 29~30 ms | suspend 호출과 fan-out에는 Semaphore로 상한을 건다 |
@@ -144,12 +145,13 @@ kotlinc 단독 실험 환경: OpenJDK 26.0.2.1, kotlinc 2.3.20(IntelliJ 번들),
 | `kco-e28-reentrantlock-suspend.log` | `ReentrantLockSuspend.kt` | ReentrantLock 을 suspension 너머로 | 10회 모두 IMSE 1/20, 임계 구역 동시 19개(같은 스레드 재진입), 끝에 락이 잠긴 채 남음. Mutex 는 동시 1·오류 0 | synchronized와 ReentrantLock 대신 Mutex를 쓴다 |
 | `kco-e29-tlcontext-rerun.log` | `TlContext.kt` | kco-e7 재현(헤더 포함) | 64·64·64/64, asContextElement 0/64 | ThreadLocal에 기대는 컨텍스트는 suspension을 넘지 못한다 · 3편 '④ ThreadLocal은 감싸지 않으면 재개마다 null이 된다'(Default 쪽 대조) |
 | `kco-e30-withlock-suspend.log` | `WithLockSuspend.kt`(컴파일 실패가 정상), `ExplicitLockSuspend.kt` | `kotlin.concurrent.withLock` 안 suspension, lock()/unlock() 직접 호출 | withLock 블록은 kco-e27 과 같은 `error: the 'delay' suspension point is inside a critical section.`(K2 `FirJvmSuspensionPointInsideMutexLockChecker`), lock()/unlock() 직접 호출은 컴파일·실행됨 | synchronized와 ReentrantLock 대신 Mutex를 쓴다 |
+| `kco-e31-io-worker-count.log` | `IoWorkerCount.kt` | kco-e12 의 live 수로는 IO 의 64 초과 여부를 가를 수 없다는 감사 지적(2026-10-10). 이름이 `DefaultDispatcher-worker-` 인 스레드만 센다(1ms 샘플 peak, 종료 뒤 생존 수, 최대 번호), 새로 생긴 worker 아닌 스레드 이름도 찍는다. 케이스마다 별도 JVM, 각 3회 | IO: worker 67(3회 같음), 태스크 실행 64. LP256: 259~264 중 256. LP16: 19~20 중 16. 새 non-worker 스레드 0. 여분은 1.10.2 `CoroutineScheduler.tryCreateWorker`(non-blocking 작업용 worker 확보)가 만든다. 여분 수는 조건식의 상한(코어 수 15)이 아니라 dispatch 타이밍이 정한다. 블로킹 dispatch 는 park 된 worker 를 먼저 깨우고, 없을 때만 하나(created−blocking 이 0이던 순간에만 둘)를 만든다. LP256 여분 3~8 이 실행마다 달랐다 | ③ Dispatchers.IO의 64는 풀이 아니라 상한이다 · IO.limitedParallelism(n)은 64를 나눠 쓰지 않는다(kco-e12 peak 해석) |
 
 Spring 실험(kco-e14·e15·e18·e25·e26)의 표는 `../kcolab/README.md` 에 있다.
 
 3편(`3-CONCURRENCY-PRACTICE-POST.md`, 2026-10-08 재편)은 위 표의 kco-e12·e13·e24·e29 와 `../kcolab/` 의 kco-e14('① 진입점마다 블로킹이 남는 스레드가 다르다', Virtual Thread 를 끈 쪽 대조)를 다시 재지 않고 2편 링크와 실험 id 로 인용한다. 이 디렉터리 파일을 직접 링크하지는 않는다. 3편이 새로 잰 실험은 `../tip/README.md` 에 있다.
 
-### 빌드·실행 명령(kco-e10 ~ e30)
+### 빌드·실행 명령(kco-e10 ~ e31)
 
 ```bash
 KC="/Applications/IntelliJ IDEA.app/Contents/plugins/Kotlin/kotlinc/bin/kotlinc"
@@ -160,5 +162,5 @@ CO=$(ls ~/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-corou
 #                          kotlinx-coroutines-debug 1.10.2 + byte-buddy/-agent 1.10.9 또는 1.18.11 + jna/jna-platform 5.9.0 (kco-e23)
 #                          blockhound 1.0.17.RELEASE + kotlinx-coroutines-debug 1.10.2, JVM 옵션 -XX:+AllowRedefinitionToAddDeleteMethods (kco-e24)
 #                          kotlinx-coroutines-core-jvm 1.11.0 (kco-e19 경고 비교, 컴파일만)
-# 인자: NestedRunBlockingKt [deadlock] · IoSiblingsKt {ALL|IO|LP256|LP16} · HeapCoroutinesKt 100000 · DebugModeKt {names|trace|probes}
+# 인자: NestedRunBlockingKt [deadlock] · IoSiblingsKt {ALL|IO|LP256|LP16} · IoWorkerCountKt {IO|LP256|LP16}(케이스마다 별도 JVM) · HeapCoroutinesKt 100000 · DebugModeKt {names|trace|probes}
 ```
