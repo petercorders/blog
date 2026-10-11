@@ -1,0 +1,85 @@
+# experiment: e13 — @TransactionalEventListener 에 @Transactional 을 붙였을 때: 6.1 RestrictedTransactionalEventListenerFactory 부팅 검사([e13]), AFTER_COMMIT 리스너가 쓴 행이 남는지(@Transactional 없음 / REQUIRES_NEW × Hikari autoCommit 기본·false, [e13b]), 커밋 뒤 콜백끼리의 순서(직접 등록한 TransactionSynchronization 셋과 AFTER_COMMIT 리스너 둘, [e13c]). 새 의존성 없음
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS / OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) / OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)  [Gradle 툴체인 JDK, 실제 실행 JVM. 셸 기본 java 는 26.0.2.1(build 26.0.2.1+1-7) 이고 실행에 쓰지 않는다]
+# device: Apple M5 Pro, 15 cores (physical 15 / logical 15), hw.cachelinesize=128
+# command: rsync -a --delete --exclude build --exclude .gradle ~/Desktop/development/blog/ /tmp/gradle-tx/ && cd /tmp/gradle-tx && ./gradlew --offline -q txEventLab   (run at 2026-10-10 23:14:00 KST; 러너 = ../../txevent/TxEventLab.kt. [e13]·[e13b] 결과는 같은 날 14:28 실행과 같고, 이 실행에서 [e13c] 를 더했다)
+# note: [e13b] (b) 의 Hikari DEBUG 'Executed rollback ... dirty commit state on close()' 4줄은 순서대로 drop table, create table, place() 호출(리스너가 쓴 뒤 커넥션 반납), 행 수 조회 커넥션의 반납이다. 셋째 줄이 리스너가 쓴 행을 되돌린 것이다
+
+## [e0] runtime versions (printed by this JVM)
+java.runtime.version = 25.0.4.1+1-LTS
+java.vendor          = Microsoft / OpenJDK 64-Bit Server VM
+Spring Framework     = 7.0.9
+Spring Boot          = 4.1.1
+Kotlin stdlib        = 2.3.21
+java.home            = /Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+HikariCP             = 7.0.2
+H2                   = 2.4.240
+
+## [e13] boot check: @TransactionalEventListener + @Transactional (RestrictedTransactionalEventListenerFactory, 6.1+)
+2026-10-10T23:14:03.650+09:00  WARN 55051 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanInitializationException: Failed to process @EventListener annotation on bean with name 'afterCommitRequired': @TransactionalEventListener method must not be annotated with @Transactional unless when declared as REQUIRES_NEW or NOT_SUPPORTED: public void com.petercoders.blog.txevent.AfterCommitRequired.on(com.petercoders.blog.txevent.Placed)
+(a) AFTER_COMMIT listener + method @Transactional (REQUIRED) -> boot failed: org.springframework.beans.factory.BeanInitializationException
+    root cause: java.lang.IllegalStateException: @TransactionalEventListener method must not be annotated with @Transactional unless when declared as REQUIRES_NEW or NOT_SUPPORTED: public void com.petercoders.blog.txevent.AfterCommitRequired.on(com.petercoders.blog.txevent.Placed)
+2026-10-10T23:14:03.735+09:00  WARN 55051 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanInitializationException: Failed to process @EventListener annotation on bean with name 'classLevelTx': @TransactionalEventListener method must not be annotated with @Transactional unless when declared as REQUIRES_NEW or NOT_SUPPORTED: public void com.petercoders.blog.txevent.ClassLevelTx.on(com.petercoders.blog.txevent.Placed)
+(b) class-level @Transactional + AFTER_COMMIT listener method -> boot failed: org.springframework.beans.factory.BeanInitializationException
+    root cause: java.lang.IllegalStateException: @TransactionalEventListener method must not be annotated with @Transactional unless when declared as REQUIRES_NEW or NOT_SUPPORTED: public void com.petercoders.blog.txevent.ClassLevelTx.on(com.petercoders.blog.txevent.Placed)
+(c) BEFORE_COMMIT listener + method @Transactional (REQUIRED) -> booted
+    listener factory = org.springframework.transaction.annotation.RestrictedTransactionalEventListenerFactory
+(d) AFTER_COMMIT listener + @Transactional(propagation = REQUIRES_NEW) -> booted
+    listener factory = org.springframework.transaction.annotation.RestrictedTransactionalEventListenerFactory
+
+## [e13b] where does an AFTER_COMMIT listener's write go (outer inserts 'outer', listener inserts 'listener')
+
+### [e13b] (a) AFTER_COMMIT, no @Transactional, Hikari autoCommit default(true)
+hikari autoCommit = true
+listener(AfterCommitPlain) thread=main actualTransactionActive=true name=com.petercoders.blog.txevent.OrderPlacer.place boundConnection=true connection.autoCommit=false poolActive=1
+caller: returned normally
+rows committed = 2 [outer, listener]   (counted afterwards on a fresh connection)
+poolActive after call = 0
+
+### [e13b] (b) AFTER_COMMIT, no @Transactional, spring.datasource.hikari.auto-commit=false
+2026-10-10T23:14:04.034+09:00 DEBUG 55051 --- [blog] [           main] com.zaxxer.hikari.pool.ProxyConnection   : HikariPool-2 - Executed rollback on connection conn1: url=jdbc:h2:mem:txevent-after-plain-2 user=SA due to dirty commit state on close().
+2026-10-10T23:14:04.035+09:00 DEBUG 55051 --- [blog] [           main] com.zaxxer.hikari.pool.ProxyConnection   : HikariPool-2 - Executed rollback on connection conn1: url=jdbc:h2:mem:txevent-after-plain-2 user=SA due to dirty commit state on close().
+hikari autoCommit = false
+2026-10-10T23:14:04.036+09:00 DEBUG 55051 --- [blog] [           main] com.zaxxer.hikari.pool.ProxyConnection   : HikariPool-2 - Executed rollback on connection conn1: url=jdbc:h2:mem:txevent-after-plain-2 user=SA due to dirty commit state on close().
+listener(AfterCommitPlain) thread=main actualTransactionActive=true name=com.petercoders.blog.txevent.OrderPlacer.place boundConnection=true connection.autoCommit=false poolActive=1
+caller: returned normally
+2026-10-10T23:14:04.036+09:00 DEBUG 55051 --- [blog] [           main] com.zaxxer.hikari.pool.ProxyConnection   : HikariPool-2 - Executed rollback on connection conn1: url=jdbc:h2:mem:txevent-after-plain-2 user=SA due to dirty commit state on close().
+rows committed = 1 [outer]   (counted afterwards on a fresh connection)
+poolActive after call = 0
+
+### [e13b] (c) AFTER_COMMIT, @Transactional(REQUIRES_NEW), Hikari autoCommit default(true)
+hikari autoCommit = true
+listener(AfterCommitRequiresNew) thread=main actualTransactionActive=true name=com.petercoders.blog.txevent.AfterCommitRequiresNew.on boundConnection=true connection.autoCommit=false poolActive=2
+caller: returned normally
+rows committed = 2 [outer, listener]   (counted afterwards on a fresh connection)
+poolActive after call = 0
+
+### [e13b] (d) AFTER_COMMIT, @Transactional(REQUIRES_NEW), spring.datasource.hikari.auto-commit=false
+hikari autoCommit = false
+listener(AfterCommitRequiresNew) thread=main actualTransactionActive=true name=com.petercoders.blog.txevent.AfterCommitRequiresNew.on boundConnection=true connection.autoCommit=false poolActive=2
+caller: returned normally
+rows committed = 2 [outer, listener]   (counted afterwards on a fresh connection)
+poolActive after call = 0
+
+### [e13b] (e) BEFORE_COMMIT, @Transactional(REQUIRED), Hikari autoCommit default(true)
+hikari autoCommit = true
+listener(BeforeCommitRequired) thread=main actualTransactionActive=true name=com.petercoders.blog.txevent.OrderPlacer.place boundConnection=true connection.autoCommit=false poolActive=1
+caller: returned normally
+rows committed = 2 [outer, listener]   (counted afterwards on a fresh connection)
+poolActive after call = 0
+
+## [e13c] order of after-commit callbacks (registered: PlainSync, AnnotatedSync, OverrideSync, then publishEvent -> listeners first, second)
+getSynchronizations() just before commit, inside the transaction:
+  sorted[0] OverrideSync [getOrder() = 0]  getOrder()=0
+  sorted[1] TransactionalApplicationListenerSynchronization$PlatformSynchronization  getOrder()=1
+  sorted[2] PlainSync [no order]  getOrder()=LOWEST_PRECEDENCE
+  sorted[3] AnnotatedSync [@Order(0) on class]  getOrder()=LOWEST_PRECEDENCE
+  sorted[4] TransactionalApplicationListenerSynchronization$PlatformSynchronization  getOrder()=LOWEST_PRECEDENCE
+actual call order after commit:
+  1. afterCommit()      OverrideSync [getOrder() = 0]
+  2. afterCommit()      PlainSync [no order]
+  3. afterCommit()      AnnotatedSync [@Order(0) on class]
+  4. afterCompletion()  OverrideSync [getOrder() = 0] (status=COMMITTED)
+  5. AFTER_COMMIT listener  first [@Order(1) on method]
+  6. afterCompletion()  PlainSync [no order] (status=COMMITTED)
+  7. afterCompletion()  AnnotatedSync [@Order(0) on class] (status=COMMITTED)
+  8. AFTER_COMMIT listener  second [no @Order]

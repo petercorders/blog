@@ -322,6 +322,16 @@ tasks.register<JavaExec>("txCoLabReactor") {
     standardOutput = System.out
 }
 
+// [e13] @TransactionalEventListener + @Transactional: 6.1 부팅 검사와 AFTER_COMMIT 리스너 쓰기의 행방, [e13c] 커밋 뒤 콜백 순서.
+// 새 의존성 없음. ./gradlew --offline -q txEventLab
+tasks.register<JavaExec>("txEventLab") {
+    group = "blog"
+    description = "@TransactionalEventListener 의 @Transactional 부팅 검사, AFTER_COMMIT 리스너가 쓴 행이 남는지(Hikari autoCommit 기본/false), 커밋 뒤 콜백 순서"
+    mainClass.set("com.petercoders.blog.txevent.TxEventLabKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardOutput = System.out
+}
+
 // JAVA-KOTLIN-CONCURRENCY 2편(Kotlin Coroutine) Spring 실험(kco-e14·e15·e18·e25·e26).
 // main 의 implementation/runtime classpath 를 건드리지 않도록 전용 sourceSet "kcolab" 으로 분리한다.
 // aspectjweaver(APC 승격)·webflux·coroutines-reactor 가 main 에 들어가면 tx·sec·async 실험의 전제가 깨지기 때문이다.
