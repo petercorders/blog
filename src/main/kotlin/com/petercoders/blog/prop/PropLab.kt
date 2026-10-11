@@ -331,11 +331,14 @@ fun main(args: Array<String>) {
     step("P10") { runP10() }
     step("P11") { runP11() }
     step("P11OS") { runP11Os() }
+    step("P11N") { runP11n() }                            // 환경 변수 소스 열거형/비열거형(PropLabPlus.kt)
     step("P13") { runP13() }                              // propLabActuator 태스크(main + propLabExtra)로만 돈다
     step("P14") { runP14() }
     step("P14B") { runP14b() }
     step("P15") { runP15() }                              // propLabExtra 태스크(main + propLabExtra)로만 돈다
+    step("P15D") { runP15d() }                            // propLabExtra 태스크로만 돈다
     step("P17") { runP17() }
     step("P18") { runP18() }
+    step("P19") { runP19() }                              // propLabCloud 태스크(main + spring-cloud-context)로만 돈다
     exitProcess(0)
 }

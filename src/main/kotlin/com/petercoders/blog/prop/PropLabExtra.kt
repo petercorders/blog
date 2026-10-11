@@ -6,16 +6,22 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.ApplicationEvent
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DeferredImportSelector
+import org.springframework.context.annotation.Import
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.MapPropertySource
+import org.springframework.core.type.AnnotationMetadata
 import org.springframework.validation.annotation.Validated
 import java.io.File
 
 // SPRING-INTERNALS 4편 재실측 중 별도 클래스패스가 필요한 마커.
 //   P13 : actuator /env · /configprops 를 실제 HTTP(curl)로 (propLabActuator 태스크: main + propLabExtra)
 //   P15 : @Validated · ignoreUnknownFields · properties-migrator (propLabExtra 태스크: main + propLabExtra)
+//   P15D: Kotlin 생성자 프로퍼티의 @NotBlank 가 붙는 자리(no-target / @param: / @field:)와 검증 여부 (propLabExtra 태스크)
+//   P19 : Spring Cloud ConfigurationPropertiesRebinder 의 EnvironmentChangeEvent 재바인딩 (propLabCloud 태스크: main + propLabCloud)
 // actuator·validation·migrator 는 propLabExtra configuration 에만 있다. main runtimeClasspath 에는 없다.
 
 // ---------- P13: actuator ----------
@@ -197,4 +203,99 @@ internal fun runP15() {
         }
     }
     PropMarker.key = "prop.lab.value"
+}
+
+// ---------- P15d: Kotlin 생성자 프로퍼티에 단 검증 annotation 은 어디에 붙고, 검증이 도는가 ----------
+// 이 저장소는 -Xannotation-default-target=param-property 로 컴파일한다(build.gradle.kts). use-site target 이 없으면
+// 생성자 파라미터와 (적용 가능하면) 필드에 같이 붙는 규칙이다. @param: 은 생성자 파라미터에만 붙인다.
+// Boot 는 바인딩이 끝난 객체를 Bean Validation 으로 검사하므로 필드·getter 의 제약만 본다.
+
+@Validated
+@ConfigurationProperties("prop.vcn")
+class ValCtorNoTarget(@NotBlank val name: String?)
+
+@Validated
+@ConfigurationProperties("prop.vcp")
+class ValCtorParam(@param:NotBlank val name: String?)
+
+@Validated
+@ConfigurationProperties("prop.vcf")
+class ValCtorField(@field:NotBlank val name: String?)
+
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(ValCtorNoTarget::class)
+open class ValCtorNoTargetConfig
+
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(ValCtorParam::class)
+open class ValCtorParamConfig
+
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(ValCtorField::class)
+open class ValCtorFieldConfig
+
+internal fun runP15d() {
+    listOf(
+        Triple("no-target", ValCtorNoTargetConfig::class.java, ValCtorNoTarget::class.java),
+        Triple("@param:", ValCtorParamConfig::class.java, ValCtorParam::class.java),
+        Triple("@field:", ValCtorFieldConfig::class.java, ValCtorField::class.java),
+    ).forEach { (tag, cfg, type) ->
+        val onField = type.getDeclaredField("name").isAnnotationPresent(NotBlank::class.java)
+        val onParam = type.declaredConstructors.single { it.parameterCount == 1 }.parameters[0].isAnnotationPresent(NotBlank::class.java)
+        val onGetter = type.getMethod("getName").isAnnotationPresent(NotBlank::class.java)
+        println("[P15d $tag] ${type.simpleName} @NotBlank on field=$onField ctorParam=$onParam getter=$onGetter")
+        tryBoot("P15d $tag no value", nb(cfg)) { ctx ->
+            println("[P15d $tag] started name=${type.getMethod("getName").invoke(ctx.getBean(type)) ?: "<null>"}")
+        }
+        println()
+    }
+}
+
+// ---------- P19: Spring Cloud EnvironmentChangeEvent 재바인딩 ----------
+// spring-cloud-context 5.0.3 은 propLabCloud configuration 에만 있다(propLabCloud 태스크). main 컴파일 클래스패스에
+// 넣지 않으려고 Spring Cloud 클래스는 이름 문자열과 리플렉션으로만 쓴다.
+// ConfigurationPropertiesRebinderAutoConfiguration 은 @ConditionalOnBean(ConfigurationPropertiesBindingPostProcessor) 라
+// 사용자 설정이 다 읽힌 뒤 평가되도록 DeferredImportSelector 로 들인다.
+
+class CloudRebinderImport : DeferredImportSelector {
+    override fun selectImports(importingClassMetadata: AnnotationMetadata): Array<String> =
+        arrayOf("org.springframework.cloud.autoconfigure.ConfigurationPropertiesRebinderAutoConfiguration")
+}
+
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(RelaxProps::class, JavaBeanProps::class, EnvcProps::class)
+@Import(CloudRebinderImport::class)
+open class CloudRebindConfig
+
+internal fun runP19() {
+    val evtClass = Class.forName("org.springframework.cloud.context.environment.EnvironmentChangeEvent")
+    val rebinderClass = Class.forName("org.springframework.cloud.context.properties.ConfigurationPropertiesRebinder")
+    println("[P19] spring-cloud-context jar=${evtClass.protectionDomain.codeSource.location.path.substringAfterLast('/')}")
+    val dir = freshDir("p19")
+    writeYml(dir, "application.yml", "prop:\n  relax:\n    my-target-value: before\n  jb:\n    v: before\n  envc:\n    my-target-value: before")
+    tryBoot("P19", nb(CloudRebindConfig::class.java).properties(mapOf<String, Any>("spring.config.additional-location" to "file:${dir.absolutePath}/"))) { ctx ->
+        val rebinder = ctx.getBean(rebinderClass)
+        println("[P19] rebinder beanNames=${rebinderClass.getMethod("getBeanNames").invoke(rebinder)}")
+        listOf(RelaxProps::class.java, JavaBeanProps::class.java, EnvcProps::class.java).forEach { t ->
+            val name = ctx.getBeanNamesForType(t).single()
+            val cpb = org.springframework.boot.context.properties.ConfigurationPropertiesBean.get(ctx, ctx.getBean(name), name)!!
+            println("[P19] ${t.simpleName} bindMethod=${cpb.asBindTarget().bindMethod} ctorParams=${t.declaredConstructors.map { it.parameterCount }}")
+        }
+        val r0 = ctx.getBean(RelaxProps::class.java)
+        val j0 = ctx.getBean(JavaBeanProps::class.java)
+        val e0 = ctx.getBean(EnvcProps::class.java)
+        fun show(stage: String) {
+            val r = ctx.getBean(RelaxProps::class.java); val j = ctx.getBean(JavaBeanProps::class.java); val e = ctx.getBean(EnvcProps::class.java)
+            println("[P19:$stage] RelaxProps.myTargetValue=${r.myTargetValue ?: "<null>"}(same=${r === r0})" +
+                " JavaBeanProps.v=${j.v ?: "<null>"}(same=${j === j0})" +
+                " EnvcProps.myTargetValue=${e.myTargetValue ?: "<null>"}(same=${e === e0})")
+        }
+        show("before")
+        val keys = setOf("prop.relax.my-target-value", "prop.jb.v", "prop.envc.my-target-value")
+        ctx.environment.propertySources.addFirst(MapPropertySource("p19-override", keys.associateWith { "after" as Any }))
+        println("[P19] env after addFirst: " + keys.joinToString(" ") { "$it=${ctx.environment.getProperty(it)}" })
+        ctx.publishEvent(evtClass.getConstructor(Any::class.java, Set::class.java).newInstance(ctx, keys) as ApplicationEvent)
+        show("after EnvironmentChangeEvent")
+        println("[P19] rebinder errors=${rebinderClass.getMethod("getErrors").invoke(rebinder)}")
+    }
 }

@@ -1,0 +1,60 @@
+# experiment: P11N — 같은 환경 변수 표기 여섯을 '-systemEnvironment' 이름의 SystemEnvironmentPropertySource 로 넣되, 열거형(일반 Map)과 비열거형(size() 가 UnsupportedOperationException 을 던지는 Map)으로 각각 등록해 후보 대조 경로와 이름 열거 경로를 가른다. adapter 는 Boot 가 이 소스를 감싼 ConfigurationPropertySource 구현이다
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-10T14:18:51+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLab --args='P11N'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+14:18:52.452 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+2026-10-10T14:18:52.671+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.672+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.839+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.331 seconds (process running for 0.531)
+[P11N enumerable] var=PROP_RELAX_my-target-value adapter=SpringIterableConfigurationPropertySource bound=v-PROP_RELAX_my-target-value
+2026-10-10T14:18:52.852+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.852+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.857+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.014 seconds (process running for 0.549)
+[P11N enumerable] var=PROP_RELAX_myTargetValue adapter=SpringIterableConfigurationPropertySource bound=v-PROP_RELAX_myTargetValue
+2026-10-10T14:18:52.865+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.865+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.874+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.017 seconds (process running for 0.566)
+[P11N enumerable] var=PROP_RELAX_my_target_value adapter=SpringIterableConfigurationPropertySource bound=<null>
+2026-10-10T14:18:52.884+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.884+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.889+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.015 seconds (process running for 0.581)
+[P11N enumerable] var=PROP_RELAX_MY_TARGET_VALUE adapter=SpringIterableConfigurationPropertySource bound=v-PROP_RELAX_MY_TARGET_VALUE
+2026-10-10T14:18:52.897+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.897+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.901+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.011 seconds (process running for 0.594)
+[P11N enumerable] var=PROP_RELAX_MYTARGETVALUE adapter=SpringIterableConfigurationPropertySource bound=v-PROP_RELAX_MYTARGETVALUE
+2026-10-10T14:18:52.912+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.912+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.918+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.016 seconds (process running for 0.61)
+[P11N enumerable] var=prop_relax_my_target_value adapter=SpringIterableConfigurationPropertySource bound=v-prop_relax_my_target_value
+
+2026-10-10T14:18:52.928+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.928+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.934+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.015 seconds (process running for 0.627)
+[P11N non-enumerable] var=PROP_RELAX_my-target-value adapter=SpringConfigurationPropertySource bound=<null>
+2026-10-10T14:18:52.946+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.946+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.953+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.018 seconds (process running for 0.645)
+[P11N non-enumerable] var=PROP_RELAX_myTargetValue adapter=SpringConfigurationPropertySource bound=<null>
+2026-10-10T14:18:52.963+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.963+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.970+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.016 seconds (process running for 0.662)
+[P11N non-enumerable] var=PROP_RELAX_my_target_value adapter=SpringConfigurationPropertySource bound=<null>
+2026-10-10T14:18:52.987+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:52.987+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:52.991+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.019 seconds (process running for 0.684)
+[P11N non-enumerable] var=PROP_RELAX_MY_TARGET_VALUE adapter=SpringConfigurationPropertySource bound=v-PROP_RELAX_MY_TARGET_VALUE
+2026-10-10T14:18:53.002+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:53.002+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:53.009+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.017 seconds (process running for 0.701)
+[P11N non-enumerable] var=PROP_RELAX_MYTARGETVALUE adapter=SpringConfigurationPropertySource bound=v-PROP_RELAX_MYTARGETVALUE
+2026-10-10T14:18:53.020+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78605 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:18:53.020+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:18:53.026+09:00  INFO 78605 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.016 seconds (process running for 0.719)
+[P11N non-enumerable] var=prop_relax_my_target_value adapter=SpringConfigurationPropertySource bound=v-prop_relax_my_target_value
+
+

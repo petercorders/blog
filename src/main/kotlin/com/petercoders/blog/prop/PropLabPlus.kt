@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.context.properties.bind.Bindable
 import org.springframework.boot.context.properties.bind.Binder
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName
+import org.springframework.boot.context.properties.source.ConfigurationPropertySources
 import org.springframework.context.ApplicationListener
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
@@ -31,6 +32,7 @@ import java.util.jar.JarOutputStream
 //   P9  : 두 프로파일 순서, 멀티 문서 on-profile, P9b 프로파일 문서 안 활성화·옛 키 spring.profiles
 //   P10 : location 콤마 순서, spring.config.location 대체, 같은 위치 .properties 대 .yml, P10c import 파일 없음
 //   P11 : 리스트·Map·네 번째 후보(소문자 레거시)·리스트 원소 레거시 표기, numberOfElements
+//   P11N: 같은 환경 변수 소스를 열거형/비열거형으로 등록해 후보 대조 경로와 이름 열거 경로를 가른다
 //   P14 : @Value 와 환경 변수(진짜 OS env), P14b 기본값 없는 @Value 의 PSPC 유무
 //   P17 : @ConfigurationProperties 의 BindMethod(JAVA_BEAN / VALUE_OBJECT)
 //   P18 : Kubernetes Service 변수 REDIS_PRIMARY_PORT=tcp://… 와 prefix 충돌
@@ -400,6 +402,47 @@ internal fun runP11Os() {
         val env = ctx.environment as ConfigurableEnvironment
         dump("[P11OS]", env)
         printEnvx("P11OS", ctx)
+    }
+}
+
+// ---------- P11N: 환경 변수 소스를 비열거형으로 등록해 두 경로(후보 대조, 이름 열거)를 가른다 ----------
+
+/**
+ * size() 만 UnsupportedOperationException 을 던지는 Map. Boot 의 SpringConfigurationPropertySource.isFullEnumerable 이
+ * map.size() 를 불러 보고 실패하면 비열거형으로 본다(v4.1.1 SpringConfigurationPropertySource 188~199행).
+ * 그러면 SpringIterableConfigurationPropertySource 의 역매핑(이름 열거) 경로가 빠지고,
+ * SystemEnvironmentPropertyMapper.map(name) 이 만든 후보 이름을 get() 으로 대조하는 경로만 남는다.
+ */
+private class NonEnumerableEnv(private val d: MutableMap<String, Any>) : MutableMap<String, Any> by d {
+    override val size: Int get() = throw UnsupportedOperationException("non-enumerable (P11N)")
+}
+
+internal fun runP11n() {
+    val vars = listOf(
+        "PROP_RELAX_my-target-value",   // P6 kebab
+        "PROP_RELAX_myTargetValue",     // P6 camel
+        "PROP_RELAX_my_target_value",   // P6 snake(대문자 접두사 + 소문자 snake)
+        "PROP_RELAX_MY_TARGET_VALUE",   // P6 upper(레거시 대문자 후보)
+        "PROP_RELAX_MYTARGETVALUE",     // 공식 표기(현행 대문자 후보)
+        "prop_relax_my_target_value",   // 소문자 레거시 후보(#45741 모양)
+    )
+    listOf("enumerable" to false, "non-enumerable" to true).forEach { (mode, nonEnum) ->
+        vars.forEach { v ->
+            val backing = mutableMapOf<String, Any>(v to "v-$v")
+            val source: MutableMap<String, Any> = if (nonEnum) NonEnumerableEnv(backing) else backing
+            builder(RelaxConfig::class.java)
+                .initializers({ ctx: ConfigurableApplicationContext ->
+                    // 이름이 -systemEnvironment 로 끝나야 Boot 가 환경 변수 매퍼를 붙인다(P6·P11 과 같은 주입 방식)
+                    ctx.environment.propertySources.addFirst(SystemEnvironmentPropertySource("proplab-systemEnvironment", source))
+                })
+                .run().use { ctx ->
+                    val adapter = ConfigurationPropertySources.get(ctx.environment)
+                        .first { (it.underlyingSource as? org.springframework.core.env.PropertySource<*>)?.name == "proplab-systemEnvironment" }
+                    println("[P11N $mode] var=$v adapter=${adapter.javaClass.simpleName}" +
+                        " bound=${ctx.getBean(RelaxProps::class.java).myTargetValue ?: "<null>"}")
+                }
+        }
+        println()
     }
 }
 

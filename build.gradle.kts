@@ -193,6 +193,23 @@ tasks.register<JavaExec>("propLabCwd") {
     workingDir(cwd)
     doFirst { cwd.get().asFile.mkdirs() }
 }
+// [P19] Spring Cloud 재바인딩(EnvironmentChangeEvent) 실측. spring-cloud-context 는 이 configuration 에만 있다.
+// Boot BOM 이 관리하지 않으니 버전을 직접 적는다. 기본 5.0.3(Spring Cloud 2025.1.x GA 라인, Boot 4.0.8 기준 빌드),
+// -PcloudContext=5.1.0-M1 로 바꿔 재바인딩 전 초기화 조건이 바뀐 버전과 비교한다.
+// 프로브(PropLabExtra.kt runP19)는 클래스 이름 문자열과 리플렉션으로만 쓰므로 main 컴파일 클래스패스에도 넣지 않는다.
+//   ./gradlew -q propLabCloud --args='P19'                          (첫 실행만 온라인으로 의존성을 받는다. 이후 --offline)
+//   ./gradlew -q propLabCloud -PcloudContext=5.1.0-M1 --args='P19'
+val propLabCloud: Configuration by configurations.creating
+dependencies {
+    propLabCloud("org.springframework.cloud:spring-cloud-context:${project.findProperty("cloudContext") ?: "5.0.3"}")
+}
+tasks.register<JavaExec>("propLabCloud") {
+    group = "blog"
+    description = "4편 [P19] spring-cloud-context 의 ConfigurationPropertiesRebinder 로 재바인딩(기본 5.0.3)"
+    mainClass.set("com.petercoders.blog.prop.PropLabKt")
+    classpath = sourceSets["main"].runtimeClasspath + propLabCloud
+    standardOutput = System.out
+}
 // [P12] 테스트 소스 우선순위. 공용 test 설정은 그대로 두고 전용 Test 태스크에서만 진짜 -D 와 OS env 를 넣는다.
 //   ./gradlew --offline propTestLab --console=plain
 tasks.register<Test>("propTestLab") {

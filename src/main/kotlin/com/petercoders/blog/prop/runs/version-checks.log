@@ -151,3 +151,352 @@ v3.0.0: 35:@ConfigurationProperties(prefix = "spring.data.redis")
 [{'name': 'spring.redis.host', 'type': 'java.lang.String', 'deprecation': {'replacement': 'spring.data.redis.host', 'level': 'error', 'since': '3.0.0'}}]
 spring.redis.* entries = 33
 # 주: P15c 의 앱 클래스패스에는 spring-boot-data-redis 가 없어 migrator 가 spring.redis.host 를 보고하지 않았다(P15.log [P15c] metadata spring.redis.host: <none>).
+
+# ==== (추가 2026-10-10) 4편 감사 반영 라운드: 환경 변수 두 경로·ConfigData 순서·Spring Cloud 재바인딩 소스 대조 ====
+# date: 2026-10-10T14:21:56+0900
+# command: zsh vc2.sh (스크립트 본문은 아래 첨부)
+# ---- vc2.sh ----
+# | #!/bin/zsh
+# | B=https://raw.githubusercontent.com/spring-projects/spring-boot
+# | C=https://raw.githubusercontent.com/spring-cloud/spring-cloud-commons
+# | S=core/spring-boot/src/main/java/org/springframework/boot
+# | g(){ # base tag path pattern
+# |   echo "## $2 $3 :: grep -nE '$4'"
+# |   curl -sS "$1/$2/$3" | grep -nE "$4" | head -${5:-12}
+# | }
+# | g $B v4.1.1 $S/context/properties/source/SpringConfigurationPropertySource.java 'for \(String candidate : mapper.map\(name\)\)|Object getSystemEnvironmentProperty|systemEnvironment.get\(name|private static boolean isSystemEnvironmentPropertySource|instanceof SystemEnvironmentPropertySource|name.endsWith\("-"|private static boolean isFullEnumerable|map.size\(\)|catch \(UnsupportedOperationException|new SpringConfigurationPropertySource\(source|new SpringIterableConfigurationPropertySource\(\(Enumerable'
+# | g $B v4.1.1 $S/context/properties/source/SpringIterableConfigurationPropertySource.java 'ConfigurationProperty configurationProperty = super.getConfigurationProperty\(name\)|for \(String candidate : getCache\(\).getMapped\(name\)\)|propertyMapper.map\(propertyName\)|reverseMappings.put\(propertyName'
+# | g $B v4.1.1 $S/context/properties/source/SystemEnvironmentPropertyMapper.java 'public ConfigurationPropertyName map\(String propertySourceName\)|ConfigurationPropertyName.adapt\(propertySourceName, ._.'
+# | g $B v4.1.1 $S/context/config/ConfigDataEnvironmentContributors.java 'public Iterator<ConfigDataEnvironmentContributor> iterator\(\)|return this.root.iterator\(\)'
+# | g $B v4.1.1 $S/context/config/ConfigDataEnvironmentContributor.java 'class ContributorIterator|this.phase = ImportPhase.AFTER_PROFILE_ACTIVATION;|this.phase = ImportPhase.BEFORE_PROFILE_ACTIVATION;|this.next = ConfigDataEnvironmentContributor.this;'
+# | g $B v4.1.1 $S/context/config/ConfigDataEnvironment.java 'private void applyContributor|for \(ConfigDataEnvironmentContributor contributor : contributors\)|propertySources.addLast\(propertySource\)|DefaultPropertiesPropertySource.moveToEnd'
+# | g $B v4.1.1 $S/context/properties/ConfigurationPropertiesBindingPostProcessor.java 'public Object postProcessBeforeInitialization|if \(!hasBoundValueObject\(beanName\)\)'
+# | P=spring-cloud-context/src/main/java/org/springframework/cloud/context/properties
+# | for t in v5.0.1 v5.0.2 v5.0.3 v5.1.0-M1 5.0.x; do g $C $t $P/ConfigurationPropertiesRebinder.java 'destroyBean\(bean\)|resetBeanToDefaults\(bean\);|initializeBean\(bean, name\)|private boolean hasDefaultConstructor|constructor.getParameterCount\(\) == 0|constructors.length == 1'; done
+# | g $C v5.0.3 $P/ConfigurationPropertiesBeans.java 'public Object postProcessBeforeInitialization|ConfigurationPropertiesBean.get\(this.applicationContext|this.beans.put\(beanName'
+# | g $C v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/autoconfigure/ConfigurationPropertiesRebinderAutoConfiguration.java '@ConditionalOnBean|public static ConfigurationPropertiesBeans|public ConfigurationPropertiesRebinder configurationPropertiesRebinder'
+# | echo "## GitHub (gh api)"
+# | for t in v5.0.3 v5.1.0-M1; do s=$(gh api repos/spring-cloud/spring-cloud-commons/git/refs/tags/$t --jq '.object.sha'); gh api repos/spring-cloud/spring-cloud-commons/git/tags/$s --jq '"spring-cloud-commons \(.tag) commit=\(.object.sha[0:9]) tagger=\(.tagger.date)"'; done
+# | gh api repos/spring-cloud/spring-cloud-commons/commits/e0a37b9f0 --jq '"spring-cloud-commons commit \(.sha[0:9]) \(.commit.committer.date) \(.commit.message | gsub("\n+"; " | "))"'
+# | gh api repos/spring-cloud/spring-cloud-commons/issues/1733 --jq '"spring-cloud-commons #\(.number) [\(.state)] title=\(.title)"'
+# | gh api repos/spring-cloud/spring-cloud-commons/issues/1733 --jq '.body' | grep -nE 'Since spring-cloud-context 5.0.2|Java 25, Spring Boot 4.1.1|Absent in 5.0.1, introduced in 5.0.2'
+# | echo "## Maven Central spring-cloud-context versions (5.x): $(curl -sS https://repo1.maven.org/maven2/org/springframework/cloud/spring-cloud-context/maven-metadata.xml | grep -oE '<version>5\.[0-9]+\.[0-9]+(-[A-Z0-9]+)?</version>' | sed -E 's#</?version>##g' | tr '\n' ' ')"
+# ---- output ----
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SpringConfigurationPropertySource.java :: grep -nE 'for \(String candidate : mapper.map\(name\)\)|Object getSystemEnvironmentProperty|systemEnvironment.get\(name|private static boolean isSystemEnvironmentPropertySource|instanceof SystemEnvironmentPropertySource|name.endsWith\("-"|private static boolean isFullEnumerable|map.size\(\)|catch \(UnsupportedOperationException|new SpringConfigurationPropertySource\(source|new SpringIterableConfigurationPropertySource\(\(Enumerable'
+91:				for (String candidate : mapper.map(name)) {
+114:	@Nullable Object getSystemEnvironmentProperty(Map<String, Object> systemEnvironment, String name) {
+115:		Object value = systemEnvironment.get(name);
+116:		return (value != null) ? value : systemEnvironment.get(name.toLowerCase(Locale.ROOT));
+176:				? new SpringConfigurationPropertySource(source, systemEnvironmentSource, mappers)
+177:				: new SpringIterableConfigurationPropertySource((EnumerablePropertySource<?>) source,
+181:	private static boolean isSystemEnvironmentPropertySource(PropertySource<?> source) {
+183:		return (source instanceof SystemEnvironmentPropertySource)
+185:						|| name.endsWith("-" + StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME));
+188:	private static boolean isFullEnumerable(PropertySource<?> source) {
+193:				map.size();
+195:			catch (UnsupportedOperationException ex) {
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SpringIterableConfigurationPropertySource.java :: grep -nE 'ConfigurationProperty configurationProperty = super.getConfigurationProperty\(name\)|for \(String candidate : getCache\(\).getMapped\(name\)\)|propertyMapper.map\(propertyName\)|reverseMappings.put\(propertyName'
+109:		ConfigurationProperty configurationProperty = super.getConfigurationProperty(name);
+113:		for (String candidate : getCache().getMapped(name)) {
+276:						ConfigurationPropertyName configurationPropertyName = propertyMapper.map(propertyName);
+279:							reverseMappings.put(propertyName, configurationPropertyName);
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SystemEnvironmentPropertyMapper.java :: grep -nE 'public ConfigurationPropertyName map\(String propertySourceName\)|ConfigurationPropertyName.adapt\(propertySourceName, ._.'
+63:	public ConfigurationPropertyName map(String propertySourceName) {
+74:			return ConfigurationPropertyName.adapt(propertySourceName, '_', this::processElementValue);
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigDataEnvironmentContributors.java :: grep -nE 'public Iterator<ConfigDataEnvironmentContributor> iterator\(\)|return this.root.iterator\(\)'
+252:	public Iterator<ConfigDataEnvironmentContributor> iterator() {
+253:		return this.root.iterator();
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigDataEnvironmentContributor.java :: grep -nE 'class ContributorIterator|this.phase = ImportPhase.AFTER_PROFILE_ACTIVATION;|this.phase = ImportPhase.BEFORE_PROFILE_ACTIVATION;|this.next = ConfigDataEnvironmentContributor.this;'
+547:	private final class ContributorIterator implements Iterator<ConfigDataEnvironmentContributor> {
+558:			this.phase = ImportPhase.AFTER_PROFILE_ACTIVATION;
+591:				this.phase = ImportPhase.BEFORE_PROFILE_ACTIVATION;
+597:				this.next = ConfigDataEnvironmentContributor.this;
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigDataEnvironment.java :: grep -nE 'private void applyContributor|for \(ConfigDataEnvironmentContributor contributor : contributors\)|propertySources.addLast\(propertySource\)|DefaultPropertiesPropertySource.moveToEnd'
+304:		for (ConfigDataEnvironmentContributor contributor : contributors) {
+345:		DefaultPropertiesPropertySource.moveToEnd(propertySources);
+355:	private void applyContributor(ConfigDataEnvironmentContributors contributors,
+358:		for (ConfigDataEnvironmentContributor contributor : contributors) {
+368:					propertySources.addLast(propertySource);
+377:		for (ConfigDataEnvironmentContributor contributor : contributors) {
+386:		for (ConfigDataEnvironmentContributor contributor : contributors) {
+391:		for (ConfigDataEnvironmentContributor contributor : contributors) {
+## v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationPropertiesBindingPostProcessor.java :: grep -nE 'public Object postProcessBeforeInitialization|if \(!hasBoundValueObject\(beanName\)\)'
+82:	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+83:		if (!hasBoundValueObject(beanName)) {
+## v5.0.1 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java :: grep -nE 'destroyBean\(bean\)|resetBeanToDefaults\(bean\);|initializeBean\(bean, name\)|private boolean hasDefaultConstructor|constructor.getParameterCount\(\) == 0|constructors.length == 1'
+138:				appContext.getAutowireCapableBeanFactory().destroyBean(bean);
+139:				appContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
+## v5.0.2 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java :: grep -nE 'destroyBean\(bean\)|resetBeanToDefaults\(bean\);|initializeBean\(bean, name\)|private boolean hasDefaultConstructor|constructor.getParameterCount\(\) == 0|constructors.length == 1'
+166:					appContext.getAutowireCapableBeanFactory().destroyBean(bean);
+167:					resetBeanToDefaults(bean);
+168:					appContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
+## v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java :: grep -nE 'destroyBean\(bean\)|resetBeanToDefaults\(bean\);|initializeBean\(bean, name\)|private boolean hasDefaultConstructor|constructor.getParameterCount\(\) == 0|constructors.length == 1'
+205:						appContext.getAutowireCapableBeanFactory().destroyBean(bean);
+206:						resetBeanToDefaults(bean);
+208:						appContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
+263:	private boolean hasDefaultConstructor(Class<?> type) {
+265:			if (constructor.getParameterCount() == 0) {
+## v5.1.0-M1 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java :: grep -nE 'destroyBean\(bean\)|resetBeanToDefaults\(bean\);|initializeBean\(bean, name\)|private boolean hasDefaultConstructor|constructor.getParameterCount\(\) == 0|constructors.length == 1'
+205:						appContext.getAutowireCapableBeanFactory().destroyBean(bean);
+206:						resetBeanToDefaults(bean);
+208:						appContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
+276:	private boolean hasDefaultConstructor(Class<?> type) {
+278:		return constructors.length == 1 && constructors[0].getParameterCount() == 0;
+## 5.0.x spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java :: grep -nE 'destroyBean\(bean\)|resetBeanToDefaults\(bean\);|initializeBean\(bean, name\)|private boolean hasDefaultConstructor|constructor.getParameterCount\(\) == 0|constructors.length == 1'
+217:						appContext.getAutowireCapableBeanFactory().destroyBean(bean);
+218:						resetBeanToDefaults(bean);
+220:						appContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
+288:	private boolean hasDefaultConstructor(Class<?> type) {
+290:		return constructors.length == 1 && constructors[0].getParameterCount() == 0;
+## v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesBeans.java :: grep -nE 'public Object postProcessBeforeInitialization|ConfigurationPropertiesBean.get\(this.applicationContext|this.beans.put\(beanName'
+70:	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+74:		ConfigurationPropertiesBean propertiesBean = ConfigurationPropertiesBean.get(this.applicationContext, bean,
+77:			this.beans.put(beanName, propertiesBean);
+## v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/autoconfigure/ConfigurationPropertiesRebinderAutoConfiguration.java :: grep -nE '@ConditionalOnBean|public static ConfigurationPropertiesBeans|public ConfigurationPropertiesRebinder configurationPropertiesRebinder'
+38:@ConditionalOnBean(ConfigurationPropertiesBindingPostProcessor.class)
+49:	public static ConfigurationPropertiesBeans configurationPropertiesBeans() {
+55:	public ConfigurationPropertiesRebinder configurationPropertiesRebinder(ConfigurationPropertiesBeans beans,
+## GitHub (gh api)
+spring-cloud-commons v5.0.3 commit=9e19c8233 tagger=2026-08-20T14:04:43Z
+spring-cloud-commons v5.1.0-M1 commit=5d1e3fe5c tagger=2026-09-24T10:11:29Z
+spring-cloud-commons commit e0a37b9f0 2026-09-02T19:07:03Z Skip reset to default functionality when a bean contains more than one constructor | Fixes #1733
+spring-cloud-commons #1733 [closed] title=Refresh drops @ConfigurationProperties values that no property source carries
+1:Since spring-cloud-context 5.0.2, `ConfigurationPropertiesRebinder` resets every rebindable bean to
+5:Java 25, Spring Boot 4.1.1, Spring Cloud 2025.1.3, spring-cloud-context 5.0.3,
+36:Absent in 5.0.1, introduced in 5.0.2 by #1680, extended in 5.0.3. The sample carries a
+## Maven Central spring-cloud-context versions (5.x): 5.0.0-M1 5.0.0-M2 5.0.0-M3 5.0.0-M4 5.0.0-RC1 5.0.0 5.0.1 5.0.2 5.0.3 5.1.0-M1 
+
+# ==== (추가 2026-10-10 2) 4편 본문 소스 permalink 16개의 행 범위 대조 ====
+# date: 2026-10-10T23:21:28+0900
+# command: zsh vc3.sh (스크립트 본문은 아래 첨부). 본문이 함수명에 건 github.com/<org>/<repo>/blob/<tag>/<path>#Lx-Ly 와 같은 범위를 태그 raw 소스에서 행 번호와 함께 뽑는다
+# ---- vc3.sh ----
+# | #!/bin/zsh
+# | # 4편 본문이 함수명에 건 GitHub 태그 permalink 16개의 행 범위를 태그 raw 소스에서 그대로 뽑는다.
+# | r(){ # org/repo tag path from to
+# |   local to=${5:-$4}
+# |   echo "## $1 $2 $3 L$4-L$to"
+# |   curl -sS "https://raw.githubusercontent.com/$1/$2/$3" | sed -n "${4},${to}p" | nl -ba -v $4 -w4 -s': '
+# | }
+# | BOOT=spring-projects/spring-boot; CC=spring-cloud/spring-cloud-commons
+# | S=core/spring-boot/src/main/java/org/springframework/boot
+# | r $BOOT v4.1.1 $S/context/config/ConfigDataEnvironment.java 355 372
+# | r $BOOT v4.1.1 $S/context/config/ConfigDataEnvironmentContributor.java 578 600
+# | r $BOOT v4.1.1 $S/context/properties/source/SpringConfigurationPropertySource.java 181 186
+# | r $BOOT v4.1.1 $S/context/properties/source/SpringConfigurationPropertySource.java 171 200
+# | r $BOOT v4.1.1 $S/context/properties/source/SystemEnvironmentPropertyMapper.java 47 54
+# | r $BOOT v4.1.1 $S/context/properties/source/SpringIterableConfigurationPropertySource.java 105 121
+# | r $BOOT v4.1.1 $S/context/properties/source/SpringIterableConfigurationPropertySource.java 273 283
+# | r $BOOT v4.1.1 $S/context/properties/bind/DefaultBindConstructorProvider.java 114 117
+# | r $BOOT v4.1.1 $S/context/properties/ConfigurationPropertiesBindingPostProcessor.java 82 91
+# | r $BOOT v4.1.1 $S/context/config/ConfigDataEnvironment.java 236 248
+# | r $BOOT v4.1.1 $S/context/config/InvalidConfigDataPropertyException.java 108 128
+# | r $BOOT v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertyMigration.java 84 90
+# | P=spring-cloud-context/src/main/java/org/springframework/cloud
+# | r $CC v5.0.3 $P/context/properties/ConfigurationPropertiesRebinder.java 204 209
+# | r $CC v5.0.3 $P/context/properties/ConfigurationPropertiesRebinder.java 263 270
+# | r $CC v5.1.0-M1 $P/context/properties/ConfigurationPropertiesRebinder.java 276 279
+# | r $CC v5.0.3 $P/endpoint/event/RefreshEventListener.java 73
+# ---- output ----
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigDataEnvironment.java L355-L372
+ 355: 	private void applyContributor(ConfigDataEnvironmentContributors contributors,
+ 356: 			ConfigDataActivationContext activationContext, MutablePropertySources propertySources) {
+ 357: 		this.logger.trace("Applying config data environment contributions");
+ 358: 		for (ConfigDataEnvironmentContributor contributor : contributors) {
+ 359: 			PropertySource<?> propertySource = contributor.getPropertySource();
+ 360: 			if (contributor.getKind() == ConfigDataEnvironmentContributor.Kind.BOUND_IMPORT && propertySource != null) {
+ 361: 				if (!contributor.isActive(activationContext)) {
+ 362: 					this.logger
+ 363: 						.trace(LogMessage.format("Skipping inactive property source '%s'", propertySource.getName()));
+ 364: 				}
+ 365: 				else {
+ 366: 					this.logger
+ 367: 						.trace(LogMessage.format("Adding imported property source '%s'", propertySource.getName()));
+ 368: 					propertySources.addLast(propertySource);
+ 369: 					this.environmentUpdateListener.onPropertySourceAdded(propertySource, contributor.getLocation(),
+ 370: 							contributor.getResource());
+ 371: 				}
+ 372: 			}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigDataEnvironmentContributor.java L578-L600
+ 578: 		private @Nullable ConfigDataEnvironmentContributor fetchIfNecessary() {
+ 579: 			if (this.next != null) {
+ 580: 				return this.next;
+ 581: 			}
+ 582: 			if (this.current.hasNext()) {
+ 583: 				this.next = this.current.next();
+ 584: 				return this.next;
+ 585: 			}
+ 586: 			if (this.children.hasNext()) {
+ 587: 				this.current = this.children.next().iterator();
+ 588: 				return fetchIfNecessary();
+ 589: 			}
+ 590: 			if (this.phase == ImportPhase.AFTER_PROFILE_ACTIVATION) {
+ 591: 				this.phase = ImportPhase.BEFORE_PROFILE_ACTIVATION;
+ 592: 				this.children = getChildren(this.phase).iterator();
+ 593: 				return fetchIfNecessary();
+ 594: 			}
+ 595: 			if (this.phase == ImportPhase.BEFORE_PROFILE_ACTIVATION) {
+ 596: 				this.phase = null;
+ 597: 				this.next = ConfigDataEnvironmentContributor.this;
+ 598: 				return this.next;
+ 599: 			}
+ 600: 			return null;
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SpringConfigurationPropertySource.java L181-L186
+ 181: 	private static boolean isSystemEnvironmentPropertySource(PropertySource<?> source) {
+ 182: 		String name = source.getName();
+ 183: 		return (source instanceof SystemEnvironmentPropertySource)
+ 184: 				&& (StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME.equals(name)
+ 185: 						|| name.endsWith("-" + StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME));
+ 186: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SpringConfigurationPropertySource.java L171-L200
+ 171: 	static SpringConfigurationPropertySource from(PropertySource<?> source) {
+ 172: 		Assert.notNull(source, "'source' must not be null");
+ 173: 		boolean systemEnvironmentSource = isSystemEnvironmentPropertySource(source);
+ 174: 		PropertyMapper[] mappers = (!systemEnvironmentSource) ? DEFAULT_MAPPERS : SYSTEM_ENVIRONMENT_MAPPERS;
+ 175: 		return (!isFullEnumerable(source))
+ 176: 				? new SpringConfigurationPropertySource(source, systemEnvironmentSource, mappers)
+ 177: 				: new SpringIterableConfigurationPropertySource((EnumerablePropertySource<?>) source,
+ 178: 						systemEnvironmentSource, mappers);
+ 179: 	}
+ 180: 
+ 181: 	private static boolean isSystemEnvironmentPropertySource(PropertySource<?> source) {
+ 182: 		String name = source.getName();
+ 183: 		return (source instanceof SystemEnvironmentPropertySource)
+ 184: 				&& (StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME.equals(name)
+ 185: 						|| name.endsWith("-" + StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME));
+ 186: 	}
+ 187: 
+ 188: 	private static boolean isFullEnumerable(PropertySource<?> source) {
+ 189: 		PropertySource<?> rootSource = getRootSource(source);
+ 190: 		if (rootSource.getSource() instanceof Map<?, ?> map) {
+ 191: 			// Check we're not security restricted
+ 192: 			try {
+ 193: 				map.size();
+ 194: 			}
+ 195: 			catch (UnsupportedOperationException ex) {
+ 196: 				return false;
+ 197: 			}
+ 198: 		}
+ 199: 		return (source instanceof EnumerablePropertySource);
+ 200: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SystemEnvironmentPropertyMapper.java L47-L54
+  47: 	public List<String> map(ConfigurationPropertyName configurationPropertyName) {
+  48: 		List<String> mapped = new ArrayList<>(4);
+  49: 		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.SYSTEM_ENVIRONMENT, true));
+  50: 		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.LEGACY_SYSTEM_ENVIRONMENT, true));
+  51: 		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.SYSTEM_ENVIRONMENT, false));
+  52: 		addIfMissing(mapped, configurationPropertyName.toString(ToStringFormat.LEGACY_SYSTEM_ENVIRONMENT, false));
+  53: 		return mapped;
+  54: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SpringIterableConfigurationPropertySource.java L105-L121
+ 105: 	public @Nullable ConfigurationProperty getConfigurationProperty(@Nullable ConfigurationPropertyName name) {
+ 106: 		if (name == null) {
+ 107: 			return null;
+ 108: 		}
+ 109: 		ConfigurationProperty configurationProperty = super.getConfigurationProperty(name);
+ 110: 		if (configurationProperty != null) {
+ 111: 			return configurationProperty;
+ 112: 		}
+ 113: 		for (String candidate : getCache().getMapped(name)) {
+ 114: 			Object value = getPropertySourceProperty(candidate);
+ 115: 			if (value != null) {
+ 116: 				Origin origin = PropertySourceOrigin.get(getPropertySource(), candidate);
+ 117: 				return ConfigurationProperty.of(this, name, value, origin);
+ 118: 			}
+ 119: 		}
+ 120: 		return null;
+ 121: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/source/SpringIterableConfigurationPropertySource.java L273-L283
+ 273: 			for (PropertyMapper propertyMapper : this.mappers) {
+ 274: 				for (String propertyName : propertyNames) {
+ 275: 					if (!reverseMappings.containsKey(propertyName)) {
+ 276: 						ConfigurationPropertyName configurationPropertyName = propertyMapper.map(propertyName);
+ 277: 						if (configurationPropertyName != null && !configurationPropertyName.isEmpty()) {
+ 278: 							add(mappings, configurationPropertyName, propertyName);
+ 279: 							reverseMappings.put(propertyName, configurationPropertyName);
+ 280: 						}
+ 281: 					}
+ 282: 				}
+ 283: 			}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/bind/DefaultBindConstructorProvider.java L114-L117
+ 114: 			if (bind == null && !hasAutowiredConstructor && isKotlinType(type)) {
+ 115: 				bind = deduceKotlinBindConstructor(type);
+ 116: 				deducedBindConstructor = bind != null;
+ 117: 			}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationPropertiesBindingPostProcessor.java L82-L91
+  82: 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+  83: 		if (!hasBoundValueObject(beanName)) {
+  84: 			bind(ConfigurationPropertiesBean.get(this.applicationContext, bean, beanName));
+  85: 		}
+  86: 		return bean;
+  87: 	}
+  88: 
+  89: 	private boolean hasBoundValueObject(String beanName) {
+  90: 		return BindMethod.VALUE_OBJECT.equals(BindMethodAttribute.get(this.registry, beanName));
+  91: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/ConfigDataEnvironment.java L236-L248
+ 236: 	void processAndApply() {
+ 237: 		ConfigDataImporter importer = new ConfigDataImporter(this.logFactory, this.notFoundAction, this.resolvers,
+ 238: 				this.loaders);
+ 239: 		registerBootstrapBinder(this.contributors, null, DENY_INACTIVE_BINDING);
+ 240: 		ConfigDataEnvironmentContributors contributors = processInitial(this.contributors, importer);
+ 241: 		ConfigDataActivationContext activationContext = createActivationContext(
+ 242: 				contributors.getBinder(null, BinderOption.FAIL_ON_BIND_TO_INACTIVE_SOURCE));
+ 243: 		contributors = processWithoutProfiles(contributors, importer, activationContext);
+ 244: 		activationContext = withProfiles(contributors, activationContext);
+ 245: 		contributors = processWithProfiles(contributors, importer, activationContext);
+ 246: 		applyToEnvironment(contributors, activationContext, importer.getLoadedLocations(),
+ 247: 				importer.getOptionalLocations());
+ 248: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot/src/main/java/org/springframework/boot/context/config/InvalidConfigDataPropertyException.java L108-L128
+ 108: 	static void throwIfPropertyFound(ConfigDataEnvironmentContributor contributor) {
+ 109: 		ConfigurationPropertySource propertySource = contributor.getConfigurationPropertySource();
+ 110: 		if (propertySource != null) {
+ 111: 			ERRORS.forEach((name, replacement) -> {
+ 112: 				ConfigurationProperty property = propertySource.getConfigurationProperty(name);
+ 113: 				if (property != null) {
+ 114: 					throw new InvalidConfigDataPropertyException(property, false, replacement,
+ 115: 							contributor.getResource());
+ 116: 				}
+ 117: 			});
+ 118: 			if (contributor.isFromProfileSpecificImport()
+ 119: 					&& !contributor.hasConfigDataOption(ConfigData.Option.IGNORE_PROFILES)) {
+ 120: 				PROFILE_SPECIFIC_ERRORS.forEach((name) -> {
+ 121: 					ConfigurationProperty property = propertySource.getConfigurationProperty(name);
+ 122: 					if (property != null) {
+ 123: 						throw new InvalidConfigDataPropertyException(property, true, null, contributor.getResource());
+ 124: 					}
+ 125: 				});
+ 126: 			}
+ 127: 		}
+ 128: 	}
+## spring-projects/spring-boot v4.1.1 core/spring-boot-properties-migrator/src/main/java/org/springframework/boot/context/properties/migrator/PropertyMigration.java L84-L90
+  84: 	private static boolean determineCompatibleType(ConfigurationMetadataProperty metadata,
+  85: 			@Nullable ConfigurationMetadataProperty replacementMetadata) {
+  86: 		String currentType = determineType(metadata);
+  87: 		String replacementType = determineType(replacementMetadata);
+  88: 		if (currentType == null || replacementType == null) {
+  89: 			return false;
+  90: 		}
+## spring-cloud/spring-cloud-commons v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java L204-L209
+ 204: 					else {
+ 205: 						appContext.getAutowireCapableBeanFactory().destroyBean(bean);
+ 206: 						resetBeanToDefaults(bean);
+ 207: 						appContext.getAutowireCapableBeanFactory().autowireBean(bean);
+ 208: 						appContext.getAutowireCapableBeanFactory().initializeBean(bean, name);
+ 209: 					}
+## spring-cloud/spring-cloud-commons v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java L263-L270
+ 263: 	private boolean hasDefaultConstructor(Class<?> type) {
+ 264: 		for (Constructor<?> constructor : type.getDeclaredConstructors()) {
+ 265: 			if (constructor.getParameterCount() == 0) {
+ 266: 				return true;
+ 267: 			}
+ 268: 		}
+ 269: 		return false;
+ 270: 	}
+## spring-cloud/spring-cloud-commons v5.1.0-M1 spring-cloud-context/src/main/java/org/springframework/cloud/context/properties/ConfigurationPropertiesRebinder.java L276-L279
+ 276: 	private boolean hasDefaultConstructor(Class<?> type) {
+ 277: 		Constructor<?>[] constructors = type.getDeclaredConstructors();
+ 278: 		return constructors.length == 1 && constructors[0].getParameterCount() == 0;
+ 279: 	}
+## spring-cloud/spring-cloud-commons v5.0.3 spring-cloud-context/src/main/java/org/springframework/cloud/endpoint/event/RefreshEventListener.java L73-L73
+  73: 			log.info("Refresh keys changed: " + keys);

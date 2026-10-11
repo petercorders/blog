@@ -1,0 +1,70 @@
+# experiment: P15d — Kotlin 생성자 프로퍼티(constructor binding)에 @NotBlank 를 use-site target 없이 / @param: / @field: 로 달고 값 없이 기동. 이 저장소의 컴파일 옵션 -Xannotation-default-target=param-property 아래에서 annotation 이 필드·생성자 파라미터·getter 중 어디에 붙었는지 리플렉션으로 찍고, @Validated 검증이 기동을 멈추는지 본다
+# java -version (앱을 실행한 Gradle toolchain JDK = 아래 env 줄의 java.home): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) 
+# java -version (셸 기본 /usr/bin/java, 앱 실행에는 쓰지 않음): openjdk version "26.0.2.1" 2026-08-18 OpenJDK Runtime Environment (build 26.0.2.1+1-7) OpenJDK 64-Bit Server VM (build 26.0.2.1+1-7, mixed mode, sharing) 
+# machine: Apple M5 Pro, hw.ncpu=15, macOS 26.6.2
+# date: 2026-10-10T14:19:01+0900
+# command: cd /tmp/gradle-prop && ./gradlew --offline -q propLabExtra --args='P15D'
+# note: 코드는 저장소(/Users/kibong_home/Desktop/development/blog)에서 고치고 rsync 한 사본 /tmp/gradle-prop 에서 돌렸다. 아래는 출력 원문이다.
+14:19:02.494 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.vm.name=OpenJDK 64-Bit Server VM java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home / kotlin=2.3.21 spring-boot=4.1.1 spring-framework=7.0.9 spring-security=7.1.1 / user.dir=/private/tmp/gradle-prop
+[P15d no-target] ValCtorNoTarget @NotBlank on field=true ctorParam=true getter=false
+2026-10-10T14:19:02.691+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78835 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:19:02.692+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:19:02.934+09:00  WARN 78835 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.vcn-com.petercoders.blog.prop.ValCtorNoTarget': Could not bind properties to 'ValCtorNoTarget' : prefix=prop.vcn, ignoreInvalidFields=false, ignoreUnknownFields=true
+2026-10-10T14:19:02.942+09:00 ERROR 78835 --- [blog] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Binding to target com.petercoders.blog.prop.ValCtorNoTarget failed:
+
+    Property: prop.vcn.name
+    Value: "null"
+    Reason: 공백일 수 없습니다
+
+
+Action:
+
+Update your application's configuration
+
+[P15d no-target no value] failure[0] org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.vcn-com.petercoders.blog.prop.ValCtorNoTarget': Could not bind properties to 'ValCtorNoTarget' : prefix=prop.vcn, ignoreInvalidFields=false, ignoreUnknownFields=true
+[P15d no-target no value] failure[1] org.springframework.boot.context.properties.bind.BindException: Failed to bind properties under 'prop.vcn' to com.petercoders.blog.prop.ValCtorNoTarget
+[P15d no-target no value] failure[2] org.springframework.boot.context.properties.bind.validation.BindValidationException: Binding validation errors on prop.vcn
+
+[P15d @param:] ValCtorParam @NotBlank on field=false ctorParam=true getter=false
+2026-10-10T14:19:02.953+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78835 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:19:02.953+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:19:02.981+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Started PropLabKt in 0.035 seconds (process running for 0.6)
+[P15d @param:] started name=<null>
+
+[P15d @field:] ValCtorField @NotBlank on field=true ctorParam=false getter=false
+2026-10-10T14:19:02.991+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : Starting PropLabKt using Java 25.0.4.1 with PID 78835 (/private/tmp/gradle-prop/build/classes/kotlin/main started by kibong_home in /private/tmp/gradle-prop)
+2026-10-10T14:19:02.991+09:00  INFO 78835 --- [blog] [           main] com.petercoders.blog.prop.PropLabKt      : No active profile set, falling back to 1 default profile: "default"
+2026-10-10T14:19:03.004+09:00  WARN 78835 --- [blog] [           main] s.c.a.AnnotationConfigApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.vcf-com.petercoders.blog.prop.ValCtorField': Could not bind properties to 'ValCtorField' : prefix=prop.vcf, ignoreInvalidFields=false, ignoreUnknownFields=true
+2026-10-10T14:19:03.005+09:00 ERROR 78835 --- [blog] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Binding to target com.petercoders.blog.prop.ValCtorField failed:
+
+    Property: prop.vcf.name
+    Value: "null"
+    Reason: 공백일 수 없습니다
+
+
+Action:
+
+Update your application's configuration
+
+[P15d @field: no value] failure[0] org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'prop.vcf-com.petercoders.blog.prop.ValCtorField': Could not bind properties to 'ValCtorField' : prefix=prop.vcf, ignoreInvalidFields=false, ignoreUnknownFields=true
+[P15d @field: no value] failure[1] org.springframework.boot.context.properties.bind.BindException: Failed to bind properties under 'prop.vcf' to com.petercoders.blog.prop.ValCtorField
+[P15d @field: no value] failure[2] org.springframework.boot.context.properties.bind.validation.BindValidationException: Binding validation errors on prop.vcf
+
+
