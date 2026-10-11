@@ -6,6 +6,7 @@
 //   X8B→x8b.log(X8b·X8c·X8d·X8e) · X10→x10.log · X11→x11.log · X12→x12.log · X13→x13.log
 //   X14→x14.log · X14OBS→x14obs.log(excLabObs 태스크) · X15→x15.log · X16→x16.log
 //   감사 반영(2026-10-08): X11CTX→x11ctx.log · X7C→x7c.log
+//   감사 반영(2026-10-10): X11AFTER→x11after.log · X1UP→x1up.log · X8IDEM→x8idem.log
 //   새 마커 함수는 ExcLabPlus.kt · ExcLabX15.kt · ExcLabObs.kt 에 있다.
 //
 // 실행: cd ~/Desktop/development/blog
@@ -264,6 +265,9 @@ fun main(args: Array<String>) {
     step("X16") { runX16() }
     step("X11CTX") { runX11Ctx() }    // 2026-10-08 감사 반영: ERROR dispatch 의 인증 상태
     step("X7C") { runX7c() }          // 2026-10-08 감사 반영: root 매치 없을 때 cause 매치
+    step("X11AFTER") { runX11After() } // 2026-10-10 감사 반영: 토큰 Filter 를 ExceptionTranslationFilter 뒤에
+    step("X1UP") { runX1Up() }        // 2026-10-10 감사 반영: 업로드 크기 초과가 try 안에서 나는가
+    step("X8IDEM") { runX8Idem() }    // 2026-10-10 감사 반영: 멱등키 레이어가 commit 뒤 541 을 저장하면
     // actuator·tracing 이 클래스패스에 있어야 하므로 excLabObs 태스크로 이름을 줘서만 돈다.
     if (only == "X14OBS") { runX14Obs(); println() }
     exitProcess(0)

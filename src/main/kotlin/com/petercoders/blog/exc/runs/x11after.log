@@ -1,0 +1,52 @@
+# experiment: x11after — X11 (4)의 TokenFilter(BadCredentialsException 을 던짐)를 addFilterBefore(UsernamePasswordAuthenticationFilter) 대신 addFilterAfter(ExceptionTranslationFilter) 로 넣고 같은 두 요청(익명·user + X-Token: expired)을 ERROR dispatch 인가 허용 없음/있음 두 구성으로 보낸다
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X11AFTER' > src/main/kotlin/com/petercoders/blog/exc/runs/x11after.log   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-10 14:15 KST)
+## [X11AFTER]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+14:15:20.859 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+user = httpBasic user/pw(ROLE_USER). X-Token: expired 면 TokenFilter 가 BadCredentialsException 을 던진다.
+
+### 토큰 Filter 가 던짐 — addFilterAfter(ExceptionTranslationFilter)  ERROR dispatch permitAll=false
+Security Filter Chain[0] 안의 Filter(실행 순서):
+  [0] org.springframework.security.web.session.DisableEncodeUrlFilter
+  [1] org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter
+  [2] org.springframework.security.web.context.SecurityContextHolderFilter
+  [3] org.springframework.security.web.header.HeaderWriterFilter
+  [4] org.springframework.security.web.authentication.logout.LogoutFilter
+  [5] org.springframework.security.web.authentication.www.BasicAuthenticationFilter
+  [6] org.springframework.security.web.savedrequest.RequestCacheAwareFilter
+  [7] org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter
+  [8] org.springframework.security.web.authentication.AnonymousAuthenticationFilter
+  [9] org.springframework.security.web.access.ExceptionTranslationFilter
+  [10] com.petercoders.blog.exc.TokenFilter
+  [11] org.springframework.security.web.access.intercept.AuthorizationFilter
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| anonymous + X-Token: expired GET /x2/ise | 401 | - | Basic realm="Realm", charset="UTF-8" |  |
+  dispatch: [REQUEST /x2/ise, ERROR /error]
+| user + X-Token: expired GET /x2/ise | 401 | application/json | Basic realm="Realm", charset="UTF-8" | {"timestamp":"2026-10-10T05:15:22.146Z","status":401,"error":"Unauthorized","path":"/x2/ise"} |
+  dispatch: [REQUEST /x2/ise, ERROR /error]
+
+### 토큰 Filter 가 던짐 — addFilterAfter(ExceptionTranslationFilter)  ERROR dispatch permitAll=true
+Security Filter Chain[0] 안의 Filter(실행 순서):
+  [0] org.springframework.security.web.session.DisableEncodeUrlFilter
+  [1] org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter
+  [2] org.springframework.security.web.context.SecurityContextHolderFilter
+  [3] org.springframework.security.web.header.HeaderWriterFilter
+  [4] org.springframework.security.web.authentication.logout.LogoutFilter
+  [5] org.springframework.security.web.authentication.www.BasicAuthenticationFilter
+  [6] org.springframework.security.web.savedrequest.RequestCacheAwareFilter
+  [7] org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter
+  [8] org.springframework.security.web.authentication.AnonymousAuthenticationFilter
+  [9] org.springframework.security.web.access.ExceptionTranslationFilter
+  [10] com.petercoders.blog.exc.TokenFilter
+  [11] org.springframework.security.web.access.intercept.AuthorizationFilter
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| anonymous + X-Token: expired GET /x2/ise | 401 | application/json | Basic realm="Realm", charset="UTF-8" | {"timestamp":"2026-10-10T05:15:22.322Z","status":401,"error":"Unauthorized","path":"/x2/ise"} |
+  dispatch: [REQUEST /x2/ise, ERROR /error]
+| user + X-Token: expired GET /x2/ise | 401 | application/json | Basic realm="Realm", charset="UTF-8" | {"timestamp":"2026-10-10T05:15:22.433Z","status":401,"error":"Unauthorized","path":"/x2/ise"} |
+  dispatch: [REQUEST /x2/ise, ERROR /error]
+

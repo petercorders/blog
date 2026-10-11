@@ -1,4 +1,4 @@
-// SPRING-INTERNALS 3편 — 2026-10 재편에서 더한 실험 러너(X1+·X2b·X3+·X5b·X7+·X8b·X10~X14·X16·X11CTX·X7C).
+// SPRING-INTERNALS 3편 — 2026-10 재편에서 더한 실험 러너(X1+·X2b·X3+·X5b·X7+·X8b·X10~X14·X16·X11CTX·X7C·X11AFTER·X1UP·X8IDEM).
 // 진입점은 ExcLab.kt 의 main. 마커마다 새 로그 파일(runs/x1plus.log 등)로 찍는다.
 // 각 마커는 첫 줄에 실행 JVM·Spring·Boot·Security·Tomcat 버전을 찍는다(로그 근거).
 package com.petercoders.blog.exc
@@ -20,6 +20,8 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.core.OrderComparator
 import org.springframework.core.Ordered
 import org.springframework.core.SpringVersion
+import org.springframework.util.LinkedMultiValueMap
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
@@ -741,6 +743,119 @@ internal fun runX7c() {
             showHead()
             show("future joined GET /x7/async-join", call(GET, "/x7/async-join"))
             Thread.sleep(300)
+        }
+    }
+}
+
+// ---------------------------------------------------------------- [X11AFTER]
+
+/** X11 (4) 의 TokenFilter(던짐)를 ExceptionTranslationFilter 바로 뒤(addFilterAfter)에 넣고 같은 두 요청을 보낸다. */
+internal fun runX11After() {
+    envHeader("X11AFTER")
+    println("user = httpBasic user/pw(ROLE_USER). X-Token: expired 면 TokenFilter 가 BadCredentialsException 을 던진다.")
+    val user = mapOf("Authorization" to basic("user", "pw"))
+    val expiredAnon = mapOf("X-Token" to "expired")
+    val expiredUser = user + expiredAnon
+    for (ep in listOf(false, true)) {
+        boot("secured", "handlers", "recorder",
+            props = arrayOf("exc.sec.error-permit=$ep", "exc.sec.token-mode=after")).use { ctx ->
+            println()
+            println("### 토큰 Filter 가 던짐 — addFilterAfter(ExceptionTranslationFilter)  ERROR dispatch permitAll=$ep")
+            printChain(ctx)
+            schema(ctx)
+            runReqs(listOf(
+                Req("anonymous + X-Token: expired GET /x2/ise", "/x2/ise", expiredAnon),
+                Req("user + X-Token: expired GET /x2/ise", "/x2/ise", expiredUser),
+            ))
+        }
+    }
+}
+
+// ---------------------------------------------------------------- [X1UP]
+
+private fun upload(path: String, bytes: Int): Resp {
+    val parts = LinkedMultiValueMap<String, Any>()
+    parts.add("file", object : ByteArrayResource(ByteArray(bytes) { 'a'.code.toByte() }) {
+        override fun getFilename() = "big.txt"
+    })
+    return RestClient.create(base()).post().uri(path)
+        .contentType(MediaType.MULTIPART_FORM_DATA).body(parts)
+        .exchange { _, res ->
+            Resp(res.statusCode.value(), res.headers.contentType?.toString() ?: "-",
+                res.bodyTo(String::class.java) ?: "", res.headers.getFirst(HttpHeaders.WWW_AUTHENTICATE))
+        }!!
+}
+
+/** spring.servlet.multipart.max-file-size=1KB 에 4KB 파일을 올린다. 예외가 DispatcherServlet 의 Resolver 목록까지 오는지(= try 안) 본다. */
+internal fun runX1Up() {
+    envHeader("X1UP")
+    println("spring.servlet.multipart.max-file-size=1KB, 올리는 파일 4096 bytes. 기본 체인(permitAll, csrf off).")
+    println("resolver saw = DispatcherServlet.processHandlerException 이 Resolver 목록에 넘긴 예외(RecordingResolver, HIGHEST_PRECEDENCE)")
+    println("resolver saw 의 앞 단어는 그 예외를 받은 dispatch 의 type 이다(REQUEST / ERROR).")
+    RecordingResolver.withDispatch = true
+    for ((label, profiles, rethrow) in listOf(
+        Triple("advice 없음", arrayOf("recorder"), false),
+        Triple("REEH 상속(reeh)", arrayOf("reeh", "recorder"), false),
+        Triple("REEH 상속 + Security 앞 Filter 가 getParameter 를 먼저 부르고 예외를 잡음(param-peek)", arrayOf("reeh", "recorder", "param-peek"), false),
+        Triple("REEH 상속 + Security 앞 Filter 가 getParameter 를 먼저 부르고 예외를 그대로 던짐(param-peek, exc.peek.rethrow=true)", arrayOf("reeh", "recorder", "param-peek"), true),
+    )) {
+        boot(*profiles, props = arrayOf("spring.servlet.multipart.max-file-size=1KB", "exc.peek.rethrow=$rethrow")).use { ctx ->
+            println()
+            println("### $label")
+            schema(ctx)
+            showHead()
+            TraceFilter.events.clear()
+            RecordingResolver.seen.clear()
+            ParamPeekFilter.events.clear()
+            show("POST /x1up/upload (4096 bytes)", upload("/x1up/upload", 4096))
+            println("  dispatch: ${TraceFilter.events}")
+            println("  resolver saw: ${RecordingResolver.seen}")
+            if (ParamPeekFilter.events.isNotEmpty()) println("  param-peek: ${ParamPeekFilter.events}")
+            show("POST /x1up/upload (100 bytes, 대조군)", upload("/x1up/upload", 100))
+        }
+    }
+    RecordingResolver.withDispatch = false
+}
+
+// ---------------------------------------------------------------- [X8IDEM]
+
+private fun idemGet(path: String, key: String): Pair<Resp, String> =
+    RestClient.create(base()).get().uri(path).header("Idempotency-Key", key)
+        .exchange { _, res ->
+            Resp(res.statusCode.value(), res.headers.contentType?.toString() ?: "-",
+                res.bodyTo(String::class.java) ?: "", null) to (res.headers.getFirst("Idempotent-Replayed") ?: "-")
+        }!!
+
+/**
+ * [X8IDEM] afterCommit 에서 던지는 요청(commit 된 뒤 AdviceA 가 541)을 같은 Idempotency-Key 로 두 번 보낸다.
+ * 멱등키 레이어(IdempotencyFilter)가 5xx 까지 저장할 때(Stripe 식)와 5xx 는 저장하지 않을 때, 응답과 행 수를 본다.
+ * 대조군은 콜백에서 던지지 않는 /x8idem/ok(200, commit).
+ */
+internal fun runX8Idem() {
+    envHeader("X8IDEM")
+    println("IdempotencyFilter(order MIN+40, profile idem): Idempotency-Key 의 첫 응답(상태·바디)을 저장해 같은 키에 재생한다.")
+    println("541 = AdviceA 가 받은 afterCommit 예외(commit 은 이미 끝났다). /x8idem/ok = 콜백에서 던지지 않는 대조군.")
+    for (store5xx in listOf(true, false)) {
+        boot("handlers", "idem", props = arrayOf("exc.idem.store-5xx=$store5xx")).use { ctx ->
+            println()
+            println("### exc.idem.store-5xx=$store5xx" + if (store5xx) " (5xx 까지 저장, Stripe 식)" else " (5xx 는 저장하지 않음)")
+            schema(ctx)
+            IdempotencyFilter.stored.clear()
+            IdempotencyFilter.events.clear()
+            println("| case | status | Idempotent-Replayed | body |")
+            println("|---|---|---|---|")
+            for ((label, path, key) in listOf(
+                Triple("1st GET /x8/after-commit key=a1", "/x8/after-commit", "a1"),
+                Triple("2nd GET /x8/after-commit key=a1 (retry)", "/x8/after-commit", "a1"),
+                Triple("1st GET /x8idem/ok key=o1", "/x8idem/ok", "o1"),
+                Triple("2nd GET /x8idem/ok key=o1 (retry)", "/x8idem/ok", "o1"),
+            )) {
+                val (r, replayed) = idemGet(path, key)
+                println("| $label | ${r.status} | $replayed | ${r.body.replace("\n", " ").take(200)} |")
+            }
+            println("  rows(afterCommit) = ${call(GET, "/rows?tag=afterCommit").body}")
+            println("  rows(idem-ok) = ${call(GET, "/rows?tag=idem-ok").body}")
+            IdempotencyFilter.events.forEach { println("  idem: $it") }
         }
     }
 }

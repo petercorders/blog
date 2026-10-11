@@ -18,6 +18,9 @@
 //   catchall-rethrow     : [X16] catch-all 이 AccessDeniedException 을 그대로 되던진다
 //   ctx-probe            : [X11CTX] Security Filter Chain 앞(-110)·뒤(-50)에서 dispatch 마다 SecurityContext 출처를 찍는 Filter
 //   ise-only             : [X7C] IllegalStateException Handler 하나만 둔 advice(root 매치 없음 → cause 매치)
+//   param-peek           : [X1UP] Security 보다 앞(order MIN+30)에서 업로드 요청의 getParameter 를 먼저 부르는 Filter
+//   (exc.sec.token-mode=after) : [X11AFTER] 토큰 Filter 를 addFilterAfter(ExceptionTranslationFilter) 로 넣는다
+//   idem                 : [X8IDEM] Idempotency-Key 의 첫 응답을 저장해 재생하는 Filter(order MIN+40, exc.idem.store-5xx=true|false)
 package com.petercoders.blog.exc
 
 import jakarta.servlet.DispatcherType
@@ -64,6 +67,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.AccessDeniedHandler
+import org.springframework.security.web.access.ExceptionTranslationFilter
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint
 import org.springframework.scheduling.annotation.Async
@@ -86,6 +90,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.HandlerExceptionResolver
 import org.springframework.web.servlet.ModelAndView
@@ -94,7 +99,9 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.HttpRequestMethodNotSupportedException
 import java.net.URI
+import org.springframework.web.util.ContentCachingResponseWrapper
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -190,11 +197,13 @@ class RecordingResolver : HandlerExceptionResolver, Ordered {
     override fun resolveException(
         request: HttpServletRequest, response: HttpServletResponse, handler: Any?, ex: Exception,
     ): ModelAndView? {
-        seen += causeChain(ex)
+        seen += (if (withDispatch) "${request.dispatcherType} " else "") + causeChain(ex)
         return null
     }
     companion object {
         val seen = CopyOnWriteArrayList<String>()
+        /** [X1UP] 만 켠다. 켜면 기록 앞에 dispatcher type 을 붙인다(다른 마커의 출력은 그대로). */
+        @Volatile var withDispatch = false
         fun causeChain(t: Throwable): String {
             val names = mutableListOf<String>()
             var c: Throwable? = t
@@ -369,6 +378,8 @@ class ExcSecuredConfig {
                 TokenFilter(BasicAuthenticationEntryPoint().apply { setRealmName("exc"); afterPropertiesSet() }),
                 UsernamePasswordAuthenticationFilter::class.java,
             )
+            // [X11AFTER] 같은 TokenFilter(던짐)를 ExceptionTranslationFilter 바로 뒤에 넣는다.
+            "after" -> http.addFilterAfter(TokenFilter(null), ExceptionTranslationFilter::class.java)
         }
         ctx.getBeanProvider(CountingFilter::class.java).ifAvailable { f ->
             http.addFilterBefore(f, UsernamePasswordAuthenticationFilter::class.java)
@@ -701,4 +712,90 @@ class SecCtxProbeConfig {
 class IseOnlyAdvice {
     @ExceptionHandler(IllegalStateException::class)
     fun ise(e: IllegalStateException) = body(561, "IseOnlyAdvice#IllegalStateException", e)
+}
+
+// ================================================================ [X1UP] 업로드 크기 초과는 어디서 나나
+
+/** [X1UP] multipart 업로드 하나를 받는다. spring.servlet.multipart.max-file-size 를 넘으면 checkMultipart 에서 실패한다. */
+@RestController
+class X1UpController {
+    @PostMapping("/x1up/upload")
+    fun upload(@RequestParam("file") file: MultipartFile) = mapOf("size" to file.size)
+}
+
+/**
+ * [X1UP] Security Filter Chain(-100)보다 앞에서 업로드 요청의 getParameter 를 먼저 부른다.
+ * CsrfFilter 처럼 앞쪽 Filter 가 파라미터를 읽어 multipart 파싱을 먼저 일으키는 구성을 흉내 낸다.
+ */
+@Profile("param-peek")
+@Component
+@Order(Int.MIN_VALUE + 30)
+class ParamPeekFilter(env: Environment) : Filter {
+    /** exc.peek.rethrow=true 면 getParameter 의 예외를 잡지 않고 그대로 던진다(보통의 Filter 처럼). */
+    private val rethrow = env.getProperty("exc.peek.rethrow", Boolean::class.java, false)
+    override fun doFilter(req: ServletRequest, res: ServletResponse, chain: FilterChain) {
+        val http = req as HttpServletRequest
+        if (http.dispatcherType == DispatcherType.REQUEST && http.requestURI.startsWith("/x1up/")) {
+            val r = runCatching { http.getParameter("peek") }
+            events += if (r.isSuccess) "getParameter(\"peek\") returned ${r.getOrNull()} (no exception)"
+                      else "getParameter threw ${RecordingResolver.causeChain(r.exceptionOrNull()!!)}" +
+                          if (rethrow) " -> rethrown from filter" else " -> caught, chain continues"
+            if (rethrow) r.getOrThrow()
+        }
+        chain.doFilter(req, res)
+    }
+    companion object { val events = CopyOnWriteArrayList<String>() }
+}
+
+// ================================================================ [X8IDEM] 멱등키 레이어가 commit 뒤 541 을 저장하면
+
+/**
+ * [X8IDEM] Stripe 식 멱등키 레이어를 흉내 낸 Filter. Idempotency-Key 헤더가 있으면 첫 실행의 상태·Content-Type·바디를 저장하고,
+ * 같은 키가 다시 오면 체인을 부르지 않고 저장한 응답을 재생한다(Idempotent-Replayed: true).
+ * exc.idem.store-5xx=false 면 5xx 응답은 저장하지 않는다(그 키의 재시도는 다시 실행된다).
+ * 저장은 메모리 맵이다. 동시 요청 잠금(진행 중인 같은 키를 409 로 돌려보내는 것)은 이 실험의 관심이 아니라 넣지 않았다.
+ */
+@Profile("idem")
+@Component
+@Order(Int.MIN_VALUE + 40)
+class IdempotencyFilter(env: Environment) : Filter {
+    private val store5xx = env.getProperty("exc.idem.store-5xx", Boolean::class.java, true)
+    override fun doFilter(req: ServletRequest, res: ServletResponse, chain: FilterChain) {
+        val http = req as HttpServletRequest
+        val out = res as HttpServletResponse
+        val key = http.getHeader("Idempotency-Key")
+        if (key == null || http.dispatcherType != DispatcherType.REQUEST) { chain.doFilter(req, res); return }
+        val saved = stored[key]
+        if (saved != null) {
+            events += "key=$key -> replay stored status=${saved.status} (chain not called)"
+            out.status = saved.status
+            saved.contentType?.let { out.contentType = it }
+            out.setHeader("Idempotent-Replayed", "true")
+            out.outputStream.write(saved.body)
+            return
+        }
+        val wrapper = ContentCachingResponseWrapper(out)
+        chain.doFilter(req, wrapper)
+        val status = wrapper.status
+        if (status < 500 || store5xx) {
+            stored[key] = Saved(status, wrapper.contentType, wrapper.contentAsByteArray)
+            events += "key=$key -> executed status=$status, stored"
+        } else {
+            events += "key=$key -> executed status=$status, not stored(5xx)"
+        }
+        wrapper.copyBodyToResponse()
+    }
+    data class Saved(val status: Int, val contentType: String?, val body: ByteArray)
+    companion object {
+        val stored = ConcurrentHashMap<String, Saved>()
+        val events = CopyOnWriteArrayList<String>()
+    }
+}
+
+/** [X8IDEM] 대조군 — 콜백에서 던지지 않고 commit 되는 요청(writeThenFail 의 phase 가 어느 콜백과도 맞지 않는다). */
+@Profile("idem")
+@RestController
+class X8IdemController(private val svc: ExcService) {
+    @GetMapping("/x8idem/ok")
+    fun ok() = mapOf("tag" to svc.writeThenFail("idem-ok"))
 }

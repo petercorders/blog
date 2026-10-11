@@ -1,0 +1,72 @@
+# experiment: x1up — spring.servlet.multipart.max-file-size=1KB 에 4096 bytes 파일을 올려 MaxUploadSizeExceededException 이 doDispatch() 의 try 안(Resolver 목록)에서 나는지 본다. 구성: advice 없음 / REEH 상속 / REEH + Security 앞 Filter 가 getParameter 를 먼저 부르고 예외를 잡음 / 같은 Filter 가 예외를 그대로 던짐. 100 bytes 대조군
+# java -version (실행 JVM = Gradle 툴체인 ms-25.0.4.1): openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+# 기기: Apple M5 Pro, physicalcpu=15 logicalcpu=15, hw.cachelinesize=128
+# command: cd ~/Desktop/development/blog && ./gradlew --offline -q excLab --args='X1UP' > src/main/kotlin/com/petercoders/blog/exc/runs/x1up.log   (실제 실행: 저장소를 rsync 한 사본 /tmp/gradle-exc 에서 같은 명령, 2026-10-10 14:14 KST)
+## [X1UP]
+env: java.runtime.version=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+14:14:46.162 [main] INFO org.springframework.security.core.SpringSecurityCoreVersion -- You are running with Spring Security Core 7.1.1
+env: kotlin=2.3.21 spring-framework=7.0.9 spring-boot=4.1.1 spring-security=7.1.1 tomcat=11.0.24.0
+spring.servlet.multipart.max-file-size=1KB, 올리는 파일 4096 bytes. 기본 체인(permitAll, csrf off).
+resolver saw = DispatcherServlet.processHandlerException 이 Resolver 목록에 넘긴 예외(RecordingResolver, HIGHEST_PRECEDENCE)
+resolver saw 의 앞 단어는 그 예외를 받은 dispatch 의 type 이다(REQUEST / ERROR).
+2026-10-10T14:14:47.203+09:00  WARN 75630 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 7dbbd00c-c0ef-47b0-adb3-195c249a8e99
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### advice 없음
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+2026-10-10T14:14:47.546+09:00  WARN 75630 --- [blog] [o-auto-1-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.multipart.MaxUploadSizeExceededException: Maximum upload size exceeded]
+2026-10-10T14:14:47.549+09:00  WARN 75630 --- [blog] [o-auto-1-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.multipart.MaxUploadSizeExceededException: Maximum upload size exceeded]
+| POST /x1up/upload (4096 bytes) | 413 | - | - |  |
+  dispatch: [REQUEST /x1up/upload, ERROR /error]
+  resolver saw: [REQUEST org.springframework.web.multipart.MaxUploadSizeExceededException <- cause org.apache.tomcat.util.http.InvalidParameterException <- cause org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException, ERROR org.springframework.web.multipart.MaxUploadSizeExceededException <- cause org.apache.tomcat.util.http.InvalidParameterException <- cause org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException]
+| POST /x1up/upload (100 bytes, 대조군) | 200 | application/json | - | {"size":100} |
+2026-10-10T14:14:47.790+09:00  WARN 75630 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 7e75bf6b-921b-472f-af8f-a9c2cde484a5
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### REEH 상속(reeh)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| POST /x1up/upload (4096 bytes) | 413 | application/problem+json | - | {"detail":"Maximum upload size exceeded","instance":"/x1up/upload","status":413,"title":"Content Too Large"} |
+  dispatch: [REQUEST /x1up/upload]
+  resolver saw: [REQUEST org.springframework.web.multipart.MaxUploadSizeExceededException <- cause org.apache.tomcat.util.http.InvalidParameterException <- cause org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException]
+| POST /x1up/upload (100 bytes, 대조군) | 200 | application/json | - | {"size":100} |
+2026-10-10T14:14:48.006+09:00  WARN 75630 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: ef8cc17b-b94f-4971-b7d2-a78396c02283
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### REEH 상속 + Security 앞 Filter 가 getParameter 를 먼저 부르고 예외를 잡음(param-peek)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| POST /x1up/upload (4096 bytes) | 413 | application/problem+json | - | {"detail":"Maximum upload size exceeded","instance":"/x1up/upload","status":413,"title":"Content Too Large"} |
+  dispatch: [REQUEST /x1up/upload]
+  resolver saw: [REQUEST org.springframework.web.multipart.MaxUploadSizeExceededException <- cause org.apache.tomcat.util.http.InvalidParameterException <- cause org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException]
+  param-peek: [getParameter threw org.apache.tomcat.util.http.InvalidParameterException <- cause org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException -> caught, chain continues]
+| POST /x1up/upload (100 bytes, 대조군) | 200 | application/json | - | {"size":100} |
+2026-10-10T14:14:48.126+09:00  WARN 75630 --- [blog] [           main] .s.a.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 510f9968-5a5c-4fb1-92b3-024edc416bf4
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+
+### REEH 상속 + Security 앞 Filter 가 getParameter 를 먼저 부르고 예외를 그대로 던짐(param-peek, exc.peek.rethrow=true)
+| case | status | content-type | WWW-Authenticate | body |
+|---|---|---|---|---|
+| POST /x1up/upload (4096 bytes) | 413 | application/json | - | {"timestamp":"2026-10-10T05:14:48.151Z","status":413,"error":"Content Too Large","path":"/x1up/upload"} |
+  dispatch: [REQUEST /x1up/upload, ERROR /error]
+  resolver saw: []
+  param-peek: [getParameter threw org.apache.tomcat.util.http.InvalidParameterException <- cause org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException -> rethrown from filter]
+| POST /x1up/upload (100 bytes, 대조군) | 200 | application/json | - | {"size":100} |
+
