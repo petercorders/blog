@@ -1,0 +1,23 @@
+# experiment: A3e-e — VT off(ThreadPoolTaskScheduler 기본)에서 @Async + @ConcurrencyLimit(1) + @Scheduled(fixedRate 2s, 본문 3s). A3e-d 에 @ConcurrencyLimit(1) 만 더했다. 부팅 직후 Proxy 의 Advisor 순서(바깥 → 안)를 함께 찍는다 (2026-10-10 추가, 5편 감사 90점 라운드)
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 셸 기본 java 는 "26.0.2.1" 2026-08-18 이라 쓰지 않는다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3e e'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-10 14:35:31 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 93279
+## [A3e-e] VT off(ThreadPoolTaskScheduler 기본) · @Async + @ConcurrencyLimit(1) + @Scheduled(fixedRate 2s), 본문 3s
+OverlapAsyncLimited advisor 순서(바깥 → 안) = [AnnotationAsyncExecutionInterceptor, ConcurrencyLimitInterceptor]
+t=  733ms delta  start thread=task-1
+t= 3734ms delta  end   thread=task-1
+t= 3735ms delta  start thread=task-2
+t= 6739ms delta  end   thread=task-2
+t= 6740ms delta  start thread=task-3
+t= 9744ms delta  end   thread=task-3
+t= 9744ms delta  start thread=task-4
+t=11732ms -- close() 호출 (t=11732ms)
+t=12745ms delta  end   thread=task-4
+t=12745ms delta  start thread=task-5
+t=15749ms delta  end   thread=task-5
+t=15749ms delta  start thread=task-6
+t=18753ms delta  end   thread=task-6
+t=18757ms -- close() 반환 (t=18757ms)
+t=22759ms -- 관측 끝(close 반환 4000ms 뒤) (t=22759ms)

@@ -1,0 +1,46 @@
+# experiment: A3f — 같은 앱을 JVM 2개(Pod 2대 흉내)로 띄워 cron(*/2, 본문 0.3s)과 fixedDelay(2000, 본문 0.3s, 노드별 무작위 initialDelay 0~2s) 잡의 시작 시각을 벽시계 ms 로 한 축에 놓는다. 락 없음, 노드마다 scheduling.pool.size=2. 드라이버 JVM 이 노드 JVM 둘을 같은 클래스패스로 띄운다(A3fNode). 같은 기계라 두 노드의 시계는 같다 (2026-10-10 추가, 5편 감사 87점 라운드)
+# java -version: openjdk version "25.0.4.1" 2026-08-18 LTS OpenJDK Runtime Environment Microsoft-14951866 (build 25.0.4.1+1-LTS) OpenJDK 64-Bit Server VM Microsoft-14951866 (build 25.0.4.1+1-LTS, mixed mode, sharing) — Gradle 툴체인(languageVersion=25)이 고르는 JDK. 노드 JVM 도 드라이버의 java.home/bin/java 로 띄운다. 실제 실행 JVM 은 아래 '# runtime:' 줄(프로그램이 Runtime.version() 을 직접 찍음)
+# 기기: Apple M5 Pro, 15 cores, hw.cachelinesize=128, Darwin 25.6.0
+# command: cd /tmp/gradle-async && ./gradlew --offline -q asyncLab --args='A3f'   (저장소를 rsync -a --delete --exclude build --exclude .gradle 로 복사한 사본) · 2026-10-10 14:52:30 KST
+# runtime: Runtime.version()=25.0.4.1+1-LTS java.vendor=Microsoft java.home=/Users/kibong_home/Library/Java/JavaVirtualMachines/ms-25.0.4.1/Contents/Home
+# runtime: Spring Framework 7.0.9 / Spring Boot 4.1.1 / Kotlin 2.3.21 / pid 6962
+## [A3f] JVM 2개 · 같은 Bean · cron */2(본문 0.3s) + fixedDelay 2000(본문 0.3s, 노드별 무작위 initialDelay 0~2s) · pool.size=2 · 락 없음
+node1 initialDelay=767ms
+node2 initialDelay=1803ms
+node1 exit=0
+node2 exit=0
+t=  910ms node2 booted
+t=  913ms node1 booted
+t= 1108ms node1 cron start thread=scheduling-1
+t= 1108ms node2 cron start thread=scheduling-1
+t= 1680ms node1 delay start thread=scheduling-2
+t= 2720ms node2 delay start thread=scheduling-2
+t= 3109ms node2 cron start thread=scheduling-1
+t= 3109ms node1 cron start thread=scheduling-1
+t= 3985ms node1 delay start thread=scheduling-2
+t= 5028ms node2 delay start thread=scheduling-2
+t= 5107ms node1 cron start thread=scheduling-1
+t= 5110ms node2 cron start thread=scheduling-1
+t= 6296ms node1 delay start thread=scheduling-2
+t= 7107ms node2 cron start thread=scheduling-2
+t= 7107ms node1 cron start thread=scheduling-1
+t= 7346ms node2 delay start thread=scheduling-1
+t= 8599ms node1 delay start thread=scheduling-2
+t= 9105ms node2 cron start thread=scheduling-2
+t= 9110ms node1 cron start thread=scheduling-1
+t= 9651ms node2 delay start thread=scheduling-1
+t=10912ms node1 delay start thread=scheduling-2
+t=10925ms node2 closed
+t=11108ms node1 cron start thread=scheduling-1
+t=11418ms node1 closed
+cron 실행 횟수: node1=6 node2=5
+  cron 같은 초(t≈1100ms): node1 t=1108ms node2 t=1108ms 차이=0ms
+  cron 같은 초(t≈3100ms): node1 t=3109ms node2 t=3109ms 차이=0ms
+  cron 같은 초(t≈5100ms): node1 t=5107ms node2 t=5110ms 차이=3ms
+  cron 같은 초(t≈7100ms): node1 t=7107ms node2 t=7107ms 차이=0ms
+  cron 같은 초(t≈9100ms): node1 t=9110ms node2 t=9105ms 차이=5ms
+fixedDelay 실행 횟수: node1=5 node2=4
+  fixedDelay 1회차: node1 t=1680ms node2 t=2720ms 차이=1040ms
+  fixedDelay 2회차: node1 t=3985ms node2 t=5028ms 차이=1043ms
+  fixedDelay 3회차: node1 t=6296ms node2 t=7346ms 차이=1050ms
+  fixedDelay 4회차: node1 t=8599ms node2 t=9651ms 차이=1052ms

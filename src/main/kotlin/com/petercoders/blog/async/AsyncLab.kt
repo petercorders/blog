@@ -1,7 +1,7 @@
 // SPRING-INTERNALS 5편(@Async·@Scheduled) — 실험 러너.
 // 마커 → 로그 파일(runs/, 대소문자 그대로): [A1]·[A1b]→A1.log · [A1c]→A1c.log · [A1d]→A1d.log · [A1e]→A1e.log
 //   [A2]→A2.log · [A2c]→A2c.log · [A2d]→A2d.log · [A2e]·[A2eCtx]→A2e.log · [A2f]→A2f.log · [A2g]→A2g.log
-//   [A3]→A3.log(2026-10-08 재실행은 A3-rerun.log) · [A3b]→A3b.log(재실행은 A3b-rerun.log) · [A3c]→A3c.log · [A3d]→A3d.log · [A3e]→A3e.log
+//   [A3]→A3.log(2026-10-08 재실행은 A3-rerun.log) · [A3b]→A3b.log(재실행은 A3b-rerun.log) · [A3c]→A3c.log · [A3d]→A3d.log · [A3e]→A3e.log(조건 e 는 2026-10-10 추가, A3e-e.log) · [A3f]→A3f.log(2026-10-10 추가)
 //   [A4]→A4.log · [A4b]→A4b.log · [A4c]→A4c.log · [A4d]→A4d.log · [A4e]→A4e.log · [A4f]→A4f.log · [A4g]→A4g.log
 //   [A5]→A5.log · [A6]→A6.log
 //
@@ -445,6 +445,67 @@ private fun runA3e(sel: Set<String>) {
         "ovlc", 11, vt, ms = true, afterCloseMs = 4000)
     if (on("d")) schedRun("[A3e-d] VT off(ThreadPoolTaskScheduler 기본) · @Async + @Scheduled(fixedRate 2s), 본문 3s",
         "ovld", 11, ms = true, afterCloseMs = 4000)
+    if (on("e")) schedRun("[A3e-e] VT off(ThreadPoolTaskScheduler 기본) · @Async + @ConcurrencyLimit(1) + @Scheduled(fixedRate 2s), 본문 3s",
+        "ovle", 11, ms = true, afterCloseMs = 4000)
+}
+
+// ------------------------------------------------------------------ [A3f] JVM 두 개 = Pod 두 대
+/**
+ * 같은 앱을 JVM 두 개로 띄워(A3fNode) cron 잡과 fixedDelay + 노드별 무작위 initialDelay 잡의 시작 시각을
+ * 벽시계 ms 로 한 축에 놓는다. 락은 없다. 같은 기계라 두 노드의 시계는 같다(실제 Pod 는 시계 차이가 더해진다).
+ * 두 잡이 서로 밀지 않도록 노드마다 scheduling.pool.size=2 를 준다. 무작위 initialDelay 값은 로그 머리에 찍는다.
+ */
+private fun runA3f() {
+    println("## [A3f] JVM 2개 · 같은 Bean · cron */2(본문 0.3s) + fixedDelay 2000(본문 0.3s, 노드별 무작위 initialDelay 0~2s) · pool.size=2 · 락 없음")
+    val rnd = java.util.concurrent.ThreadLocalRandom.current()
+    val delays = listOf(1, 2).associateWith { rnd.nextLong(0, 2000) }
+    delays.forEach { (n, d) -> println("node$n initialDelay=${d}ms") }
+    val javaBin = java.io.File(System.getProperty("java.home"), "bin/java").path
+    val cp = System.getProperty("java.class.path")
+    val events = java.util.concurrent.ConcurrentLinkedQueue<Triple<Long, Int, String>>()
+    val pattern = Regex("""^NODE wall=(\d+) (.+)$""")
+    val t0 = System.currentTimeMillis()
+    val procs = delays.map { (n, d) ->
+        val p = ProcessBuilder(javaBin, "-cp", cp, "com.petercoders.blog.async.AsyncLabKt", "A3fNode", "$d")
+            .redirectErrorStream(true).start()
+        val reader = Thread {
+            p.inputStream.bufferedReader().forEachLine { line ->
+                pattern.find(line)?.let { m -> events += Triple(m.groupValues[1].toLong(), n, m.groupValues[2]) }
+            }
+        }.apply { start() }
+        Triple(n, p, reader)
+    }
+    procs.forEach { (n, p, r) ->
+        val ok = p.waitFor(60, TimeUnit.SECONDS)
+        r.join(5000)
+        println("node$n exit=${if (ok) p.exitValue() else "timeout"}")
+    }
+    val sorted = events.sortedBy { it.first }
+    sorted.forEach { (w, n, s) -> println("t=%5dms node%d %s".format(w - t0, n, s)) }
+    fun starts(n: Int, tag: String) = sorted.filter { it.second == n && it.third.startsWith("$tag start") }.map { it.first }
+    // cron: 같은 벽시계 초에 깬 회차끼리 짝짓는다
+    val c1 = starts(1, "cron").associateBy { (it + 500) / 1000 }
+    val c2 = starts(2, "cron").associateBy { (it + 500) / 1000 }
+    println("cron 실행 횟수: node1=${c1.size} node2=${c2.size}")
+    c1.keys.intersect(c2.keys).sorted().forEach { k ->
+        println("  cron 같은 초(t≈${k * 1000 - t0}ms): node1 t=${c1[k]!! - t0}ms node2 t=${c2[k]!! - t0}ms 차이=${kotlin.math.abs(c2[k]!! - c1[k]!!)}ms")
+    }
+    // fixedDelay: n번째 회차끼리 짝짓는다
+    val d1 = starts(1, "delay")
+    val d2 = starts(2, "delay")
+    println("fixedDelay 실행 횟수: node1=${d1.size} node2=${d2.size}")
+    d1.zip(d2).forEachIndexed { i, (a, b) ->
+        println("  fixedDelay ${i + 1}회차: node1 t=${a - t0}ms node2 t=${b - t0}ms 차이=${kotlin.math.abs(b - a)}ms")
+    }
+}
+
+/** A3f 노드 하나. 부팅 → 10초 → close. 드라이버가 NODE 줄만 모은다. */
+private fun serveA3fNode(initialDelayMs: String) {
+    val ctx = boot("multi", props = arrayOf("lab.node.initial-delay-ms=$initialDelayMs", "spring.task.scheduling.pool.size=2"))
+    println("NODE wall=${System.currentTimeMillis()} booted")
+    Thread.sleep(10_000)
+    ctx.close()
+    println("NODE wall=${System.currentTimeMillis()} closed")
 }
 
 // ------------------------------------------------------------------ [A4] 계열: 종료
@@ -645,6 +706,8 @@ fun main(args: Array<String>) {
         "A3c" -> runA3c()
         "A3d" -> runA3d()
         "A3e" -> runA3e(sel)
+        "A3f" -> runA3f()
+        "A3fNode" -> serveA3fNode(args.getOrElse(1) { "0" })   // runA3f 가 띄우는 노드 JVM
         "A4" -> runA4()
         "A4b" -> runA4b()
         "A4c" -> runA4c(sel)

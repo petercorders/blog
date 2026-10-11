@@ -2,7 +2,7 @@
 
 SPRING-INTERNALS 5편(`@Async`·`@Scheduled`)에 실린 실측의 소스와 원본 로그를 담는다.
 본문(velog 게시 후 이 줄에 링크 추가 예정)에는 요지 코드와 결정적 출력 몇 줄만 실려 있고, 전문은 여기에 있다.
-아래 실험 표의 "본문 절" 열은 원고의 지금 절 제목(2026-10-08 판)과 맞췄다.
+아래 실험 표의 "본문 절" 열은 원고의 지금 절 제목(2026-10-10 판)과 맞췄다.
 
 ## 실행 환경
 
@@ -33,7 +33,7 @@ configuration 에만 있고 main runtimeClasspath 에는 없다(A2e 의 'context
 
 ## 실험 목록
 
-'본문 절' 열은 원고(`SPRING-INTERNALS/5-ASYNC-SCHEDULED-POST.md`, 2026-10-08 판)의 지금 `##`·`###` 제목 그대로다.
+'본문 절' 열은 원고(`SPRING-INTERNALS/5-ASYNC-SCHEDULED-POST.md`, 2026-10-10 판)의 지금 `##`·`###` 제목 그대로다.
 ①~⑦은 문제별 `##` 절이고 `›` 뒤가 그 아래 `###` 절이다. `(본문)`은 그 `##` 절의 첫 `###` 앞 부분이다.
 한 실험을 여러 절이 쓰면 `<br>` 로 잇고, 괄호는 그 절에서 이 실험이 맡은 부분이다. 그림 설명(alt)과 접힌 검증 메모에서만 언급한 곳은 적지 않았다.
 
@@ -45,14 +45,14 @@ configuration 에만 있고 main runtimeClasspath 에는 없다(A2e 의 'context
 - ⑥ 같은 잡이 동시에 두 번 도는 경로는 둘이다
 - ⑦ 종료는 실행 중인 작업이 0이 되는 순간까지만 기다린다
 
-본문이 링크한 저장소 파일은 `runs/` 로그 25개와 `a4f_sigterm.py` 이고, 모두 아래 표의 '로그' 열에 있다.
+본문이 링크한 저장소 파일은 `runs/` 로그 27개와 `a4f_sigterm.py`·`AsyncProbes2.kt`·이 README 이고, 로그와 `a4f_sigterm.py` 는 모두 아래 표의 '로그' 열에 있다.
 `runs/A3.log`·`runs/A3b.log`(2026-09-28 원본)는 본문이 링크하지 않는다. 본문은 런타임 머리와 close 시각이 있는 `-rerun` 로그를 인용한다.
 
 | 마커 | 무엇을 보나 | 로그 | 본문 절 | 결과 요지 |
 |---|---|---|---|---|
 | A1 / A1b | Virtual Thread off/on — `applicationTaskExecutor`·`taskScheduler` 실물과 풀 설정 | `runs/A1.log` | @Async·@Scheduled 한 줄이 실제로 올라타는 것 | off: `ThreadPoolTaskExecutor core=8 max=2147483647 queueCapacity=2147483647`, `task-1` / on: `SimpleAsyncTaskExecutor`·`SimpleAsyncTaskScheduler`, `task-1 virtual=true` |
 | A1c | 사용자 `ExecutorService` Bean 등록 / `mode=force` | `runs/A1c.log` | ② (본문)<br>② › 용도별 Executor를 남기는 방법은 둘이다(`[A1c-force]`) | `applicationTaskExecutor` 없음, `@Async` 는 `scheduling-1` / force 면 `task-1` |
-| A1d | 풀과 큐: latch 로 붙잡고 poolSize·activeCount·queueSize / 거절 정책 Customizer | `runs/A1d.log` | 도입(배경 문단)<br>먼저 써 본 팀들이 남긴 기록(갱신 문단)<br>① › max-size는 큐가 찬 뒤에야 쓰인다<br>① › 큐를 줄이면 거절 정책을 같이 고른다(`[A1d-3]`·`[A1d-5]`)<br>⑦ › 큐에 남은 작업은 보장되지 않는다(거절 메시지의 `CompletableFuture$AsyncSupply`) | 기본 20건 → pool 8·queue 12 / cap 4·max 16 → pool 16·queue 4 / 30건 → `TaskRejectedException` 10건 / cap 0 → 16 실행·4 거절 / (5) `ThreadPoolTaskExecutorCustomizer` 로 CallerRunsPolicy → 포화 중 `whereAmI()` 가 `main` 에서 돈다 |
+| A1d | 풀과 큐: latch 로 붙잡고 poolSize·activeCount·queueSize / 거절 정책 Customizer | `runs/A1d.log` | 도입(배경 문단)<br>① › max-size는 큐가 찬 뒤에야 쓰인다(Meituan·Allegro 기록의 갱신 포함)<br>① › 큐를 줄이면 거절 정책을 같이 고른다(`[A1d-3]`·`[A1d-5]`)<br>⑦ › 큐에 남은 작업은 보장되지 않는다(거절 메시지의 `CompletableFuture$AsyncSupply`) | 기본 20건 → pool 8·queue 12 / cap 4·max 16 → pool 16·queue 4 / 30건 → `TaskRejectedException` 10건 / cap 0 → 16 실행·4 거절 / (5) `ThreadPoolTaskExecutorCustomizer` 로 CallerRunsPolicy → 포화 중 `whereAmI()` 가 `main` 에서 돈다 |
 | A1e | Executor Bean 8가지 × `@EnableScheduling` 유무 | `runs/A1e.log` | ② (본문, 여덟 조합 표)<br>② › 용도별 Executor를 남기는 방법은 둘이다(`[A1e-vi]`) | ExecutorService+sched → `scheduling-1`, ExecutorService 단독 → `SimpleAsyncTaskExecutor-1`, `myPool`+sched → `SimpleAsyncTaskExecutor-1`(INFO 'More than one TaskExecutor …'), `myPool` 단독 → `my-1`, 이름 `taskExecutor` → `te-1`, `defaultCandidate=false` → `task-1` + `report-1`, force → `task-1`, `@Primary` → `my-1` |
 | A2 | `get()`·`join()`·`Future.get()` 세 갈래의 예외 클래스명, `void` 예외 | `runs/A2.log` | ③ › 대기 방식이 예외의 행선지를 정한다<br>붙인 다음 운영에서 보는 것(알림 로그 `void` 줄) | `ExecutionException`/`CompletionException`/`ExecutionException`, `void` 는 `SimpleAsyncUncaughtExceptionHandler` ERROR 한 줄 |
 | A2c | `get(1, SECONDS)` 타임아웃 | `runs/A2c.log` | ③ › 타임아웃은 기다림만 끊는다 | `CompletableFuture`, 원인 없는 `TimeoutException`, 타임아웃 뒤 `isDone=false` |
@@ -65,13 +65,15 @@ configuration 에만 있고 main runtimeClasspath 에는 없다(A2e 의 'context
 | A3c | Virtual Thread on — `fixedRate` 대 `fixedDelay` | `runs/A3c.log` | ⑥ › Virtual Thread를 켜거나 잡에 @Async를 붙이면 같은 잡이 겹친다<br>⑦ › Virtual Thread를 켜면 @Async 작업을 기다리지 않는다(close 시각) | fixedRate(delta) 겹침, fixedDelay(gamma) 안 겹침. close 는 gamma 가 끝날 때(14,458ms)까지 반환하지 않았다 |
 | A3d | `@Scheduled` 예외 뒤 다음 주기, ERROR 로그, `lastExecutionOutcome` | `runs/A3d.log` | ⑤ › 예외가 나도 다음 주기는 돈다<br>붙인 다음 운영에서 보는 것(알림 로그 `@Scheduled` 줄) | 4.5초에 5회 실행(1·3·5회 Boom), `TaskUtils$LoggingErrorHandler` ERROR, `status=ERROR` |
 | A3e | Virtual Thread 스케줄러 겹침과 제한 수단 / Virtual Thread off + `@Async @Scheduled` | `runs/A3e.log` | ⑥ › Virtual Thread를 켜거나 잡에 @Async를 붙이면 같은 잡이 겹친다<br>⑦ › Virtual Thread를 켜면 @Async 작업을 기다리지 않는다(`[A3e-0]` close 8ms) | (0) fixedRate·cron 모두 겹침, close 는 기다리지 않음 / (a) 스케줄러 전체가 한 줄로(zeta 도 밀림) / (b) `@ConcurrencyLimit(1)` 겹침 없이 줄 서고 close 뒤에도 대기분이 계속 시작 / (c) REJECT: 겹치는 회차가 `InvocationRejectedException` ERROR 로 빠짐 / (d) `task-` 스레드에서 겹침 |
+| A3e-e | Virtual Thread off + `@Async @ConcurrencyLimit(1) @Scheduled(fixedRate 2s)`, 본문 3s — 두 Advisor 의 순서와 겹침(2026-10-10 추가) | `runs/A3e-e.log` | ⑥ › Virtual Thread를 켜거나 잡에 @Async를 붙이면 같은 잡이 겹친다 | Advisor 순서(바깥 → 안) `[AnnotationAsyncExecutionInterceptor, ConcurrencyLimitInterceptor]` — 제한이 `task-` 스레드 안에서 걸린다 / 겹침 없음, 앞 회차가 끝나자마자 다음 `task-` 스레드에서 시작(3,734ms 끝, 3,735ms 시작) / close 호출 11,732ms → 반환 18,757ms, 기다리던 두 회차(`task-5`·`task-6`)가 close 뒤에 차례로 돌았다 |
+| A3f | 같은 앱을 JVM 2개로 띄워(드라이버가 노드 JVM 둘을 같은 클래스패스로 실행) cron(*/2)과 fixedDelay(2000, 노드별 무작위 initialDelay 0~2s) 잡의 시작 시각을 벽시계 ms 로 대조, 본문 0.3s, 락 없음(2026-10-10 추가) | `runs/A3f.log` | ⑥ › 서버가 여러 대면 잡도 대수만큼 돈다 | cron: 같은 초에 깬 다섯 회차 모두 두 노드에서 실행, 노드 간 차이 0~5ms / fixedDelay: initialDelay 767ms·1,803ms 가 만든 1,040ms 어긋남이 4회차 1,052ms 로 거의 유지(회차마다 2~7ms) / 같은 기계라 두 노드의 시계는 같다 |
 | A4 | 종료 기본값 — 실행 중 `@Async`(4초), 1초 뒤 close | `runs/A4.log` | ⑦ › 기본값은 실행 중 작업을 phase timeout까지 기다린 뒤 interrupt한다 | close 호출 t=1,007ms → 반환 t=4,040ms(3,033ms), finished=1 |
 | A4b | `await-termination=true` + `period=10s` | `runs/A4b.log` | ⑦ › await-termination은 기다리는 단계를 바꾼다 | close 호출 t=1,006ms → 반환 t=4,031ms(3,025ms), finished=1 |
 | A4c | `timeout-per-shutdown-phase=2s` / 실행 중 `@Scheduled` 잡 종료 | `runs/A4c.log` | ⑦ › 기본값은 실행 중 작업을 phase timeout까지 기다린 뒤 interrupt한다<br>붙인 다음 운영에서 보는 것(알림 로그 종료 timeout 줄) | 2s: 'Shutdown phase 1073741823 ends with 1 bean still running after timeout of 2000ms', interrupted=1, h2Rows=0 / 스케줄 잡: 30s 면 끝까지, 2s 면 interrupt |
 | A4d | `await-termination` 조합 / `accept-tasks-after-context-close` | `runs/A4d.log` | ⑦ › await-termination은 기다리는 단계를 바꾼다 | period 1s: 1초 뒤 WARN 'Timed out while waiting …', 작업은 interrupt 없이 계속 / period 없음: 즉시 반환, 작업 계속 / accept=true: 즉시 반환 + interrupt |
-| A4e | Virtual Thread on 종료 4조건 | `runs/A4e.log` | 먼저 써 본 팀들이 남긴 기록(갱신 문단)<br>⑦ › Virtual Thread를 켜면 @Async 작업을 기다리지 않는다 | 기본·await 만: close 즉시 반환(기다리지 않음) / period 10s: 작업 끝까지 기다림 / cancel-remaining: 즉시 interrupt |
-| A4f | 실제 SIGTERM(web, phase 3s) — platform / Virtual Thread | `runs/A4f.log`, 드라이버 `a4f_sigterm.py` | 먼저 써 본 팀들이 남긴 기록(갱신 문단)<br>⑦ › Kubernetes 예산 안에 종료 phase가 여럿 들어간다(platform)<br>⑦ › Virtual Thread를 켜면 @Async 작업을 기다리지 않는다(vt) | platform: SIGTERM→종료 6,142ms(웹 phase 3s + Executor phase 3s), 작업 interrupt / Virtual Thread: 4,198ms, `@Async` 작업은 interrupt 로그도 마커도 없이 사라짐 |
-| A4g | 큐에 남은 작업(워커 수별) / CF 갈래 | `runs/A4g.log` | 먼저 써 본 팀들이 남긴 기록(갱신 문단)<br>⑦ › 큐에 남은 작업은 보장되지 않는다<br>⑦ › await-termination은 기다리는 단계를 바꾼다(넷째 행 참조) | core 1: started=2·finished=1·interrupted=1 / core 2 엇갈림: 6건 모두 완료(7.5s) / core 8·20건: 모두 완료(6.0s) / await+period: 3건 모두 / CF: 큐에서 버려진 작업의 호출자 future 는 끝내 미완료 |
+| A4e | Virtual Thread on 종료 4조건 | `runs/A4e.log` | ⑦ › Virtual Thread를 켜면 @Async 작업을 기다리지 않는다<br>코드에서 고쳐야 하는 것 › 긴 작업은 잘려도 이어지게 만든다(ZOZO 듀얼 DB 기록의 갱신) | 기본·await 만: close 즉시 반환(기다리지 않음) / period 10s: 작업 끝까지 기다림 / cancel-remaining: 즉시 interrupt |
+| A4f | 실제 SIGTERM(web, phase 3s) — platform / Virtual Thread | `runs/A4f.log`, 드라이버 `a4f_sigterm.py` | ⑦ › Kubernetes 예산 안에 종료 phase가 여럿 들어간다(platform)<br>⑦ › Virtual Thread를 켜면 @Async 작업을 기다리지 않는다(vt)<br>코드에서 고쳐야 하는 것 › 긴 작업은 잘려도 이어지게 만든다(ZOZO 듀얼 DB 기록의 갱신) | platform: SIGTERM→종료 6,142ms(웹 phase 3s + Executor phase 3s), 작업 interrupt / Virtual Thread: 4,198ms, `@Async` 작업은 interrupt 로그도 마커도 없이 사라짐 |
+| A4g | 큐에 남은 작업(워커 수별) / CF 갈래 | `runs/A4g.log` | ⑦ › 큐에 남은 작업은 보장되지 않는다<br>⑦ › await-termination은 기다리는 단계를 바꾼다(넷째 행 참조)<br>코드에서 고쳐야 하는 것 › 긴 작업은 잘려도 이어지게 만든다(ZOZO 듀얼 DB 기록의 갱신) | core 1: started=2·finished=1·interrupted=1 / core 2 엇갈림: 6건 모두 완료(7.5s) / core 8·20건: 모두 완료(6.0s) / await+period: 3건 모두 / CF: 큐에서 버려진 작업의 호출자 future 는 끝내 미완료 |
 | A5 | 자기 호출 / 자기 주입 | `runs/A5.log` | 코드에서 고쳐야 하는 것 › 자기 호출은 비동기로 돌지 않는다 | `this.whereAmI()` → `main` / allow-circular-references=true 필드 자기 주입: 부팅은 되지만 주입된 값은 Proxy 가 아닌 원본(호출하면 `main`) / `@Lazy` 자기 주입 → `task-1` |
 | A6 | executor 메트릭 자동 바인딩(actuator) | `runs/A6.log` | 붙인 다음 운영에서 보는 것 | name 태그 = Bean 이름. `applicationTaskExecutor`·`taskScheduler`·`reportExecutor`(defaultCandidate=false 도 포함) / ExecutorService·Virtual Thread Executor 는 빠짐 / `executor.queued`=12.0 = `getQueueSize()` 12 |
 | E10 | 버전 사실 대조(실행 없음): Framework·Boot 태그 소스, JDK 25 `src.zip`, GitHub 이슈 milestone | `runs/E10-version-checks.log` | ⑦ (본문, 버전 표) | coordinated stop 6.1.0, `markShutdown`·`strictEarlyShutdown` 6.1.4, `DEFAULT_PHASE = Integer.MAX_VALUE / 2` 6.2.0, Framework 단독 phase timeout 30초 → 10초 6.2.0, 로그 문구 'Failed to shut down' → 'Shutdown phase … ends with' 6.1.4, `cancel(false)` 6.0.12, `defaultCandidate` 6.2.0(Boot 3.4.0 = Framework 6.2.0), 스케줄러 builder 의 `TaskDecorator` Boot 3.5.0, milestone #27090 6.1.0-M2 · #31019 6.0.12 · #32109·#32226 6.1.4 |
@@ -92,6 +94,7 @@ CP=$(./gradlew --offline -q asyncLabClasspath)          # A4f: java 직접 실�
 python3 src/main/kotlin/com/petercoders/blog/async/a4f_sigterm.py "$(/usr/libexec/java_home -v 25)/bin/java" "$CP" platform
 ```
 
+A3f 는 `--args='A3f'` 하나로 돈다. 드라이버가 자기 `java.home`/`java.class.path` 로 노드 JVM 둘(`A3fNode <initialDelayMs>`)을 띄우고 노드가 찍은 `NODE wall=` 줄만 모은다.
 A3e 는 조건마다 JVM 을 따로 띄웠다(`--args='A3e 0'`, `'A3e a'` …). VT 스케줄러는 close 때 fixedRate·cron 작업을 기다리지 않아서
 한 JVM 에서 이어 돌리면 앞 조건의 작업 줄이 다음 조건 로그에 섞인다(처음 한 번 그렇게 섞인 실행은 버렸다).
 절대 시간(ms)은 이 기계를 탄다. 판정은 스레드 이름·예외 클래스명·카운터·H2 행으로 한다.
@@ -118,6 +121,8 @@ macOS(APFS)는 대소문자 비구분이라 새 로그 파일을 만들 때 기�
 | `runs/A3c.log` | A3c | 2026-10-08 재실행(작업 줄은 원본과 같고 머리·close 시각 추가. 원본은 머리가 없었다) |
 | `runs/A3d.log` | A3d | 신규 |
 | `runs/A3e.log` | A3e-0, a, b, c, d | 신규(조건마다 JVM 따로) |
+| `runs/A3e-e.log` | A3e-e | 2026-10-10 신규(A3e-d 에 `@ConcurrencyLimit(1)` 을 더한 조건, 별도 JVM) |
+| `runs/A3f.log` | A3f | 2026-10-10 신규(드라이버 JVM 이 노드 JVM 2개를 띄운다. 무작위 initialDelay 는 로그 머리에 찍힌다) |
 | `runs/A4.log` | A4 | 2026-10-08 재실행(원본 '3초' = 정수 절삭, 이번 3,033ms) |
 | `runs/A4b.log` | A4b | 2026-10-08 재실행(값 동일) |
 | `runs/A4c.log` | A4c-a, b30, b2 | 신규 |
@@ -129,4 +134,4 @@ macOS(APFS)는 대소문자 비구분이라 새 로그 파일을 만들 때 기�
 | `runs/A6.log` | A6-1~4 | 신규 |
 | `runs/E10-version-checks.log` | E10 | 실행 없음. 버전 사실을 Framework·Boot 태그 소스, JDK 25 src.zip, GitHub 이슈 milestone 으로 대조한 grep 원문 |
 
-`fc6713c` 까지가 2026-09-28 실행분이다. 그 뒤의 변경(위 색인의 '재실행'·'신규' 로그, `AsyncProbes2.kt`·`AsyncCtx.kt`·`AsyncObs.kt`·`a4f_sigterm.py`, `build.gradle.kts` 의 `asyncLabCtx`·`asyncLabObs`·`asyncLabClasspath`)은 2026-10-08 실행분이다.
+`fc6713c` 까지가 2026-09-28 실행분이다. 그 뒤의 변경(위 색인의 '재실행'·'신규' 로그, `AsyncProbes2.kt`·`AsyncCtx.kt`·`AsyncObs.kt`·`a4f_sigterm.py`, `build.gradle.kts` 의 `asyncLabCtx`·`asyncLabObs`·`asyncLabClasspath`)은 2026-10-08 실행분이다. `runs/A3e-e.log` 와 `AsyncProbes2.kt` 의 `OverlapAsyncLimited`·`AdvisorOrderProbe`(프로파일 `ovle`), `AsyncLab.kt` 의 `A3e e` 조건은 2026-10-10 추가분이다. `runs/A3f.log` 와 `AsyncProbes2.kt` 의 `MultiNodeJobs`(프로파일 `multi`), `AsyncLab.kt` 의 `runA3f`·`serveA3fNode`(마커 `A3f`·`A3fNode`)도 같은 날 추가분이다.

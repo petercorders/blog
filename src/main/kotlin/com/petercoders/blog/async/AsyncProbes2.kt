@@ -280,7 +280,7 @@ class OverlapReject {
 }
 
 @Configuration(proxyBeanMethods = false)
-@Profile("ovlb | ovlc")
+@Profile("ovlb | ovlc | ovle")
 @EnableResilientMethods
 class ResilientOn
 
@@ -289,6 +289,47 @@ class ResilientOn
 @Profile("ovld")
 class OverlapAsync {
     @Async @Scheduled(fixedRate = 2000) fun delta() = body("delta", 3000)
+}
+
+/**
+ * (e) Virtual Thread off. (d) 에 @ConcurrencyLimit(1) 을 더한다(2026-10-10 추가).
+ * 두 Advisor 가 어느 순서로 감싸는지에 따라 제한이 @Async 작업 스레드 안에서 걸리는지, 넘기는 순간에만 걸리는지가 갈린다.
+ */
+@Component
+@Profile("ovle")
+class OverlapAsyncLimited {
+    @Async @ConcurrencyLimit(1) @Scheduled(fixedRate = 2000) fun delta() = body("delta", 3000)
+}
+
+/** (e) 부팅 직후 Proxy 의 Advisor 순서(바깥 → 안)를 찍는다. */
+@Component
+@Profile("ovle")
+class AdvisorOrderProbe(private val ctx: org.springframework.context.ApplicationContext) :
+    org.springframework.context.ApplicationListener<org.springframework.context.event.ContextRefreshedEvent> {
+    override fun onApplicationEvent(event: org.springframework.context.event.ContextRefreshedEvent) {
+        val bean = ctx.getBean(OverlapAsyncLimited::class.java)
+        val chain = (bean as? org.springframework.aop.framework.Advised)?.advisors
+            ?.map { it.advice.javaClass.simpleName } ?: emptyList()
+        println("OverlapAsyncLimited advisor 순서(바깥 → 안) = $chain")
+    }
+}
+
+// ------------------------------------------------------------------ A3f: JVM 두 개(Pod 두 대)에서 같은 잡
+
+/**
+ * A3f(2026-10-10 추가) — 노드(JVM)마다 같은 Bean 이 뜨고, 락은 없다.
+ * 시각은 벽시계 ms 로 찍어 드라이버(runA3f)가 두 노드를 한 축에 놓는다. 본문은 둘 다 0.3초.
+ */
+@Component
+@Profile("multi")
+class MultiNodeJobs {
+    @Scheduled(cron = "*/2 * * * * *") fun sweep() = nodeMark("cron")
+    @Scheduled(fixedDelay = 2000, initialDelayString = "\${lab.node.initial-delay-ms}") fun pick() = nodeMark("delay")
+}
+
+private fun nodeMark(tag: String) {
+    println("NODE wall=${System.currentTimeMillis()} $tag start thread=${Thread.currentThread().name}")
+    Thread.sleep(300)
 }
 
 // ------------------------------------------------------------------ A4c (b): 실행 중인 @Scheduled 잡의 종료
